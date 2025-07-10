@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import "./load.css"; // 스타일시트 임포트
+import godown from "./img/godown.png";
 
-function MainLogin() {
+function Main() {
   const [animate1, setAnimate1] = useState(false);
   useEffect(() => {
     // 3.8초 후 노란 박스 애니메이션 시작
@@ -45,42 +46,26 @@ function MainLogin() {
           color: "#656247",
           fontFamily: "Noto Sans KR, sans-serif",
           fontWeight: 500,
-          fontSize: "24px",
-          paddingTop: "30px",
+          fontSize: "18px",
           margin: "0px",
-          paddingLeft: "100px",
+          paddingTop: "3%",
+          paddingBottom: "5px",
+          paddingLeft: "7%",
         }}
       >
         파일명 : 알아서 AI가 요약해준대로 임시로 지정
-        <botton
-          style={{
-            color: "#656247",
-            backgroundColor: "#ECEAD5",
-            fontFamily: "Noto Sans KR, sans-serif",
-            fontWeight: 400,
-            fontSize: "18px",
-            lineHeight: "0.1",
-            justifyContent: "center",
-            textAlign: "center",
-            cursor: "pointer",
-            paddingLeft: "10px",
-            paddingRight: "10px",
-            paddingTop: "0px",
-            paddingBottom: "5px",
-            marginLeft: "10px",
-            borderRadius: "15px",
-          }}
-        >
-          ...
-        </botton>
+        <div className="exportButtonContainer">
+          <button className="exportButton">. . .</button>
+          <button className="hoverButton">이미지 1, 이미지 2</button>
+        </div>
       </h1>
       <h2
         style={{
           color: "#656247",
           fontFamily: "Noto Sans KR, sans-serif",
           fontWeight: 300,
-          fontSize: "15px",
-          paddingLeft: "100px",
+          fontSize: "11px",
+          paddingLeft: "7%",
           paddingTop: "0px",
           margin: "0px",
         }}
@@ -94,12 +79,15 @@ function MainLogin() {
           backgroundColor: "#ECEAD5",
           fontFamily: "Noto Sans KR, sans-serif",
           fontWeight: 400,
-          fontSize: "18px",
-          marginLeft: "100px",
-          marginRight: "100px",
-          padding: "20px",
+          fontSize: "12px",
+          marginTop: "20px",
+          marginLeft: "7%",
+          marginRight: "8%",
+          paddingTop: "40px",
           paddingBottom: "50px",
-          lineHeight: "1.6",
+          paddingLeft: "40px",
+          paddingRight: "40px",
+          lineHeight: "2",
           borderRadius: "10px",
         }}
       >
@@ -147,24 +135,46 @@ function MainLogin() {
         커뮤니케이션 도구의 발전은 원격 협업을 점차 수월하게 만들고 있다.
         재택근무는 직무의 특성과 개인의 성향에 따라 효과가 달라질 수 있다.
         따라서 일률적인 정책보다는 유연한 제도 설계가 필요하다. 결론적으로
+        재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다. 결론적으로
+        재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다. 결론적으로
+        재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다. 결론적으로
+        재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다. 결론적으로
+        재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다. 결론적으로
+        재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다. 결론적으로
+        재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다. 결론적으로
+        재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다. 결론적으로
+        재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다. 결론적으로
+        재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다. 결론적으로
+        재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다. 결론적으로
+        재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다. 결론적으로
+        재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다. 결론적으로
+        재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다. 결론적으로
+        재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다. 결론적으로
+        재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다. 결론적으로
+        재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다. 결론적으로
+        재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다. 결론적으로
         재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다.
         {/* 값을 어떻게 받아오지 */}
       </p>
 
       {/* 하단 한번에 이동 버튼 */}
-      <button
+      <img
+        src={godown}
         onClick={scrollToBottom}
+        alt="최하단으로 이동"
         style={{
           position: "fixed",
-          left: "50%",
+          left: "55%",
           bottom: "50px",
+          transform: "translateX(-50%)",
           zIndex: 999,
+          cursor: "pointer",
+          width: "50px", // 원하는 크기로
+          height: "30px",
         }}
-      >
-        맨 하단 이동
-      </button>
+      />
     </div>
   );
 }
 
-export default MainLogin;
+export default Main;

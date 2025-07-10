@@ -45,7 +45,7 @@ function Load() {
           fontSize: "40px",
           position: "absolute",
           top: "40%",
-          left: "45%",
+          left: "48%",
           padding: "0px",
           margin: "0px",
           opacity: animate2 ? 0 : 1,
@@ -64,14 +64,13 @@ function Load() {
           position: "absolute",
           padding: "0px",
           margin: "0px",
-          top: animate1 ? "7%" : "50%",
+          top: animate1 ? "8%" : "50%",
           left: animate1 ? "13%" : "50%",
           transform: animate1 ? "translate(0, 0)" : "translate(-50%, -50%)",
           opacity: 1,
           transition: "all 1.5s ease-in-out",
         }}
       >
-        {" "}
         Lingro+
       </h1>
     </div>
