@@ -64,14 +64,14 @@ function Load() {
           position: "absolute",
           padding: "0px",
           margin: "0px",
-          top: animate1 ? "8%" : "50%",
+          top: animate1 ? "7%" : "50%",
           left: animate1 ? "13%" : "50%",
           transform: animate1 ? "translate(0, 0)" : "translate(-50%, -50%)",
           opacity: 1,
           transition: "all 1.5s ease-in-out",
         }}
       >
-        Lingro+
+        Saymary
       </h1>
     </div>
   );
