@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import "./load.css"; // 스타일시트 임포트
+import "./main.css"; // 스타일시트 임포트
 import godown from "./img/godown.png";
 
 function Main() {

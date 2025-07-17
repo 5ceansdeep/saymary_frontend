@@ -1,12 +1,13 @@
-import React from "react";
 import Load from "./load.js";
 import Main from "./main.js";
+import Login from "./login.js";
 
 function App() {
   return (
     <div>
-      <Load />
-      <Main />
+      {/* <Load />
+      <Main /> */}
+      <Login />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import "./load.css"; // 스타일시트 임포트
+import "./main.css"; // 스타일시트 임포트
 
 function Load() {
   const [animate1, setAnimate1] = useState(false);
