@@ -5,9 +5,9 @@ import Login from "./login.js";
 function App() {
   return (
     <div>
-      <Load />
-      <Main />
-      {/* <Login /> */}
+      {/* <Load />
+      <Main /> */}
+      <Login />
     </div>
   );
 }
