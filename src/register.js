@@ -1,10 +1,13 @@
 import { useState } from "react";
 
-function Login() {
+function Register() {
+  const [nickname, setNickname] = useState("");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
   const handleEmailChange = (e) => {
     const { value } = e.target;
@@ -14,7 +17,7 @@ function Login() {
     if (filteredValue === "" || emailRegex.test(filteredValue)) {
       setEmailError(""); // 통과하면 에러 제거
     } else {
-      setEmailError("Please enter a valid email address.");
+      setEmailError("올바른 이메일 형식이 아닙니다.");
     }
   };
 
@@ -26,7 +29,23 @@ function Login() {
     } else {
       setPasswordError("");
     }
+    if (confirmPassword && value !== confirmPassword) {
+      setConfirmPasswordError("Passwords do not match.");
+    } else {
+      setConfirmPasswordError("");
+    }
   }; // 비밀번호 input에 최소 6자 이상 입력
+
+  const handleConfirmPasswordChange = (e) => {
+    const { value } = e.target;
+    setConfirmPassword(value);
+    if (value !== password) {
+      setConfirmPasswordError("Passwords do not match.");
+    } else {
+      setConfirmPasswordError("");
+    }
+  };
+
 
   return (
     <div
@@ -37,6 +56,7 @@ function Login() {
         backgroundColor: "#00492C",
       }}
     >
+      {/* 계정 생성 페이지 */}
       <h1
         style={{
           position: "absolute",
@@ -49,8 +69,9 @@ function Login() {
           textAlign: "center",
         }}
       >
-        Please Login.
+        Wecome :-)
       </h1>
+      {/* 회원가입 폼 박스 */}
       <div
         style={{
           position: "absolute",
@@ -73,23 +94,52 @@ function Login() {
           justifyContent: "center",
         }}
       >
+        {/* Nickname 인풋 */}
         <h3
           style={{
             marginBottom: "5px",
             fontSize: "1.2rem",
+            margin: "0 auto",
             marginLeft: "18%",
+          }}
+        >
+          Nickname
+        </h3>
+        <input
+          type="text"
+          placeholder="Enter your nickname"
+          value={nickname}
+          onChange={(e) => setNickname(e.target.value)}
+          style={{
             marginBottom: "5px",
+            fontSize: "1rem",
+            borderRadius: "5px",
+            backgroundColor: "#FFFCE4",
+            border: "solid 2px #C7C29B",
+            padding: "10px",
+            width: "300px",
+            marginLeft: "18%",
+          }}
+        />
+
+        {/* 이메일 인풋 */}
+        <h3
+          style={{
+            marginBottom: "5px",
+            marginTop: "10px",
+            fontSize: "1.2rem",
+            marginLeft: "18%",
           }}
         >
           Email ID
         </h3>
         <input
           type="email"
-          placeholder="Enter your email"
           value={email}
+          placeholder="Enter your email"
           onChange={handleEmailChange}
           style={{
-            marginBottom: "10px",
+            marginBottom: "5px",
             fontSize: "1rem",
             borderRadius: "5px",
             backgroundColor: "#FFFCE4",
@@ -113,12 +163,13 @@ function Login() {
             {emailError}
           </p>
         )}
+
+        {/* pw 인풋 */}
         <h3
           style={{
             marginBottom: "5px",
             marginTop: "10px",
             fontSize: "1.2rem",
-            marginTop: "10px",
             marginLeft: "18%",
           }}
         >
@@ -127,9 +178,10 @@ function Login() {
         <input
           type="password"
           placeholder="Enter your password"
+          value={password}
           onChange={handlePasswordChange}
           style={{
-            marginBottom: "10px",
+            marginBottom: "5px",
             fontSize: "1rem",
             borderRadius: "5px",
             backgroundColor: "#FFFCE4",
@@ -153,46 +205,51 @@ function Login() {
             {passwordError}
           </p>
         )}
-        <div
+
+        {/* pw 확인 인풋 */}
+        <h3
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginBottom: "20px",
-            fontSize: "0.9rem",
+            marginBottom: "5px",
+            marginTop: "10px",
+            fontSize: "1.2rem",
+            marginLeft: "18%",
+            color: "#00492C",
           }}
         >
-          <div
-            style={{ display: "flex", alignItems: "center", marginLeft: "18%" }}
-          >
-            <input
-              type="checkbox"
-              id="remember-me"
-              style={{ marginRight: "5px" }}
-            />
-            <label
-              htmlFor="remember-me"
-              style={{
-                textDecoration: "underline",
-                margin: 0,
-                fontSize: "1rem",
-                cursor: "pointer",
-              }}
-            >
-              Remember me
-            </label>
-          </div>
-          <label
+          Confirm Password
+        </h3>
+        <input
+          type="password"
+          placeholder="Enter your password"
+          value={confirmPassword}
+          onChange={handleConfirmPasswordChange}
+          style={{
+            marginBottom: "5px",
+            fontSize: "1rem",
+            borderRadius: "5px",
+            backgroundColor: "#FFFCE4",
+            border: "solid 2px #C7C29B",
+            padding: "10px",
+            width: "300px",
+            marginLeft: "18%",
+          }}
+        />
+        {confirmPasswordError && (
+          <p
             style={{
-              textDecoration: "underline",
-              margin: 0,
-              fontSize: "1rem",
-              cursor: "pointer",
-              marginRight: "18%",
+              color: "red",
+              fontSize: "0.8rem",
+              marginLeft: "18%",
+              marginTop: "0",
+              marginBottom: "15px",
+              fontFamily: "Noto Sans KR, sans-serif",
             }}
           >
-            Forgot password
-          </label>
-        </div>
+            {confirmPasswordError}
+          </p>
+        )}
+
+        {/* sign up 버튼 */}
         <button
           style={{
             padding: "12px",
@@ -207,42 +264,11 @@ function Login() {
             width: "320px",
           }}
         >
-          Sign in
+          Sign up
         </button>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            paddingTop: "20px",
-          }}
-        >
-          <label
-            style={{
-              color: "#000000",
-              margin: 0,
-              fontSize: "1rem",
-              marginRight: "5px",
-            }}
-          >
-            Don't have an account?
-          </label>
-          <label
-            style={{
-              color: "#000000",
-              fontWeight: "bold",
-              textDecoration: "underline",
-              margin: 0,
-              fontSize: "1rem",
-              cursor: "pointer",
-            }}
-          >
-            Sign up
-          </label>
-        </div>
       </div>
     </div>
   );
 }
 
-export default Login;
+export default Register;
