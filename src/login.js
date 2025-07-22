@@ -28,6 +28,35 @@ function Login() {
     }
   }; // 비밀번호 input에 최소 6자 이상 입력
 
+const handleLogin = async () => {
+  try {
+    const response = await fetch("http://localhost:8080/api/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: email,
+        password: password,
+      }),
+    });
+
+    const text = await response.text();
+    console.log("응답 내용:", text);
+
+    if (text.includes("성공")) {
+      alert("로그인 성공!");
+      // 임시 테스트용, 토큰 저장 로직 추가 필요
+      window.location.href = "/main.js"; // 성공 시 이동할 페이지
+    } else {
+      alert("로그인 실패!");
+    }
+  } catch (error) {
+    alert("서버 연결 실패!");
+    console.error(error);
+  }
+};
+
   return (
     <div
       style={{
@@ -37,6 +66,7 @@ function Login() {
         backgroundColor: "#00492C",
       }}
     >
+      {/* 계정 생성 페이지 */}
       <h1
         style={{
           position: "absolute",
@@ -51,6 +81,8 @@ function Login() {
       >
         Please Login.
       </h1>
+
+      {/* 회원가입 폼 박스 */}
       <div
         style={{
           position: "absolute",
@@ -73,12 +105,12 @@ function Login() {
           justifyContent: "center",
         }}
       >
+        {/* 이메일 인풋 */}
         <h3
           style={{
             marginBottom: "5px",
             fontSize: "1.2rem",
             marginLeft: "18%",
-            marginBottom: "5px",
           }}
         >
           Email ID
@@ -113,12 +145,13 @@ function Login() {
             {emailError}
           </p>
         )}
+
+        {/* pw 인풋 */}
         <h3
           style={{
             marginBottom: "5px",
             marginTop: "10px",
             fontSize: "1.2rem",
-            marginTop: "10px",
             marginLeft: "18%",
           }}
         >
@@ -127,6 +160,7 @@ function Login() {
         <input
           type="password"
           placeholder="Enter your password"
+          value={password}
           onChange={handlePasswordChange}
           style={{
             marginBottom: "10px",
@@ -153,6 +187,8 @@ function Login() {
             {passwordError}
           </p>
         )}
+
+        {/* remember me 체크박스 & forgot password 링크 */}
         <div
           style={{
             display: "flex",
@@ -164,6 +200,7 @@ function Login() {
           <div
             style={{ display: "flex", alignItems: "center", marginLeft: "18%" }}
           >
+            {/* remember me 체크박스 */}
             <input
               type="checkbox"
               id="remember-me"
@@ -181,6 +218,8 @@ function Login() {
               Remember me
             </label>
           </div>
+
+          {/* forgot password 링크 */}
           <label
             style={{
               textDecoration: "underline",
@@ -193,7 +232,9 @@ function Login() {
             Forgot password
           </label>
         </div>
+        {/* 로그인 버튼 */}
         <button
+          onClick={handleLogin}
           style={{
             padding: "12px",
             fontSize: "1rem",
@@ -209,6 +250,7 @@ function Login() {
         >
           Sign in
         </button>
+        {/* 계정 등록 링크 (sign up) */}
         <div
           style={{
             display: "flex",

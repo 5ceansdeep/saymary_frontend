@@ -9,6 +9,7 @@ function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
+  // 이메일 입력 형식 제어
   const handleEmailChange = (e) => {
     const { value } = e.target;
     const filteredValue = value.replace(/[^a-zA-Z0-9@.!*$]/g, ""); // 이메일 input에 영어 대소문자, 숫자, @, ., !, *, $ 만 허용
@@ -17,10 +18,11 @@ function Register() {
     if (filteredValue === "" || emailRegex.test(filteredValue)) {
       setEmailError(""); // 통과하면 에러 제거
     } else {
-      setEmailError("올바른 이메일 형식이 아닙니다.");
+      setEmailError("Please enter a valid email address.");
     }
   };
 
+  // 비밀번호 입력 형식 제어
   const handlePasswordChange = (e) => {
     const { value } = e.target;
     setPassword(value);
@@ -36,6 +38,7 @@ function Register() {
     }
   }; // 비밀번호 input에 최소 6자 이상 입력
 
+  // 비밀번호 확인 입력
   const handleConfirmPasswordChange = (e) => {
     const { value } = e.target;
     setConfirmPassword(value);
@@ -45,7 +48,6 @@ function Register() {
       setConfirmPasswordError("");
     }
   };
-
 
   return (
     <div
