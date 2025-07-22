@@ -48,6 +48,37 @@ function Register() {
       setConfirmPasswordError("");
     }
   };
+const handleLogin = async () => {
+  try {
+    const response = await fetch("http://localhost:8080/api/user/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: email,
+        password: password,
+        nickname: nickname,
+      }),
+    });
+
+    const text = await response.text();
+    console.log("응답 내용:", text);
+
+    if (text.includes("성공")) {
+      alert("회원 가입 성공!");
+      // 임시 테스트용, 토큰 저장 로직 추가 필요
+      window.location.href = "/login.js";
+    } else if (text.includes("이미")) {
+      alert("이미 등록된 이메일입니다.");
+    } else {
+      alert("회원 가입 실패!");
+    }
+  } catch (error) {
+    alert("서버 연결 실패!");
+    console.error(error);
+  }
+}; 
 
   return (
     <div
@@ -253,6 +284,7 @@ function Register() {
 
         {/* sign up 버튼 */}
         <button
+          onClick={handleLogin}
           style={{
             padding: "12px",
             fontSize: "1rem",

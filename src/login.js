@@ -28,34 +28,36 @@ function Login() {
     }
   }; // 비밀번호 input에 최소 6자 이상 입력
 
-const handleLogin = async () => {
-  try {
-    const response = await fetch("http://localhost:8080/api/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: email,
-        password: password,
-      }),
-    });
+  const handleLogin = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/api/user/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      });
 
-    const text = await response.text();
-    console.log("응답 내용:", text);
+      const text = await response.text();
+      console.log("응답 내용:", text);
 
-    if (text.includes("성공")) {
-      alert("로그인 성공!");
-      // 임시 테스트용, 토큰 저장 로직 추가 필요
-      window.location.href = "/main.js"; // 성공 시 이동할 페이지
-    } else {
-      alert("로그인 실패!");
+      if (text.includes("성공")) {
+        alert("로그인 성공!");
+        // 임시 테스트용, 토큰 저장 로직 추가 필요
+        window.location.href = "/main.js";
+      } else if (text.includes("존재")) {
+        alert("등록되지 않은 이메일입니다.");
+      } else if (text.includes("비밀")) {
+        alert("비밀번호가 일치하지 않습니다.");
+      }
+    } catch (error) {
+      alert("서버 연결 실패!");
+      console.error(error);
     }
-  } catch (error) {
-    alert("서버 연결 실패!");
-    console.error(error);
-  }
-};
+  };
 
   return (
     <div
