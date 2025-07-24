@@ -1,17 +1,20 @@
+import './App.css';
 import Load from "./load.js";
 import Main from "./main.js";
 import Login from "./login.js";
-import sideMenu from "./sideMenu.js";
+import SideMenu from "./sideMenu.js";
+import { BrowserRouter } from "react-router-dom";
 
 function App() {
   return (
-    <div>
-      {/* <Load />
-      <Main /> */}
-      <Login />
-      <h1>dks</h1>
-      {/* <sideMenu /> */}
-    </div>
+    <BrowserRouter>
+      <div>
+        {/* <Load />
+        <Main /> */}
+        {/* <Login /> */}
+        <SideMenu />
+      </div>
+    </BrowserRouter>
   );
 }
 
