@@ -1,32 +1,42 @@
 import { useState } from "react";
 
 function Newpw() {
-  const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get("token");
 
-  const handleEmailChange = (e) => {
+  const handlePasswordChange = (e) => {
     const { value } = e.target;
-    const filteredValue = value.replace(/[^a-zA-Z0-9@._+-]/g, ""); // 이메일 input에 영어 대소문자, 숫자, @, ., !, *, $ 만 허용
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    setEmail(filteredValue);
-    if (filteredValue === "" || emailRegex.test(filteredValue)) {
-      setEmailError(""); // 통과하면 에러 제거
+    setPassword(value);
+    if (value.length > 0 && value.length < 6) {
+      setPasswordError("Password must be at least 6 characters long.");
     } else {
-      setEmailError("Please enter a valid email address.");
+      setPasswordError("");
     }
-  };
+  }; // 비밀번호 input에 최소 6자 이상 입력
+  const handleNewpw = async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get("token");
 
-  const handleLogin = async () => {
+    console.log("보낼 token:", token); // 반드시 확인
+
+    if (!token) {
+      alert("토큰이 유효하지 않습니다.");
+      return;
+    }
+
     try {
       const response = await fetch(
-        "http://localhost:8080/api/user/request-reset",
+        "http://localhost:8080/api/user/reset-password",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            email: email,
+            token: token,
+            newPassword: password,
           }),
         }
       );
@@ -34,14 +44,14 @@ function Newpw() {
       const text = await response.text();
       console.log("응답 내용:", text);
 
-      if (text.includes("재설정")) {
-        alert("비밀번호 재설정 메일이 발송되었습니다.");
-        // 임시 테스트용, 토큰 저장 로직 추가 필요
-      } else if (text.includes("존재")) {
-        alert("등록되지 않은 이메일입니다.");
+      if (response.ok && text.includes("변경")) {
+        alert("비밀번호가 성공적으로 변경되었습니다!");
+        window.location.href = "/signin";
+      } else {
+        alert("비밀번호 변경 실패: " + text);
       }
     } catch (error) {
-      alert("서버 연결 실패!");
+      alert("서버 오류 발생");
       console.error(error);
     }
   };
@@ -94,21 +104,22 @@ function Newpw() {
           justifyContent: "center",
         }}
       >
-        {/* 이메일 인풋 */}
+        {/* pw 인풋 */}
         <h3
           style={{
             marginBottom: "5px",
+            marginTop: "10px",
             fontSize: "1.2rem",
             marginLeft: "18%",
           }}
         >
-          New Password
+          Password
         </h3>
         <input
-          type="email"
-          placeholder="Enter your new password"
-          value={email}
-          onChange={handleEmailChange}
+          type="password"
+          placeholder="Enter your password"
+          value={password}
+          onChange={handlePasswordChange}
           style={{
             marginBottom: "10px",
             fontSize: "1rem",
@@ -120,7 +131,7 @@ function Newpw() {
             marginLeft: "18%",
           }}
         />
-        {emailError && (
+        {passwordError && (
           <p
             style={{
               color: "red",
@@ -131,22 +142,22 @@ function Newpw() {
               fontFamily: "Noto Sans KR, sans-serif",
             }}
           >
-            {emailError}
+            {passwordError}
           </p>
         )}
 
         {/* 제출 버튼 */}
         <button
-          onClick={handleLogin}
-          disabled={!email || emailError}
+          onClick={handleNewpw}
+          disabled={!password || passwordError}
           style={{
             padding: "12px",
             fontSize: "1rem",
             borderRadius: "5px",
-            backgroundColor: !email || emailError ? "#C7C29B" : "#00492C",
+            backgroundColor: !password || passwordError ? "#C7C29B" : "#00492C",
             color: "white",
             border: "none",
-            cursor: !email || emailError ? "not-allowed" : "pointer",
+            cursor: !password || passwordError ? "not-allowed" : "pointer",
             marginLeft: "18%",
             marginTop: "10px",
             width: "320px",

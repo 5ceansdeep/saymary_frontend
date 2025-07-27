@@ -3,6 +3,7 @@ import { useState } from "react";
 function Forgot() {
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
+  
 
   const handleEmailChange = (e) => {
     const { value } = e.target;
@@ -25,9 +26,7 @@ function Forgot() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            email: email,
-          }),
+          body: JSON.stringify({ email }),
         }
       );
 
@@ -36,13 +35,12 @@ function Forgot() {
 
       if (text.includes("재설정")) {
         alert("비밀번호 재설정 메일이 발송되었습니다.");
-        // 임시 테스트용, 토큰 저장 로직 추가 필요
       } else if (text.includes("존재")) {
         alert("등록되지 않은 이메일입니다.");
       }
     } catch (error) {
       alert("서버 연결 실패!");
-      console.error(error);
+      console.error("fetch error:", error);
     }
   };
 
