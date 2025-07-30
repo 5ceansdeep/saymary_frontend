@@ -1,6 +1,64 @@
-import React from "react";
+ import { useState } from "react"; 
 
 function Login() {
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  const handleEmailChange = (e) => {
+    const { value } = e.target;
+    const filteredValue = value.replace(/[^a-zA-Z0-9@.!*$]/g, ""); // 이메일 input에 영어 대소문자, 숫자, @, ., !, *, $ 만 허용
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    setEmail(filteredValue);
+    if (filteredValue === "" || emailRegex.test(filteredValue)) {
+      setEmailError(""); // 통과하면 에러 제거
+    } else {
+      setEmailError("Please enter a valid email address.");
+    }
+  };
+
+  const handlePasswordChange = (e) => {
+    const { value } = e.target;
+    setPassword(value);
+    if (value.length > 0 && value.length < 6) {
+      setPasswordError("Password must be at least 6 characters long.");
+    } else {
+      setPasswordError("");
+    }
+  }; // 비밀번호 input에 최소 6자 이상 입력
+
+  const handleLogin = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/api/user/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      });
+
+      const text = await response.text();
+      console.log("응답 내용:", text);
+
+      if (text.includes("성공")) {
+        alert("로그인 성공!");
+        // 임시 테스트용, 토큰 저장 로직 추가 필요
+        window.location.href = "/main.js";
+      } else if (text.includes("존재")) {
+        alert("등록되지 않은 이메일입니다.");
+      } else if (text.includes("비밀")) {
+        alert("비밀번호가 일치하지 않습니다.");
+      }
+    } catch (error) {
+      alert("서버 연결 실패!");
+      console.error(error);
+    }
+  };
+
   return (
     <div
       style={{
@@ -10,49 +68,32 @@ function Login() {
         backgroundColor: "#00492C",
       }}
     >
+      {/* 계정 생성 페이지 */}
       <h1
         style={{
           position: "absolute",
-          top: "10%",
-          left: "5%",
+          bottom: "85%",
+          left: "-20%",
           color: "#F2C81B",
           fontSize: "50px",
-          margin: 0,
+          marginBottom: 0,
+          width: "100%",
+          textAlign: "center",
         }}
       >
         Please Login.
       </h1>
-      {/* <div
-        style={{
-          position: "fixed",
-          bottom: "0",
-          left: "50%",
-          transform: "translateX(-50%)",
-          backgroundColor: "#FFFCE4",
-          color: "#656247",
-          flexDirection: "column",
-          width: "80%",
-          height: "80%",
-          borderTopLeftRadius: "30px",
-          borderTopRightRadius: "30px",
-          borderBottomLeftRadius: "0px",
-          borderBottomRightRadius: "0px",
-          display: "flex",
-        }}
-      > */}
+
+      {/* 회원가입 폼 박스 */}
       <div
         style={{
           position: "absolute",
           bottom: "0",
           left: "50%",
-          transform: "translate(-50%, -0%)", // 완전 가운데 정렬
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "stretch",
+          transform: "translateX(-50%)",
           width: "90%", // 전체 너비의 90%
           maxWidth: "500px", // 최대 너비 제한
-          height: "60%", // 전체 높이의 60%
+          height: "60vh", // 전체 높이의 60%
           padding: "5vw", // 반응형 여백
           backgroundColor: "#FFFCE4",
           borderRadius: "10px",
@@ -61,12 +102,26 @@ function Login() {
           borderTopRightRadius: "30px",
           borderBottomLeftRadius: "0px",
           borderBottomRightRadius: "0px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
         }}
       >
-        <h3 style={{ marginBottom: "5px", fontSize: "1.2rem" }}>Email</h3>
+        {/* 이메일 인풋 */}
+        <h3
+          style={{
+            marginBottom: "5px",
+            fontSize: "1.2rem",
+            marginLeft: "18%",
+          }}
+        >
+          Email ID
+        </h3>
         <input
           type="email"
           placeholder="Enter your email"
+          value={email}
+          onChange={handleEmailChange}
           style={{
             marginBottom: "10px",
             fontSize: "1rem",
@@ -74,13 +129,32 @@ function Login() {
             backgroundColor: "#FFFCE4",
             border: "solid 2px #C7C29B",
             padding: "10px",
+            width: "300px",
+            marginLeft: "18%",
           }}
         />
+        {emailError && (
+          <p
+            style={{
+              color: "red",
+              fontSize: "0.8rem",
+              marginLeft: "18%",
+              marginTop: "0",
+              marginBottom: "15px",
+              fontFamily: "Noto Sans KR, sans-serif",
+            }}
+          >
+            {emailError}
+          </p>
+        )}
+
+        {/* pw 인풋 */}
         <h3
           style={{
             marginBottom: "5px",
             marginTop: "10px",
             fontSize: "1.2rem",
+            marginLeft: "18%",
           }}
         >
           Password
@@ -88,15 +162,35 @@ function Login() {
         <input
           type="password"
           placeholder="Enter your password"
+          value={password}
+          onChange={handlePasswordChange}
           style={{
-            marginBottom: "20px",
+            marginBottom: "10px",
             fontSize: "1rem",
             borderRadius: "5px",
             backgroundColor: "#FFFCE4",
             border: "solid 2px #C7C29B",
             padding: "10px",
+            width: "300px",
+            marginLeft: "18%",
           }}
         />
+        {passwordError && (
+          <p
+            style={{
+              color: "red",
+              fontSize: "0.8rem",
+              marginLeft: "18%",
+              marginTop: "0",
+              marginBottom: "15px",
+              fontFamily: "Noto Sans KR, sans-serif",
+            }}
+          >
+            {passwordError}
+          </p>
+        )}
+
+        {/* remember me 체크박스 & forgot password 링크 */}
         <div
           style={{
             display: "flex",
@@ -105,14 +199,44 @@ function Login() {
             fontSize: "0.9rem",
           }}
         >
-          <h3 style={{ textDecoration: "underline", margin: 0 }}>
-            Remember me
-          </h3>
-          <h3 style={{ textDecoration: "underline", margin: 0 }}>
+          <div
+            style={{ display: "flex", alignItems: "center", marginLeft: "18%" }}
+          >
+            {/* remember me 체크박스 */}
+            <input
+              type="checkbox"
+              id="remember-me"
+              style={{ marginRight: "5px" }}
+            />
+            <label
+              htmlFor="remember-me"
+              style={{
+                textDecoration: "underline",
+                margin: 0,
+                fontSize: "1rem",
+                cursor: "pointer",
+              }}
+            >
+              Remember me
+            </label>
+          </div>
+
+          {/* forgot password 링크 */}
+          <label
+            style={{
+              textDecoration: "underline",
+              margin: 0,
+              fontSize: "1rem",
+              cursor: "pointer",
+              marginRight: "18%",
+            }}
+          >
             Forgot password
-          </h3>
+          </label>
         </div>
+        {/* 로그인 버튼 */}
         <button
+          onClick={handleLogin}
           style={{
             padding: "12px",
             fontSize: "1rem",
@@ -120,13 +244,48 @@ function Login() {
             backgroundColor: "#00492C",
             color: "white",
             border: "none",
+            cursor: "pointer",
+            marginLeft: "18%",
+            marginTop: "10px",
+            width: "320px",
           }}
         >
-          Sign Up
+          Sign in
         </button>
+        {/* 계정 등록 링크 (sign up) */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            paddingTop: "20px",
+          }}
+        >
+          <label
+            style={{
+              color: "#000000",
+              margin: 0,
+              fontSize: "1rem",
+              marginRight: "5px",
+            }}
+          >
+            Don't have an account?
+          </label>
+          <label
+            style={{
+              color: "#000000",
+              fontWeight: "bold",
+              textDecoration: "underline",
+              margin: 0,
+              fontSize: "1rem",
+              cursor: "pointer",
+            }}
+          >
+            Sign up
+          </label>
+        </div>
       </div>
     </div>
-    // </div>
   );
 }
 
