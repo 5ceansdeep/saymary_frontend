@@ -1,14 +1,46 @@
-import { useEffect, useState, useRef } from "react";
+import { useState } from "react";
 
 function Select() {
+  const situation1 = [
+    "Lecture (강의)",
+    "Interview (면접)",
+    "Presentation (발표)",
+    "Speech (연설)",
+    "Briefing (브리핑)",
+  ];
+  const situation2 = [
+    "Professor / Teacher (교수 / 선생님)",
+    "Interviewer (면접관)",
+    "Colleague / Team member (동료 / 팀원)",
+    "Client / Boss (고객 / 상사)",
+    "General audience (일반 청중)",
+  ];
+  const situation3 = [
+    "Explanatory (설명형)",
+    "Self-introductory (자기소개형)",
+    "Persuasive (설득형)",
+    "Informal (비격식형)",
+    "Formal (격식형)",
+    "Q&A style (질문응답형)",
+  ];
 
-    const [isActive, setIsActive] = useState(false); // 상태
+  const [activeStates1, setActiveStates1] = useState(null);
+  const [activeStates2, setActiveStates2] = useState(null);
+  const [activeStates3, setActiveStates3] = useState(null);
 
-    const handleClick = () => {
-      setIsActive(!isActive); // true <-> false
-    };
-  const handleCLick = () => {
-    alert("필터링 기능은 현재 개발 중입니다.");
+  const isReadyToUpload =
+    activeStates1 !== null && activeStates2 !== null && activeStates3 !== null;
+
+  const handleClick1 = (index) => {
+    setActiveStates1((prev) => (prev === index ? null : index));
+  };
+
+  const handleClick2 = (index) => {
+    setActiveStates2((prev) => (prev === index ? null : index));
+  };
+
+  const handleClick3 = (index) => {
+    setActiveStates3((prev) => (prev === index ? null : index));
   };
 
   return (
@@ -57,416 +89,161 @@ function Select() {
           overflowX: "hidden",
         }}
       >
+        {/* Situation */}
         <h1
           style={{
             color: "#000000",
-            marginTop: "2%",
+            marginTop: "0.3%",
+            marginBottom: "0px",
             fontFamily: "Noto Sans KR, sans-serif",
             fontWeight: 500,
             fontSize: "2rem",
-            margin: "0px",
             paddingTop: "3%",
             paddingBottom: "5px",
             paddingLeft: "7%",
           }}
         >
           Situation
-          {/* 필터링 버튼들 */}
           <div>
-            <div
-              onClick={() => handleCLick()}
-              style={{
-                display: "inline-block",
-                color: "#000",
-                fontFamily: "Noto Sans KR, sans-serif",
-                fontWeight: 500,
-                lineHeight: "normal",
-                fontSize: "0.9375rem",
-                marginTop: "0.3%",
-                marginRight: "1%",
-                paddingLeft: "10px",
-                paddingRight: "10px",
-                paddingTop: "3px",
-                paddingBottom: "4px",
-                borderRadius: "10px",
-                border: "1px solid #C7C29B",
-                backgroundColor: "#ECEAD5",
-                cursor: "pointer",
-              }}
-            >
-              Lecture (강의)
-            </div>
-            <div
-              style={{
-                display: "inline-block",
-                color: "#000",
-                fontFamily: "Noto Sans KR, sans-serif",
-                fontWeight: 500,
-                lineHeight: "normal",
-                fontSize: "0.9375rem",
-                marginTop: "0.3%",
-                marginRight: "1%",
-                paddingLeft: "10px",
-                paddingRight: "10px",
-                paddingTop: "3px",
-                paddingBottom: "4px",
-                borderRadius: "10px",
-                border: "1px solid #C7C29B",
-                backgroundColor: "#ECEAD5",
-              }}
-            >
-              Interview (면접)
-            </div>
-            <div
-              style={{
-                display: "inline-block",
-                color: "#000",
-                fontFamily: "Noto Sans KR, sans-serif",
-                fontWeight: 500,
-                lineHeight: "normal",
-                fontSize: "0.9375rem",
-                marginTop: "0.3%",
-                marginRight: "1%",
-                paddingLeft: "10px",
-                paddingRight: "10px",
-                paddingTop: "3px",
-                paddingBottom: "4px",
-                borderRadius: "10px",
-                border: "1px solid #C7C29B",
-                backgroundColor: "#ECEAD5",
-              }}
-            >
-              Presentation (발표)
-            </div>
-            <div
-              style={{
-                display: "inline-block",
-                color: "#000",
-                fontFamily: "Noto Sans KR, sans-serif",
-                fontWeight: 500,
-                lineHeight: "normal",
-                fontSize: "0.9375rem",
-                marginTop: "0.3%",
-                marginRight: "1%",
-                paddingLeft: "10px",
-                paddingRight: "10px",
-                paddingTop: "3px",
-                paddingBottom: "4px",
-                borderRadius: "10px",
-                border: "1px solid #C7C29B",
-                backgroundColor: "#ECEAD5",
-              }}
-            >
-              Speech (연설)
-            </div>
-            <div
-              style={{
-                display: "inline-block",
-                color: "#000",
-                fontFamily: "Noto Sans KR, sans-serif",
-                fontWeight: 500,
-                lineHeight: "normal",
-                fontSize: "0.9375rem",
-                marginTop: "0.3%",
-                marginRight: "1%",
-                paddingLeft: "10px",
-                paddingRight: "10px",
-                paddingTop: "3px",
-                paddingBottom: "4px",
-                borderRadius: "10px",
-                border: "1px solid #C7C29B",
-                backgroundColor: "#ECEAD5",
-              }}
-            >
-              Briefing (브리핑)
-            </div>
+            {situation1.map((situation1, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleClick1(idx)}
+                style={{
+                  display: "inline-block",
+                  marginTop: "0.3%",
+                  marginRight: "1%",
+                  paddingLeft: "20px",
+                  paddingRight: "20px",
+                  paddingTop: "3px",
+                  paddingBottom: "4px",
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                  fontFamily: "Noto Sans KR, sans-serif",
+                  fontWeight: 500,
+                  fontSize: "1.1rem",
+                  lineHeight: "normal",
+                  border: "1px solid #C7C29B",
+                  backgroundColor:
+                    activeStates1 === idx ? "#00492C" : "#ECEAD5",
+                  color: activeStates1 === idx ? "#ffffff" : "#000000",
+                }}
+              >
+                {situation1}
+              </button>
+            ))}
           </div>
         </h1>
-        {/* Audience */}
+        {/* Audience type */}
         <h1
           style={{
             color: "#000000",
+            marginTop: "2%",
+            marginBottom: "0px",
             fontFamily: "Noto Sans KR, sans-serif",
             fontWeight: 500,
             fontSize: "2rem",
-            margin: "0px",
-            paddingTop: "3%",
             paddingBottom: "5px",
             paddingLeft: "7%",
           }}
         >
-          Audience
-          {/* 필터링 버튼들 */}
+          Audience type
           <div>
-            <div
-              style={{
-                display: "inline-block",
-                color: "#000",
-                fontFamily: "Noto Sans KR, sans-serif",
-                fontWeight: 500,
-                lineHeight: "normal",
-                fontSize: "0.9375rem",
-                marginTop: "0.3%",
-                marginRight: "1%",
-                paddingLeft: "10px",
-                paddingRight: "10px",
-                paddingTop: "3px",
-                paddingBottom: "4px",
-                borderRadius: "10px",
-                border: "1px solid #C7C29B",
-                backgroundColor: "#ECEAD5",
-              }}
-            >
-              Professor / Teacher (교수 / 선생님)
-            </div>
-            <div
-              style={{
-                display: "inline-block",
-                color: "#000",
-                fontFamily: "Noto Sans KR, sans-serif",
-                fontWeight: 500,
-                lineHeight: "normal",
-                fontSize: "0.9375rem",
-                marginTop: "0.3%",
-                marginRight: "1%",
-                paddingLeft: "10px",
-                paddingRight: "10px",
-                paddingTop: "3px",
-                paddingBottom: "4px",
-                borderRadius: "10px",
-                border: "1px solid #C7C29B",
-                backgroundColor: "#ECEAD5",
-              }}
-            >
-              Interviewer (면접관)
-            </div>
-            <div
-              style={{
-                display: "inline-block",
-                color: "#000",
-                fontFamily: "Noto Sans KR, sans-serif",
-                fontWeight: 500,
-                lineHeight: "normal",
-                fontSize: "0.9375rem",
-                marginTop: "0.3%",
-                marginRight: "1%",
-                paddingLeft: "10px",
-                paddingRight: "10px",
-                paddingTop: "3px",
-                paddingBottom: "4px",
-                borderRadius: "10px",
-                border: "1px solid #C7C29B",
-                backgroundColor: "#ECEAD5",
-              }}
-            >
-              Colleague / Team member (동료 / 팀원)
-            </div>
-            <div
-              style={{
-                display: "inline-block",
-                color: "#000",
-                fontFamily: "Noto Sans KR, sans-serif",
-                fontWeight: 500,
-                lineHeight: "normal",
-                fontSize: "0.9375rem",
-                marginTop: "0.3%",
-                marginRight: "1%",
-                paddingLeft: "10px",
-                paddingRight: "10px",
-                paddingTop: "3px",
-                paddingBottom: "4px",
-                borderRadius: "10px",
-                border: "1px solid #C7C29B",
-                backgroundColor: "#ECEAD5",
-              }}
-            >
-              Client / Boss (고객 / 상사)
-            </div>
-            <div
-              style={{
-                display: "inline-block",
-                color: "#000",
-                fontFamily: "Noto Sans KR, sans-serif",
-                fontWeight: 500,
-                lineHeight: "normal",
-                fontSize: "0.9375rem",
-                marginTop: "0.3%",
-                marginRight: "1%",
-                paddingLeft: "10px",
-                paddingRight: "10px",
-                paddingTop: "3px",
-                paddingBottom: "4px",
-                borderRadius: "10px",
-                border: "1px solid #C7C29B",
-                backgroundColor: "#ECEAD5",
-              }}
-            >
-              General audience (일반 청중)
-            </div>
+            {situation2.map((situation2, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleClick2(idx)}
+                style={{
+                  display: "inline-block",
+                  marginTop: "0.3%",
+                  marginRight: "1%",
+                  paddingLeft: "20px",
+                  paddingRight: "20px",
+                  paddingTop: "3px",
+                  paddingBottom: "4px",
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                  fontFamily: "Noto Sans KR, sans-serif",
+                  fontWeight: 500,
+                  fontSize: "1.1rem",
+                  lineHeight: "normal",
+                  border: "1px solid #C7C29B",
+                  backgroundColor:
+                    activeStates2 === idx ? "#00492C" : "#ECEAD5",
+                  color: activeStates2 === idx ? "#ffffff" : "#000000",
+                }}
+              >
+                {situation2}
+              </button>
+            ))}
           </div>
         </h1>
+        {/* Speech style */}
         <h1
           style={{
             color: "#000000",
+            marginTop: "2%",
+            marginBottom: "2%",
             fontFamily: "Noto Sans KR, sans-serif",
             fontWeight: 500,
             fontSize: "2rem",
-            margin: "0px",
-            paddingTop: "3%",
             paddingBottom: "5px",
             paddingLeft: "7%",
           }}
         >
           Speech style
-          {/* 필터링 버튼들 */}
           <div>
-            <div
-              style={{
-                display: "inline-block",
-                color: "#000",
-                fontFamily: "Noto Sans KR, sans-serif",
-                fontWeight: 500,
-                lineHeight: "normal",
-                fontSize: "0.9375rem",
-                marginTop: "0.3%",
-                marginRight: "1%",
-                paddingLeft: "10px",
-                paddingRight: "10px",
-                paddingTop: "3px",
-                paddingBottom: "4px",
-                borderRadius: "10px",
-                border: "1px solid #C7C29B",
-                backgroundColor: "#ECEAD5",
-              }}
-            >
-              Explanatory (설명형)
-            </div>
-            <div
-              style={{
-                display: "inline-block",
-                color: "#000",
-                fontFamily: "Noto Sans KR, sans-serif",
-                fontWeight: 500,
-                lineHeight: "normal",
-                fontSize: "0.9375rem",
-                marginTop: "0.3%",
-                marginRight: "1%",
-                paddingLeft: "10px",
-                paddingRight: "10px",
-                paddingTop: "3px",
-                paddingBottom: "4px",
-                borderRadius: "10px",
-                border: "1px solid #C7C29B",
-                backgroundColor: "#ECEAD5",
-              }}
-            >
-              Self-introductory (자기소개형)
-            </div>
-            <div
-              style={{
-                display: "inline-block",
-                color: "#000",
-                fontFamily: "Noto Sans KR, sans-serif",
-                fontWeight: 500,
-                lineHeight: "normal",
-                fontSize: "0.9375rem",
-                marginTop: "0.3%",
-                marginRight: "1%",
-                paddingLeft: "10px",
-                paddingRight: "10px",
-                paddingTop: "3px",
-                paddingBottom: "4px",
-                borderRadius: "10px",
-                border: "1px solid #C7C29B",
-                backgroundColor: "#ECEAD5",
-              }}
-            >
-              Persuasive (설득형)
-            </div>
-            <div
-              style={{
-                display: "inline-block",
-                color: "#000",
-                fontFamily: "Noto Sans KR, sans-serif",
-                fontWeight: 500,
-                lineHeight: "normal",
-                fontSize: "0.9375rem",
-                marginTop: "0.3%",
-                marginRight: "1%",
-                paddingLeft: "10px",
-                paddingRight: "10px",
-                paddingTop: "3px",
-                paddingBottom: "4px",
-                borderRadius: "10px",
-                border: "1px solid #C7C29B",
-                backgroundColor: "#ECEAD5",
-              }}
-            >
-              Informal (비격식형)
-            </div>
-            <div
-              style={{
-                display: "inline-block",
-                color: "#000",
-                fontFamily: "Noto Sans KR, sans-serif",
-                fontWeight: 500,
-                lineHeight: "normal",
-                fontSize: "0.9375rem",
-                marginTop: "0.3%",
-                marginRight: "1%",
-                paddingLeft: "10px",
-                paddingRight: "10px",
-                paddingTop: "3px",
-                paddingBottom: "4px",
-                borderRadius: "10px",
-                border: "1px solid #C7C29B",
-                backgroundColor: "#ECEAD5",
-              }}
-            >
-              Formal (격식형)
-            </div>
-            <div
-              style={{
-                display: "inline-block",
-                color: "#000",
-                fontFamily: "Noto Sans KR, sans-serif",
-                fontWeight: 500,
-                lineHeight: "normal",
-                fontSize: "0.9375rem",
-                marginTop: "0.3%",
-                marginRight: "1%",
-                paddingLeft: "10px",
-                paddingRight: "10px",
-                paddingTop: "3px",
-                paddingBottom: "4px",
-                borderRadius: "10px",
-                border: "1px solid #C7C29B",
-                backgroundColor: "#ECEAD5",
-              }}
-            >
-              Q&A style (질문응답형)
-            </div>
+            {situation3.map((situation3, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleClick3(idx)}
+                style={{
+                  display: "inline-block",
+                  marginTop: "0.3%",
+                  marginBottom: "0.3%",
+                  marginRight: "1%",
+                  paddingLeft: "20px",
+                  paddingRight: "20px",
+                  paddingTop: "3px",
+                  paddingBottom: "4px",
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                  fontFamily: "Noto Sans KR, sans-serif",
+                  fontWeight: 500,
+                  fontSize: "1.1rem",
+                  lineHeight: "normal",
+                  border: "1px solid #C7C29B",
+                  backgroundColor:
+                    activeStates3 === idx ? "#00492C" : "#ECEAD5",
+                  color: activeStates3 === idx ? "#ffffff" : "#000000",
+                }}
+              >
+                {situation3}
+              </button>
+            ))}
           </div>
         </h1>
-        <button
-          style={{
-            position: "relative",
-            top: "10%",
-            left: "80%",
-            marginBottom: "5%",
-            whiteSpace: "nowrap", // 줄바꿈 방지
-            padding: "10px 20px",
-            borderRadius: "10px",
-            border: "none",
-            color: "#ffffff",
-            backgroundColor: "#00492C",
-            fontSize: "1.2rem",
-            fontFamily: "Noto Sans KR, sans-serif",
-            fontWeight: 500,
-          }}
-        >
-          Upload File
-        </button>
+        {isReadyToUpload && (
+          <button
+            style={{
+              position: "fixed",
+              top: "25%",
+              right: "20px",
+              zIndex: 1000,
+              padding: "20px 60px",
+              borderRadius: "20px",
+              border: "none",
+              backgroundColor: "#00492C",
+              color: "#ffffff",
+              fontFamily: "Noto Sans KR, sans-serif",
+              fontWeight: 500,
+              fontSize: "1.1rem",
+              cursor: "pointer",
+            }}
+          >
+            Upload File
+          </button>
+        )}
       </div>
     </div>
   );
