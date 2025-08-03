@@ -84,7 +84,6 @@ function Select() {
           left: "12%",
           width: "88%",
           height: "80%",
-          transition: "all 0.3s ease-in-out",
           overflowY: "auto", // 스크롤 가능, 스크롤바는 index.css에서 설정
           overflowX: "hidden",
         }}
