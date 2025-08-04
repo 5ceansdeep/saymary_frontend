@@ -7,8 +7,7 @@ import Newpw from "./login/newpw.js";
 import Select from "./coaching/select.js";
 import Coach from "./coaching/coach.js";
 import Upload from "./mainpage/uploadFile.js";
-import Sidebar from "./sidebar.js";
-import Archive from "./archivepage/archive.js";
+
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 function App() {
@@ -30,7 +29,7 @@ function App() {
       {/* <Select /> */}
       {/* <Coach /> */}
       {/* <Load /> */}
-      {/* <Main /> */}
+      <Main />
       {/* <Upload /> */}
       {/* <Archive /> */}
       {/* <Sidebar /> */}
