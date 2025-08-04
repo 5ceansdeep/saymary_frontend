@@ -3,10 +3,12 @@ import Main from "./mainpage/main.js";
 import Login from "./login/login.js";
 import Register from "./login/register.js";
 import Forgot from "./login/forgot.js";
-import Newpw from "./img/newpw.js";
+import Newpw from "./login/newpw.js";
 import Select from "./coaching/select.js";
 import Coach from "./coaching/coach.js";
 import Upload from "./mainpage/uploadFile.js";
+import Sidebar from "./sidebar.js";
+import Archive from "./archivepage/archive.js";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 function App() {
@@ -27,8 +29,12 @@ function App() {
       {/* <Login /> */}
       {/* <Select /> */}
       {/* <Coach /> */}
+      {/* <Load /> */}
+      {/* <Main /> */}
       {/* <Upload /> */}
-    </div>
+      {/* <Archive /> */}
+      {/* <Sidebar /> */}
+      </div>
   );
 }
 
