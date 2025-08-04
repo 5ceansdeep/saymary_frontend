@@ -8,17 +8,54 @@ function Main() {
 
   // 상태 관리
   const [animate1, setAnimate1] = useState(false);
-  const [activeButton, setActiveButton] = useState(null);
+  const [activeButton, setActiveButton] = useState(null); // 초기값을 null로 변경
   const [showActionButtons, setShowActionButtons] = useState(false);
+  const [summaryData, setSummaryData] = useState(null);
+  const [currentSummary, setCurrentSummary] = useState(""); // 초기값을 빈 문자열로 변경
   const BoxRef = useRef();
 
-  // 3.8초 후 노란 박스 애니메이션 시작
+  // 0.5초 후 노란 박스 애니메이션 시작
   useEffect(() => {
     const timer = setTimeout(() => {
       setAnimate1(true);
-    }, 1000);
+    }, 500);
 
     return () => clearTimeout(timer);
+  }, []);
+
+  // 컴포넌트 마운트 시 저장된 요약 데이터 불러오기
+  useEffect(() => {
+    const savedData = localStorage.getItem("summaryData");
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        setSummaryData(parsedData);
+        // 기본값으로 간단요약 표시
+        setCurrentSummary(
+          parsedData.간단요약 ||
+            parsedData.text ||
+            "요약 데이터를 불러올 수 없습니다."
+        );
+      } catch (error) {
+        console.error("데이터 파싱 오류:", error);
+        setCurrentSummary("저장된 요약 데이터를 불러올 수 없습니다.");
+      }
+    } else {
+      // 테스트용 기본 데이터
+      const defaultData = {
+        text: "회의 전체 텍스트 내용입니다...",
+        간단요약:
+          "재택근무가 확산되면서 워라밸 향상과 비용 절감 등의 이점이 있지만, 소통 부족과 조직 소속감 약화 등의 문제도 존재한다.",
+        상세요약:
+          "재택근무는 코로나19 팬데믹을 계기로 빠르게 확산된 근무 형태이다. 직원들은 출퇴근 시간이 사라지면서 더 많은 여유 시간을 확보할 수 있게 되었다. 이는 워라밸(Work-Life Balance) 향상에 긍정적인 영향을 주었다. 또한, 자율적인 시간 관리가 가능해져 개인의 집중력이 오히려 높아지기도 한다. 기업 입장에서는 사무실 운영비용 절감 등의 경제적 이점이 존재한다. 반면, 팀원 간의 소통이 부족해지며 협업 효율이 낮아지는 경우도 있다.",
+        키워드요약:
+          "• 재택근무, 코로나19 팬데믹\n• 워라밸 향상, 여유 시간 확보\n• 자율적 시간 관리, 집중력 향상\n• 사무실 운영비용 절감\n• 소통 부족, 협업 효율 저하\n• 조직 소속감 약화\n• 하이브리드 근무 형태",
+        fileName: "sample_audio.mp3",
+        uploadTime: new Date().toLocaleString(),
+      };
+      setSummaryData(defaultData);
+      setCurrentSummary(defaultData.간단요약);
+    }
   }, []);
 
   // 스크롤 함수
@@ -34,6 +71,27 @@ function Main() {
   // 버튼 클릭 핸들러
   const handleButtonClick = (buttonId, originalOnClick) => {
     setActiveButton(buttonId);
+
+    // 요약 타입에 따라 표시할 내용 변경
+    if (summaryData) {
+      switch (buttonId) {
+        case "simple":
+        case "간단요약":
+          setCurrentSummary(summaryData.간단요약 || summaryData.text);
+          break;
+        case "detailed":
+        case "상세요약":
+          setCurrentSummary(summaryData.상세요약 || summaryData.text);
+          break;
+        case "keyword":
+        case "키워드요약":
+          setCurrentSummary(summaryData.키워드요약 || summaryData.text);
+          break;
+        default:
+          setCurrentSummary(summaryData.간단요약 || summaryData.text);
+      }
+    }
+
     if (originalOnClick) {
       originalOnClick();
     }
@@ -44,39 +102,75 @@ function Main() {
     setShowActionButtons((prev) => !prev);
   };
 
-  // 새 파일 업로드 핸들러 (업로드 페이지로 이동)
+  // 새 파일 업로드 핸들러
   const handleNewUpload = () => {
+    // 기존 데이터 삭제
+    localStorage.removeItem("summaryData");
     navigate("/upload");
   };
 
-  // 요약 텍스트 (실제 데이터)
-  const summaryText = `재택근무는 코로나19 팬데믹을 계기로 빠르게 확산된 근무 형태이다. 직원들은 출퇴근 시간이 사라지면서 더 많은 여유 시간을 확보할 수 있게 되었다. 이는 워라밸(Work-Life Balance) 향상에 긍정적인 영향을 주었다. 또한, 자율적인 시간 관리가 가능해져 개인의 집중력이 오히려 높아지기도 한다. 기업 입장에서는 사무실 운영비용 절감 등의 경제적 이점이 존재한다. 반면, 팀원 간의 소통이 부족해지며 협업 효율이 낮아지는 경우도 있다. 물리적 거리감은 심리적 거리감으로 이어져 조직 소속감을 약화시킬 수 있다. 특히 신입사원의 경우 적응이 어렵고 피드백이 늦어 성장이 더뎌질 수 있다. 업무와 사생활의 경계가 모호해지면서 오히려 스트레스를 유발하기도 한다. 사이버 보안 및 데이터 보호 문제도 재택근무의 큰 과제로 남아 있다. 일부 기업은 하이브리드 근무 형태를 도입하여 장단점을 조율하고 있다. 기술 인프라와 커뮤니케이션 도구의 발전은 원격 협업을 점차 수월하게 만들고 있다. 재택근무는 직무의 특성과 개인의 성향에 따라 효과가 달라질 수 있다. 따라서 일률적인 정책보다는 유연한 제도 설계가 필요하다. 결론적으로 재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고 있다.`;
+  // 요약 타입명 가져오기 함수
+  const getSummaryTypeName = (buttonId) => {
+    switch (buttonId) {
+      case "간단요약":
+        return "간단 요약";
+      case "상세요약":
+        return "상세 요약";
+      case "키워드요약":
+        return "키워드 요약";
+      default:
+        return "요약";
+    }
+  };
+
+  // 전체 내용을 포함한 텍스트 생성 함수
+  const getFullContent = () => {
+    const summaryTypeName = getSummaryTypeName(activeButton);
+
+    let content = `파일명: ${summaryData?.fileName || "알 수 없음"}\n`;
+    content += `생성일시: ${
+      summaryData?.uploadTime || new Date().toLocaleString()
+    }\n\n`;
+
+    // 원본 텍스트
+    content += `=== 원본 텍스트 ===\n`;
+    content += `${
+      summaryData?.text || "원본 텍스트를 불러올 수 없습니다."
+    }\n\n`;
+
+    // 선택된 요약이 있는 경우에만 추가
+    if (activeButton && currentSummary) {
+      content += `=== ${summaryTypeName} ===\n`;
+      content += `${currentSummary}`;
+    }
+
+    return content;
+  };
 
   // 텍스트 복사 함수
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(summaryText);
-      alert("클립보드에 복사되었습니다.");
+      const fullContent = getFullContent();
+      await navigator.clipboard.writeText(fullContent);
+      alert("원본 텍스트와 요약이 클립보드에 복사되었습니다.");
     } catch (err) {
       const textArea = document.createElement("textarea");
-      textArea.value = summaryText;
+      textArea.value = getFullContent();
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand("copy");
       document.body.removeChild(textArea);
-      alert("클립보드에 복사되었습니다.");
+      alert("원본 텍스트와 요약이 클립보드에 복사되었습니다.");
     }
   };
 
   // 파일로 내보내기 함수
   const exportToFile = () => {
-    const fileName = `요약_${new Date()
-      .toLocaleDateString("ko-KR")
-      .replace(/\./g, "")}.txt`;
-    const fileContent = `파일명: 알아서 AI가 요약해준대로 임시로 지정
-생성일시: ${new Date().toLocaleString()}
+    const fileName = `요약_${
+      summaryData?.fileName?.replace(/\.[^/.]+$/, "") || "audio"
+    }_${new Date().toLocaleDateString("ko-KR").replace(/\./g, "")}.txt`;
 
-${summaryText}`;
+    const fileContent = getFullContent();
 
     const blob = new Blob([fileContent], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -92,19 +186,19 @@ ${summaryText}`;
   // 버튼 데이터 배열
   const summaryButtons = [
     {
-      id: "simple",
+      id: "간단요약",
       text: "간단 요약",
       title: "짧고 핵심적인 한두 문장으로 내용을 압축한 요약",
       onClick: () => console.log("간단 요약 클릭"),
     },
     {
-      id: "detailed",
+      id: "상세요약",
       text: "상세 요약",
       title: "전체 내용을 자세히 풀어 설명한 장문 요약",
       onClick: () => console.log("상세 요약 클릭"),
     },
     {
-      id: "keyword",
+      id: "키워드요약",
       text: "키워드 요약",
       title: "핵심 키워드만 뽑아낸 리스트형 요약",
       onClick: () => console.log("키워드 요약 클릭"),
@@ -115,8 +209,8 @@ ${summaryText}`;
   const actionButtons = [
     {
       id: "copy",
-      text: "텍스트 복사",
-      title: "요약 내용을 클립보드에 복사",
+      text: "📄 텍스트 복사",
+      title: "원본 텍스트와 선택된 요약을 클립보드에 복사합니다",
       onClick: copyToClipboard,
       style: {
         backgroundColor: "#F2C81B",
@@ -126,8 +220,8 @@ ${summaryText}`;
     },
     {
       id: "export",
-      text: "txt 파일 저장",
-      title: "요약 내용을 텍스트 파일로 다운로드",
+      text: "💾 파일로 내보내기",
+      title: "원본 텍스트와 선택된 요약을 텍스트 파일로 다운로드합니다",
       onClick: exportToFile,
       style: {
         backgroundColor: "#F2C81B",
@@ -137,8 +231,8 @@ ${summaryText}`;
     },
     {
       id: "newUpload",
-      text: "새 파일 업로드",
-      title: "새로운 파일을 업로드",
+      text: "📁 새 파일 업로드",
+      title: "새로운 파일을 업로드합니다",
       onClick: handleNewUpload,
       style: {
         backgroundColor: "#00492C",
@@ -161,7 +255,7 @@ ${summaryText}`;
         position: "relative",
       }}
     >
-      {/* 제목 - 클릭하면 홈(업로드 페이지)로 이동 */}
+      {/* 제목 - 클릭하면 업로드 페이지로 이동 */}
       <h1
         style={{
           color: "#F2C81B",
@@ -184,7 +278,7 @@ ${summaryText}`;
         onMouseLeave={(e) => {
           e.target.style.opacity = "1";
         }}
-        title="홈으로 돌아가기"
+        title="새 파일 업로드"
       >
         Saymary
       </h1>
@@ -222,10 +316,11 @@ ${summaryText}`;
             position: "relative",
           }}
         >
-          파일명 : 알아서 AI가 요약해준대로 임시로 지정
+          파일명: {summaryData?.fileName || "알 수 없음"}
           {/* exportButton */}
           <button
             className="exportButton"
+            title="내보내기 옵션"
             onClick={handleExportButtonClick}
             style={{
               color: "#656247",
@@ -245,8 +340,7 @@ ${summaryText}`;
               position: "relative",
             }}
           >
-            . . .
-            {/* 액션 버튼들 */}
+            . . .{/* 액션 버튼들 */}
             <div
               style={{
                 position: "absolute",
@@ -314,10 +408,10 @@ ${summaryText}`;
             margin: "0px",
           }}
         >
-          {new Date().toLocaleString()}
+          {summaryData?.uploadTime || new Date().toLocaleString()}
         </h2>
 
-        {/* 요약 텍스트 본문 */}
+        {/* 요약 텍스트 본문 - 원본 텍스트 표시 */}
         <p
           style={{
             color: "#656247",
@@ -334,9 +428,10 @@ ${summaryText}`;
             paddingRight: "40px",
             lineHeight: "2",
             borderRadius: "10px",
+            whiteSpace: "pre-line", // 줄바꿈 문자 처리
           }}
         >
-          {summaryText}
+          {summaryData?.text || "원본 텍스트를 불러올 수 없습니다."}
 
           {/* 요약 타입 선택 버튼들 */}
           <div
@@ -378,6 +473,37 @@ ${summaryText}`;
             ))}
           </div>
         </p>
+
+        {/* 선택된 요약본 표시 영역 */}
+        <div
+          style={{
+            marginTop: "20px",
+            marginLeft: "7%",
+            marginRight: "8%",
+            marginBottom: "50px",
+          }}
+        >
+          <div
+            style={{
+              color: "#4a4332",
+              backgroundColor: "#ECEAD5",
+              fontFamily: "Noto Sans KR, sans-serif",
+              fontWeight: 400,
+              fontSize: "13px",
+              padding: "30px",
+              lineHeight: "2.2",
+              borderRadius: "10px",
+              whiteSpace: "pre-line",
+              minHeight: "120px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: activeButton ? "left" : "center",
+            }}
+          >
+            {currentSummary || "위의 버튼을 클릭하여 요약을 확인해보세요! 📋"}
+          </div>
+        </div>
 
         {/* 하단 스크롤 버튼 */}
         <img
