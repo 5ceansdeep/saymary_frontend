@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import "./main.css";
-import godown from "./img/godown.png";
+import godown from "../img/godown.png";
 
 function Main() {
   const [animate1, setAnimate1] = useState(false);

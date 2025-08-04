@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import axios from "axios";
-import godown from "./img/godown.png";
+import godown from "../img/godown.png";
 
 function Coach() {
   const [hovered, setHovered] = useState(false);

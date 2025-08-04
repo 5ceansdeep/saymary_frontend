@@ -1,12 +1,12 @@
-import Load from "./load.js";
-import Main from "./main.js";
-import Login from "./login.js";
-import Register from "./register.js";
-import Forgot from "./forgot.js";
-import Newpw from "./newpw.js";
-import Select from "./select.js";
-import Coach from "./coach.js";
-import Upload from "./uploadFile.js";
+import Load from "./mainpage/load.js";
+import Main from "./mainpage/main.js";
+import Login from "./login/login.js";
+import Register from "./login/register.js";
+import Forgot from "./login/forgot.js";
+import Newpw from "./img/newpw.js";
+import Select from "./coaching/select.js";
+import Coach from "./coaching/coach.js";
+import Upload from "./mainpage/uploadFile.js";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 function App() {
@@ -25,7 +25,7 @@ function App() {
       {/* <Register /> */}
       {/* <Forgot /> */}
       {/* <Login /> */}
-      <Select />
+      {/* <Select /> */}
       {/* <Coach /> */}
       {/* <Upload /> */}
     </div>
