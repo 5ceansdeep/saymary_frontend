@@ -45,11 +45,19 @@ function App() {
           {/* 기본 경로 - 로딩 페이지 */}
           <Route path="/" element={<Load />} />
 
-          {/* 파일 업로드 페이지 */}
-          <Route path="/upload" element={<UploadFile />} />
+          {/* 인증 관련 라우트 */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot" element={<Forgot />} />
+          <Route path="/reset-password" element={<Newpw />} />
 
-          {/* 요약 결과 페이지 */}
+          {/* 메인 기능 라우트 */}
+          <Route path="/upload" element={<UploadFile />} />
           <Route path="/main" element={<Main />} />
+
+          {/* 코칭 기능 라우트 */}
+          <Route path="/coaching/select" element={<Select />} />
+          <Route path="/coaching/result" element={<Coach />} />
 
           {/* 잘못된 경로 처리 - 기본 페이지로 리다이렉트 */}
           <Route path="*" element={<Navigate to="/" replace />} />

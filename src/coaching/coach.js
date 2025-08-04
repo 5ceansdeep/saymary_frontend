@@ -1,22 +1,80 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import axios from "axios";
 import godown from "../img/godown.png";
 
 function Coach() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [hovered, setHovered] = useState(false);
-  const [feedback, setFeedback] = useState("");
+  const [feedbackData, setFeedbackData] = useState(null);
+  const [sessionData, setSessionData] = useState(null);
+  const [showActionButtons, setShowActionButtons] = useState(false);
+  const [activeTab, setActiveTab] = useState("summary"); // 탭 상태
+
+  const BoxRef = useRef();
 
   useEffect(() => {
+    // Select 페이지에서 전달받은 데이터 확인
+    if (location.state) {
+      const receivedFeedback = location.state.feedback;
+
+      // API 응답이 문자열인지 객체인지 확인
+      if (typeof receivedFeedback === "string") {
+        try {
+          setFeedbackData(JSON.parse(receivedFeedback));
+        } catch {
+          setFeedbackData({ summary: receivedFeedback });
+        }
+      } else {
+        setFeedbackData(receivedFeedback);
+      }
+
+      setSessionData({
+        situation: location.state.situation,
+        audience: location.state.audience,
+        style: location.state.style,
+        fileName: location.state.fileName,
+        uploadTime: location.state.uploadTime || new Date().toLocaleString(),
+      });
+    } else {
+      // 직접 접근한 경우 테스트 데이터 설정
+      setFeedbackData({
+        original_text:
+          "재택근무는 코로나19 팬데믹을 계기로 빠르게 확산된 근무 형태입니다.",
+        summary: "발표력이 좋습니다.",
+        keywords: "재택근무, 코로나19, 팬데믹",
+        speaking_speed: {
+          average_wpm: 212.5,
+          comment: "조금 빠른 말하기입니다.",
+        },
+        pause_analysis: {
+          long_pauses: [
+            { start: "00:12.3", end: "00:14.8" },
+            { start: "00:34.0", end: "00:35.7" },
+          ],
+          pause_ratio: 0.17,
+          comment: "자연스러운 말하기입니다.",
+        },
+      });
+      setSessionData({
+        situation: "Presentation (발표)",
+        audience: "Colleague / Team member (동료 / 팀원)",
+        style: "Formal (격식형)",
+        fileName: "test_audio.mp3",
+        uploadTime: new Date().toLocaleString(),
+      });
+    }
+
     setHovered(true);
     const timer = setTimeout(() => {
       setHovered(false);
-    }, 1200); // 페이지 로딩 완료 후 1.2초 메뉴바 보여줌
+    }, 1200);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [location]);
 
-  const BoxRef = useRef();
   const scrollToBottom = () => {
     if (BoxRef.current) {
       BoxRef.current.scrollTo({
@@ -26,22 +84,333 @@ function Coach() {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // 사이드바 네비게이션 핸들러
+  const handleNavigation = (path) => {
+    switch (path) {
+      case "home":
+        navigate("/");
+        break;
+      case "coaching":
+        navigate("/coaching");
+        break;
+      case "summary":
+        navigate("/main");
+        break;
+      case "upload":
+        navigate("/upload");
+        break;
+      default:
+        console.log(`${path} 페이지로 이동`);
+    }
+  };
 
-    const formData = new FormData();
-    formData.append("audience", "팀원");
-    formData.append("style", "격식있는");
-    formData.append("situation", "발표");
+  // exportButton 클릭 핸들러
+  const handleExportButtonClick = () => {
+    setShowActionButtons((prev) => !prev);
+  };
 
+  // 새로운 코칭 시작
+  const handleNewCoaching = () => {
+    navigate("/coaching");
+  };
+
+  // 텍스트 복사 함수
+  const copyToClipboard = async () => {
     try {
-      const res = await axios.post(
-        "http://localhost:8080/api/coaching/feedback",
-        formData
-      );
-      setFeedback(res.data.feedback);
+      let content = `파일명: ${sessionData?.fileName}\n생성일시: ${sessionData?.uploadTime}\n설정: ${sessionData?.situation} / ${sessionData?.audience} / ${sessionData?.style}\n\n`;
+
+      if (feedbackData) {
+        content += `=== 원본 텍스트 ===\n${
+          feedbackData.original_text || "원본 텍스트 없음"
+        }\n\n`;
+        content += `=== 요약 ===\n${feedbackData.summary || "요약 없음"}\n\n`;
+        content += `=== 키워드 ===\n${
+          feedbackData.keywords || "키워드 없음"
+        }\n\n`;
+
+        if (feedbackData.speaking_speed) {
+          content += `=== 말하기 속도 분석 ===\n평균 WPM: ${feedbackData.speaking_speed.average_wpm}\n코멘트: ${feedbackData.speaking_speed.comment}\n\n`;
+        }
+
+        if (feedbackData.pause_analysis) {
+          content += `=== 휴지 분석 ===\n휴지 비율: ${feedbackData.pause_analysis.pause_ratio}\n코멘트: ${feedbackData.pause_analysis.comment}\n`;
+        }
+      }
+
+      await navigator.clipboard.writeText(content);
+      alert("코칭 피드백이 클립보드에 복사되었습니다.");
     } catch (err) {
-      console.error("요청 실패", err);
+      console.error("복사 실패:", err);
+      alert("복사에 실패했습니다.");
+    }
+  };
+
+  // 파일로 내보내기 함수
+  const exportToFile = () => {
+    const fileName = `코칭피드백_${
+      sessionData?.fileName?.replace(/\.[^/.]+$/, "") || "audio"
+    }_${new Date().toLocaleDateString("ko-KR").replace(/\./g, "")}.txt`;
+
+    let content = `파일명: ${sessionData?.fileName}\n생성일시: ${sessionData?.uploadTime}\n설정: ${sessionData?.situation} / ${sessionData?.audience} / ${sessionData?.style}\n\n`;
+
+    if (feedbackData) {
+      content += `=== 원본 텍스트 ===\n${
+        feedbackData.original_text || "원본 텍스트 없음"
+      }\n\n`;
+      content += `=== 요약 ===\n${feedbackData.summary || "요약 없음"}\n\n`;
+      content += `=== 키워드 ===\n${
+        feedbackData.keywords || "키워드 없음"
+      }\n\n`;
+
+      if (feedbackData.speaking_speed) {
+        content += `=== 말하기 속도 분석 ===\n평균 WPM: ${feedbackData.speaking_speed.average_wpm}\n코멘트: ${feedbackData.speaking_speed.comment}\n\n`;
+      }
+
+      if (feedbackData.pause_analysis) {
+        content += `=== 휴지 분석 ===\n휴지 비율: ${feedbackData.pause_analysis.pause_ratio}\n코멘트: ${feedbackData.pause_analysis.comment}\n`;
+      }
+    }
+
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // 액션 버튼 데이터 배열
+  const actionButtons = [
+    {
+      id: "copy",
+      text: "📄 텍스트 복사",
+      title: "코칭 피드백을 클립보드에 복사합니다",
+      onClick: copyToClipboard,
+      style: {
+        backgroundColor: "#F2C81B",
+        color: "white",
+        border: "none",
+      },
+    },
+    {
+      id: "export",
+      text: "💾 파일로 내보내기",
+      title: "코칭 피드백을 텍스트 파일로 다운로드합니다",
+      onClick: exportToFile,
+      style: {
+        backgroundColor: "#F2C81B",
+        color: "white",
+        border: "none",
+      },
+    },
+    {
+      id: "newCoaching",
+      text: "🎯 새 코칭 시작",
+      title: "새로운 코칭을 시작합니다",
+      onClick: handleNewCoaching,
+      style: {
+        backgroundColor: "#00492C",
+        color: "white",
+        border: "none",
+      },
+    },
+  ];
+
+  // 탭 데이터
+  const tabs = [
+    { id: "summary", label: "💬 요약 & 키워드", icon: "💬" },
+    { id: "speed", label: "⚡ 말하기 속도", icon: "⚡" },
+    { id: "pause", label: "⏸️ 휴지 분석", icon: "⏸️" },
+  ];
+
+  // 탭 컨텐츠 렌더링
+  const renderTabContent = () => {
+    if (!feedbackData) return <p>피드백 데이터를 불러오는 중...</p>;
+
+    switch (activeTab) {
+      case "summary":
+        return (
+          <div>
+            <div style={{ marginBottom: "20px" }}>
+              <h3
+                style={{
+                  color: "#00492C",
+                  marginBottom: "10px",
+                  fontSize: "1.1rem",
+                }}
+              >
+                📝 요약
+              </h3>
+              <p style={{ lineHeight: "1.6", color: "#333" }}>
+                {feedbackData.summary || "요약이 없습니다."}
+              </p>
+            </div>
+            <div>
+              <h3
+                style={{
+                  color: "#00492C",
+                  marginBottom: "10px",
+                  fontSize: "1.1rem",
+                }}
+              >
+                🔑 키워드
+              </h3>
+              <p style={{ lineHeight: "1.6", color: "#333" }}>
+                {feedbackData.keywords || "키워드가 없습니다."}
+              </p>
+            </div>
+          </div>
+        );
+
+      case "speed":
+        return (
+          <div>
+            <h3
+              style={{
+                color: "#00492C",
+                marginBottom: "15px",
+                fontSize: "1.1rem",
+              }}
+            >
+              ⚡ 말하기 속도 분석
+            </h3>
+            {feedbackData.speaking_speed ? (
+              <div>
+                <div
+                  style={{
+                    backgroundColor: "#f8f9fa",
+                    padding: "15px",
+                    borderRadius: "8px",
+                    marginBottom: "15px",
+                    border: "1px solid #e9ecef",
+                  }}
+                >
+                  <p
+                    style={{
+                      margin: "0",
+                      fontSize: "1.2rem",
+                      fontWeight: "bold",
+                      color: "#00492C",
+                    }}
+                  >
+                    평균 {feedbackData.speaking_speed.average_wpm} WPM
+                  </p>
+                  <p
+                    style={{
+                      margin: "5px 0 0 0",
+                      fontSize: "0.9rem",
+                      color: "#666",
+                    }}
+                  >
+                    Words Per Minute (분당 단어 수)
+                  </p>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#e8f5e8",
+                    padding: "15px",
+                    borderRadius: "8px",
+                    border: "1px solid #c3e6c3",
+                  }}
+                >
+                  <p style={{ margin: "0", lineHeight: "1.6", color: "#333" }}>
+                    💡 {feedbackData.speaking_speed.comment}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p>말하기 속도 데이터가 없습니다.</p>
+            )}
+          </div>
+        );
+
+      case "pause":
+        return (
+          <div>
+            <h3
+              style={{
+                color: "#00492C",
+                marginBottom: "15px",
+                fontSize: "1.1rem",
+              }}
+            >
+              ⏸️ 휴지 분석
+            </h3>
+            {feedbackData.pause_analysis ? (
+              <div>
+                <div
+                  style={{
+                    backgroundColor: "#f8f9fa",
+                    padding: "15px",
+                    borderRadius: "8px",
+                    marginBottom: "15px",
+                    border: "1px solid #e9ecef",
+                  }}
+                >
+                  <p
+                    style={{
+                      margin: "0 0 10px 0",
+                      fontWeight: "bold",
+                      color: "#00492C",
+                    }}
+                  >
+                    휴지 비율:{" "}
+                    {(feedbackData.pause_analysis.pause_ratio * 100).toFixed(1)}
+                    %
+                  </p>
+                  {feedbackData.pause_analysis.long_pauses &&
+                    feedbackData.pause_analysis.long_pauses.length > 0 && (
+                      <div>
+                        <p
+                          style={{
+                            margin: "0 0 8px 0",
+                            fontWeight: "500",
+                            color: "#555",
+                          }}
+                        >
+                          긴 휴지 구간:
+                        </p>
+                        {feedbackData.pause_analysis.long_pauses.map(
+                          (pause, index) => (
+                            <p
+                              key={index}
+                              style={{
+                                margin: "0",
+                                fontSize: "0.9rem",
+                                color: "#666",
+                              }}
+                            >
+                              • {pause.start} ~ {pause.end}
+                            </p>
+                          )
+                        )}
+                      </div>
+                    )}
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#e8f5e8",
+                    padding: "15px",
+                    borderRadius: "8px",
+                    border: "1px solid #c3e6c3",
+                  }}
+                >
+                  <p style={{ margin: "0", lineHeight: "1.6", color: "#333" }}>
+                    💡 {feedbackData.pause_analysis.comment}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p>휴지 분석 데이터가 없습니다.</p>
+            )}
+          </div>
+        );
+
+      default:
+        return <p>잘못된 탭입니다.</p>;
     }
   };
 
@@ -57,20 +426,21 @@ function Coach() {
         position: "relative",
       }}
     >
-      {/* 좌우 반반 분할 */}
+      {/* 좌측 영역 - 원본 텍스트 */}
       <div
         ref={BoxRef}
         style={{
           width: "50%",
           height: "100%",
-          overflowY: "auto", // 독립 스크롤
+          overflowY: "auto",
+          overflowX: "hidden",
           justifyContent: "center",
           padding: "20px",
           boxSizing: "border-box",
           borderRight: "2px solid #ECEAD5",
         }}
       >
-        <div style={{ height: "1500px" }}>
+        <div style={{ minHeight: "100%" }}>
           <h1
             style={{
               color: "#656247",
@@ -81,13 +451,78 @@ function Coach() {
               paddingTop: "3%",
               paddingBottom: "5px",
               paddingLeft: "7%",
+              position: "relative",
             }}
           >
-            파일명 : 알아서 AI가 요약해준대로 임시로 지정
-            <div className="exportButtonContainer">
-              <button className="exportButton">. . .</button>
-              <button className="hoverButton">이미지 1, 이미지 2</button>
-            </div>
+            파일명 : {sessionData?.fileName || "알 수 없음"}
+            {/* exportButton */}
+            <button
+              className="exportButton"
+              title="내보내기 옵션"
+              onClick={handleExportButtonClick}
+              style={{
+                color: "#656247",
+                backgroundColor: showActionButtons ? "#d4d1b8" : "#ecead5",
+                fontFamily: "Noto Sans KR, sans-serif",
+                fontWeight: 600,
+                fontSize: "11px",
+                border: "none",
+                lineHeight: "0.1",
+                justifyContent: "center",
+                textAlign: "center",
+                cursor: "pointer",
+                padding: "10px 10px",
+                marginLeft: "10px",
+                borderRadius: "15px",
+                transition: "all 0.2s ease-in-out",
+                position: "relative",
+              }}
+            >
+              . . .{/* 액션 버튼들 */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: "0",
+                  zIndex: 1001,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "8px",
+                  marginTop: "5px",
+                  opacity: showActionButtons ? 1 : 0,
+                  transform: showActionButtons
+                    ? "translateY(0)"
+                    : "translateY(-10px)",
+                  transition: "all 0.3s ease-in-out",
+                  visibility: showActionButtons ? "visible" : "hidden",
+                  pointerEvents: showActionButtons ? "auto" : "none",
+                }}
+              >
+                {actionButtons.map((button) => (
+                  <button
+                    key={button.id}
+                    title={button.title}
+                    onClick={button.onClick}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: "6px",
+                      fontFamily: "Noto Sans KR, sans-serif",
+                      fontWeight: 500,
+                      fontSize: "0.7rem",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease-in-out",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                      border: "none",
+                      whiteSpace: "nowrap",
+                      minWidth: "140px",
+                      ...button.style,
+                    }}
+                  >
+                    {button.text}
+                  </button>
+                ))}
+              </div>
+            </button>
           </h1>
           <h2
             style={{
@@ -100,10 +535,10 @@ function Coach() {
               margin: "0px",
             }}
           >
-            {new Date().toLocaleString()} {/* 생성된 (현재) 날짜와 시간 표시 */}
+            {sessionData?.uploadTime}
           </h2>
-          {/* 요약 텍스트 본문 */}
-          <p
+
+          <div
             style={{
               color: "#656247",
               backgroundColor: "#ECEAD5",
@@ -121,57 +556,21 @@ function Coach() {
               borderRadius: "10px",
             }}
           >
-            재택근무는 코로나19 팬데믹을 계기로 빠르게 확산된 근무 형태이다.
-            직원들은 출퇴근 시간이 사라지면서 더 많은 여유 시간을 확보할 수 있게
-            되었다. 이는 워라밸(Work-Life Balance) 향상에 긍정적인 영향을
-            주었다. 또한, 자율적인 시간 관리가 가능해져 개인의 집중력이 오히려
-            높아지기도 한다. 기업 입장에서는 사무실 운영비용 절감 등의 경제적
-            이점이 존재한다. 반면, 팀원 간의 소통이 부족해지며 협업 효율이
-            낮아지는 경우도 있다. 물리적 거리감은 심리적 거리감으로 이어져 조직
-            소속감을 약화시킬 수 있다. 특히 신입사원의 경우 적응이 어렵고
-            피드백이 늦어 성장이 더뎌질 수 있다. 업무와 사생활의 경계가
-            모호해지면서 오히려 스트레스를 유발하기도 한다. 사이버 보안 및
-            데이터 보호 문제도 재택근무의 큰 과제로 남아 있다. 일부 기업은
-            하이브리드 근무 형태를 도입하여 장단점을 조율하고 있다. 기술
-            인프라와 커뮤니케이션 도구의 발전은 원격 협업을 점차 수월하게 만들고
-            있다. 재택근무는 직무의 특성과 개인의 성향에 따라 효과가 달라질 수
-            있다. 따라서 일률적인 정책보다는 유연한 제도 설계가 필요하다.
-            결론적으로 재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고
-            있다. 재택근무는 코로나19 팬데믹을 계기로 빠르게 확산된 근무
-            형태이다. 직원들은 출퇴근 시간이 사라지면서 더 많은 여유 시간을
-            확보할 수 있게 되었다. 이는 워라밸(Work-Life Balance) 향상에
-            긍정적인 영향을 주었다. 또한, 자율적인 시간 관리가 가능해져 개인의
-            집중력이 오히려 높아지기도 한다. 기업 입장에서는 사무실 운영비용
-            절감 등의 경제적 이점이 존재한다. 반면, 팀원 간의 소통이 부족해지며
-            협업 효율이 낮아지는 경우도 있다. 물리적 거리감은 심리적 거리감으로
-            이어져 조직 소속감을 약화시킬 수 있다. 특히 신입사원의 경우 적응이
-            어렵고 피드백이 늦어 성장이 더뎌질 수 있다. 업무와 사생활의 경계가
-            모호해지면서 오히려 스트레스를 유발하기도 한다. 사이버 보안 및
-            데이터 보호 문제도 재택근무의 큰 과제로 남아 있다. 일부 기업은
-            하이브리드 근무 형태를 도입하여 장단점을 조율하고 있다. 기술
-            인프라와 커뮤니케이션 도구의 발전은 원격 협업을 점차 수월하게 만들고
-            있다. 재택근무는 직무의 특성과 개인의 성향에 따라 효과가 달라질 수
-            있다. 따라서 일률적인 정책보다는 유연한 제도 설계가 필요하다.
-            결론적으로 재택근무는 미래 업무 환경의 중요한 축으로 자리 잡아가고
-            있다. 재택근무는 코로나19 팬데믹을 계기로 빠르게 확산된 근무
-            형태이다. 직원들은 출퇴근 시간이 사라지면서 더 많은 여유 시간을
-            확보할 수 있게 되었다. 이는 워라밸(Work-Life Balance) 향상에
-            긍정적인 영향을 주었다. 또한, 자율적인 시간 관리가 가능해져 개인의
-            집중력이 오히려 높아지기도 한다. 기업 입장에서는 사무실 운영비용
-            절감 등의 경제적 이점이 존재한다. 반면, 팀원 간의 소통이 부족해지며
-            협업 효율이 낮아지는 경우도 있다. 물리적 거리감은 심리적 거리감으로
-            이어져 조직 소속감을 약화시킬 수 있다. 특히 신입사원의 경우 적응이
-            어렵고 피드백이 늦어 성장이 더뎌질 수 있다. 업무와 사생활의 경계가
-            모호해지면서 오히려 스트레스를 유발하기도 한다. 사이버 보안 및
-            데이터 보호 문제도 재택근무의 큰 과제로 남아 있다. 일부 기업은
-            하이브리드 근무 형태를 도입하여 장단점을 조율하고 있다. 기술
-            인프라와 커뮤니케이션 도구의 발전은 원격 협업을 점차 수월하게 만들고
-            있다. 재택근무는 직무의 특성과 개인의 성향에 따라 효과가 달라질 수
-            있다. 따라서 일률적인 정책보다는 유연한 제도 설계가 필요하다.
-            결론적으로 재택근무는 미래 업무 환경의
-          </p>
+            <h3
+              style={{
+                margin: "0 0 20px 0",
+                color: "#4a4332",
+                fontSize: "1.1rem",
+              }}
+            >
+              📄 원본 텍스트
+            </h3>
+            <p style={{ margin: "0", lineHeight: "1.8" }}>
+              {feedbackData?.original_text ||
+                "원본 텍스트를 불러올 수 없습니다."}
+            </p>
+          </div>
 
-          {/* 하단 한번에 이동 버튼 */}
           <img
             src={godown}
             onClick={scrollToBottom}
@@ -182,30 +581,124 @@ function Coach() {
               bottom: "50px",
               transform: "translateX(-50%)",
               cursor: "pointer",
-              width: "50px", // 원하는 크기로
+              width: "50px",
               height: "30px",
             }}
           />
         </div>
       </div>
-      {/* 오른쪽 영역 */}
+
+      {/* 우측 영역 - 피드백 */}
       <div
         style={{
           width: "50%",
           height: "100%",
           display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
+          flexDirection: "column",
           backgroundColor: "#ECEAD5",
+          padding: "20px",
+          boxSizing: "border-box",
         }}
       >
-        <p>Meeting (회의) / Customer (고객) / Persuasive (설득형)</p>
-        <div style={{ whiteSpace: "pre-wrap", lineHeight: "1.7" }}>
-          <ReactMarkdown>{feedback}</ReactMarkdown>
+        {/* 세션 정보 표시 */}
+        <div
+          style={{
+            marginBottom: "20px",
+            textAlign: "center",
+            padding: "15px",
+            backgroundColor: "#ffffff",
+            borderRadius: "10px",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          }}
+        >
+          <p
+            style={{
+              margin: "0",
+              fontWeight: "bold",
+              color: "#00492C",
+              fontFamily: "Noto Sans KR, sans-serif",
+              fontSize: "0.9rem",
+            }}
+          >
+            {sessionData?.situation} / {sessionData?.audience} /{" "}
+            {sessionData?.style}
+          </p>
         </div>
+
+        {/* 탭 메뉴 */}
+        <div
+          style={{
+            display: "flex",
+            marginBottom: "20px",
+            backgroundColor: "#ffffff",
+            borderRadius: "10px",
+            padding: "5px",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          }}
+        >
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                flex: 1,
+                padding: "10px 5px",
+                border: "none",
+                backgroundColor:
+                  activeTab === tab.id ? "#00492C" : "transparent",
+                color: activeTab === tab.id ? "white" : "#666",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontFamily: "Noto Sans KR, sans-serif",
+                fontSize: "0.8rem",
+                fontWeight: "500",
+                transition: "all 0.2s ease",
+              }}
+            >
+              {tab.icon} {tab.label.split(" ")[1]}
+            </button>
+          ))}
+        </div>
+
+        {/* 탭 컨텐츠 */}
+        <div
+          style={{
+            flex: 1,
+            backgroundColor: "#ffffff",
+            borderRadius: "10px",
+            padding: "20px",
+            overflowY: "auto",
+            fontFamily: "Noto Sans KR, sans-serif",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          }}
+        >
+          {renderTabContent()}
+        </div>
+
+        {/* 새로운 코칭 시작 버튼 */}
+        <button
+          onClick={handleNewCoaching}
+          style={{
+            marginTop: "15px",
+            padding: "12px 24px",
+            backgroundColor: "#00492C",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontFamily: "Noto Sans KR, sans-serif",
+            fontSize: "14px",
+            fontWeight: "500",
+            transition: "all 0.2s ease",
+          }}
+          onMouseEnter={(e) => (e.target.style.backgroundColor = "#003d25")}
+          onMouseLeave={(e) => (e.target.style.backgroundColor = "#00492C")}
+        >
+          🎯 새로운 코칭 시작하기
+        </button>
       </div>
 
-      {/* 마우스 감지 영역 (얇게) */}
+      {/* 마우스 감지 영역 */}
       <div
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -214,12 +707,12 @@ function Coach() {
           top: 0,
           left: 0,
           height: "100vh",
-          width: "20px", // 감지용 영역
+          width: "20px",
           zIndex: 1000,
         }}
       ></div>
 
-      {/* 사이드바 실제 영역 */}
+      {/* 사이드바 */}
       <div
         style={{
           position: "fixed",
@@ -239,9 +732,70 @@ function Coach() {
         onMouseLeave={() => setHovered(false)}
       >
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          <li style={{ marginBottom: "16px" }}>홈</li>
-          <li style={{ marginBottom: "16px" }}>코칭</li>
-          <li>아카이브</li>
+          <li
+            style={{
+              marginBottom: "16px",
+              cursor: "pointer",
+              padding: "8px",
+              borderRadius: "4px",
+              transition: "background-color 0.2s",
+            }}
+            onClick={() => handleNavigation("home")}
+            onMouseEnter={(e) =>
+              (e.target.style.backgroundColor = "rgba(255,255,255,0.1)")
+            }
+            onMouseLeave={(e) =>
+              (e.target.style.backgroundColor = "transparent")
+            }
+          >
+            홈
+          </li>
+          <li
+            style={{
+              marginBottom: "16px",
+              cursor: "pointer",
+              padding: "8px",
+              borderRadius: "4px",
+              backgroundColor: "rgba(255,255,255,0.1)", // 현재 페이지 표시
+            }}
+          >
+            코칭
+          </li>
+          <li
+            style={{
+              marginBottom: "16px",
+              cursor: "pointer",
+              padding: "8px",
+              borderRadius: "4px",
+              transition: "background-color 0.2s",
+            }}
+            onClick={() => handleNavigation("summary")}
+            onMouseEnter={(e) =>
+              (e.target.style.backgroundColor = "rgba(255,255,255,0.1)")
+            }
+            onMouseLeave={(e) =>
+              (e.target.style.backgroundColor = "transparent")
+            }
+          >
+            요약
+          </li>
+          <li
+            style={{
+              cursor: "pointer",
+              padding: "8px",
+              borderRadius: "4px",
+              transition: "background-color 0.2s",
+            }}
+            onClick={() => handleNavigation("upload")}
+            onMouseEnter={(e) =>
+              (e.target.style.backgroundColor = "rgba(255,255,255,0.1)")
+            }
+            onMouseLeave={(e) =>
+              (e.target.style.backgroundColor = "transparent")
+            }
+          >
+            업로드
+          </li>
         </ul>
       </div>
     </div>
