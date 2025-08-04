@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 function Select() {
   const situation1 = [
@@ -28,6 +28,15 @@ function Select() {
   const [activeStates2, setActiveStates2] = useState(null);
   const [activeStates3, setActiveStates3] = useState(null);
 
+  const [selectedFile, setSelectedFile] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const selectedSituation = situation1[activeStates1];
+  const selectedAudience = situation2[activeStates2];
+  const selectedStyle = situation3[activeStates3];
+
   const isReadyToUpload =
     activeStates1 !== null && activeStates2 !== null && activeStates3 !== null;
 
@@ -41,6 +50,51 @@ function Select() {
 
   const handleClick3 = (index) => {
     setActiveStates3((prev) => (prev === index ? null : index));
+  };
+
+  const handleButtonClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click(); // input 클릭 트리거
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      handleUpload(file);
+    }
+    fileInputRef.current.value = null;
+  };
+
+  const handleUpload = async (file) => {
+    if (!file) {
+      alert("파일을 선택해주세요.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("situation", selectedSituation);
+    formData.append("audience", selectedAudience);
+    formData.append("style", selectedStyle);
+    formData.append("file", file);
+
+    setIsLoading(true);
+    try {
+      const res = await fetch("http://localhost:8080//api/coaching/feedback", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await res.json();
+      console.log("업로드 결과:", result);
+      alert("업로드 성공!");
+    } catch (err) {
+      console.error("업로드 중 오류:", err);
+      alert("업로드 실패");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -222,8 +276,17 @@ function Select() {
             ))}
           </div>
         </h1>
+        <input
+          type="file"
+          accept=".mp3, .aac, .ac3, .ogg, .flac, .wav, .m4a"
+          style={{ display: "none" }}
+          ref={fileInputRef}
+          onChange={handleFileChange}
+        />
         {isReadyToUpload && (
           <button
+            onClick={handleButtonClick}
+            disabled={isLoading}
             style={{
               position: "fixed",
               top: "25%",
@@ -237,10 +300,11 @@ function Select() {
               fontFamily: "Noto Sans KR, sans-serif",
               fontWeight: 500,
               fontSize: "1.1rem",
-              cursor: "pointer",
+              cursor: isLoading ? "wait" : "pointer",
+              opacity: isLoading ? 0.6 : 1,
             }}
           >
-            Upload File
+            {isLoading ? "Uploading..." : "Upload File"}
           </button>
         )}
       </div>

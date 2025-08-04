@@ -6,7 +6,7 @@ import Forgot from "./forgot.js";
 import Newpw from "./newpw.js";
 import Select from "./select.js";
 import Coach from "./coach.js";
-import Upload from "./uploadfIle.js";
+import Upload from "./uploadFile.js";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 function App() {
@@ -25,9 +25,9 @@ function App() {
       {/* <Register /> */}
       {/* <Forgot /> */}
       {/* <Login /> */}
-      {/* <Select /> */}
+      <Select />
       {/* <Coach /> */}
-      <Upload />
+      {/* <Upload /> */}
     </div>
   );
 }

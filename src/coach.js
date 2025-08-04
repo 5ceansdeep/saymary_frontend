@@ -181,7 +181,6 @@ function Coach() {
               left: "25%",
               bottom: "50px",
               transform: "translateX(-50%)",
-              zIndex: 999,
               cursor: "pointer",
               width: "50px", // 원하는 크기로
               height: "30px",
@@ -206,7 +205,6 @@ function Coach() {
         </div>
       </div>
 
-      
       {/* 마우스 감지 영역 (얇게) */}
       <div
         onMouseEnter={() => setHovered(true)}
@@ -217,7 +215,7 @@ function Coach() {
           left: 0,
           height: "100vh",
           width: "20px", // 감지용 영역
-          zIndex: 20,
+          zIndex: 1000,
         }}
       ></div>
 
