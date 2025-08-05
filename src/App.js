@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import Load from "./load.js";
-import Main from "./main.js";
-// import Login from "./login.js";
+import Load from "./load";
+import Layout from "./Layout";
+import Archive from "./archive";
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -9,15 +9,19 @@ function App() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 3800); // Load.js에서 애니메이션이 끝나는 시간과 동일하게 설정
+    }, 3800);
     return () => clearTimeout(timer);
   }, []);
 
-   return (
+  return (
     <div>
-      <Load />
-      {!loading && <Main />}
-      {/* <Login /> */}
+      {loading ? (
+        <Load />
+      ) : (
+        <Layout>
+          <Archive />
+        </Layout>
+      )}
     </div>
   );
 }

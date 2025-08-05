@@ -1,0 +1,97 @@
+.archive-wrapper {
+  display: flex;
+  height: 100vh;
+  background-color: #00492c;
+  font-family: sans-serif;
+}
+
+/* 사이드바 */
+.sidebar {
+  width: 80px;
+  background-color: #00492c;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 50px;
+  gap: 40px;
+}
+
+.sidebar img {
+  width: 30px;
+  height: 30px;
+}
+
+.sidebar span {
+  font-size: 14px;
+}
+
+.active-menu {
+  background-color: #002d1a;
+  border-radius: 15px;
+  padding: 10px;
+  text-align: center;
+}
+
+/* 본문 */
+.archive-content {
+  flex: 1;
+  background-color: #f8f3d7;
+  padding: 40px;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+.archive-title {
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 30px;
+}
+
+.search-box {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.search-box input {
+  width: 220px;
+  height: 30px;
+  border-radius: 20px;
+  border: 1px solid #999;
+  padding: 0 35px 0 10px;
+  background-color: white;
+}
+
+.search-box img {
+  position: relative;
+  right: 30px;
+  width: 14px;
+  height: 14px;
+}
+
+/* 파일 리스트 */
+.file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.file-item {
+  background-color: #e8e4cf;
+  border-radius: 10px;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.file-item span {
+  font-size: 13px;
+  color: #444;
+}
+
+.dots {
+  font-weight: bold;
+}
