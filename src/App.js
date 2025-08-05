@@ -56,6 +56,7 @@ function App() {
           <Route path="/main" element={<Main />} />
 
           {/* 코칭 기능 라우트 */}
+          <Route path="/coaching" element={<Select />} />
           <Route path="/coaching/select" element={<Select />} />
           <Route path="/coaching/result" element={<Coach />} />
 

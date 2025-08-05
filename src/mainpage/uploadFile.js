@@ -333,7 +333,7 @@ function UploadFile() {
                     padding: "5px 15px",
                     borderRadius: "5px",
                     border: "none",
-                    backgroundColor: "#e74c3c",
+                    backgroundColor: "#F2C81B",
                     color: "#ffffff",
                     fontFamily: "Noto Sans KR, sans-serif",
                     fontWeight: 500,

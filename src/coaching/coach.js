@@ -91,13 +91,10 @@ function Coach() {
         navigate("/");
         break;
       case "coaching":
-        navigate("/coaching");
+        navigate("/coaching/select");
         break;
-      case "summary":
-        navigate("/main");
-        break;
-      case "upload":
-        navigate("/upload");
+        // case "archive":
+        //   navigate("/main"); 서진언니 커밋하면 추가하기
         break;
       default:
         console.log(`${path} 페이지로 이동`);
@@ -111,7 +108,7 @@ function Coach() {
 
   // 새로운 코칭 시작
   const handleNewCoaching = () => {
-    navigate("/coaching");
+    navigate("/coaching/select");
   };
 
   // 텍스트 복사 함수
@@ -133,7 +130,7 @@ function Coach() {
         }
 
         if (feedbackData.pause_analysis) {
-          content += `=== 휴지 분석 ===\n휴지 비율: ${feedbackData.pause_analysis.pause_ratio}\n코멘트: ${feedbackData.pause_analysis.comment}\n`;
+          content += `=== 말하기 템포 분석 ===\n잠깐 쉬는 비율: ${feedbackData.pause_analysis.pause_ratio}\n코멘트: ${feedbackData.pause_analysis.comment}\n`;
         }
       }
 
@@ -167,7 +164,7 @@ function Coach() {
       }
 
       if (feedbackData.pause_analysis) {
-        content += `=== 휴지 분석 ===\n휴지 비율: ${feedbackData.pause_analysis.pause_ratio}\n코멘트: ${feedbackData.pause_analysis.comment}\n`;
+        content += `=== 말하기 템포 분석 ===\n잠깐 쉬는 비율: ${feedbackData.pause_analysis.pause_ratio}\n코멘트: ${feedbackData.pause_analysis.comment}\n`;
       }
     }
 
@@ -223,7 +220,7 @@ function Coach() {
   const tabs = [
     { id: "summary", label: "💬 요약 & 키워드", icon: "💬" },
     { id: "speed", label: "⚡ 말하기 속도", icon: "⚡" },
-    { id: "pause", label: "⏸️ 휴지 분석", icon: "⏸️" },
+    { id: "pause", label: "⏸️ 말하기 템포", icon: "⏸️" },
   ];
 
   // 탭 컨텐츠 렌더링
@@ -337,7 +334,7 @@ function Coach() {
                 fontSize: "1.1rem",
               }}
             >
-              ⏸️ 휴지 분석
+              ⏸️ 말하기 템포 분석
             </h3>
             {feedbackData.pause_analysis ? (
               <div>
@@ -357,7 +354,7 @@ function Coach() {
                       color: "#00492C",
                     }}
                   >
-                    휴지 비율:{" "}
+                    잠깐 쉬는 비율:{" "}
                     {(feedbackData.pause_analysis.pause_ratio * 100).toFixed(1)}
                     %
                   </p>
@@ -371,7 +368,7 @@ function Coach() {
                             color: "#555",
                           }}
                         >
-                          긴 휴지 구간:
+                          오래 멈춘 구간:
                         </p>
                         {feedbackData.pause_analysis.long_pauses.map(
                           (pause, index) => (
@@ -404,7 +401,7 @@ function Coach() {
                 </div>
               </div>
             ) : (
-              <p>휴지 분석 데이터가 없습니다.</p>
+              <p>말하기 템포 분석 데이터가 없습니다.</p>
             )}
           </div>
         );
@@ -620,7 +617,7 @@ function Coach() {
               fontSize: "0.9rem",
             }}
           >
-            {sessionData?.situation} ◦ {sessionData?.audience} ◦ {" "}
+            {sessionData?.situation} ◦ {sessionData?.audience} ◦{" "}
             {sessionData?.style}
           </p>
         </div>
@@ -758,6 +755,13 @@ function Coach() {
               borderRadius: "4px",
               backgroundColor: "rgba(255,255,255,0.1)", // 현재 페이지 표시
             }}
+            onClick={() => handleNavigation("coaching")}
+            onMouseEnter={(e) =>
+              (e.target.style.backgroundColor = "rgba(255,255,255,0.1)")
+            }
+            onMouseLeave={(e) =>
+              (e.target.style.backgroundColor = "transparent")
+            }
           >
             코칭
           </li>
@@ -769,7 +773,7 @@ function Coach() {
               borderRadius: "4px",
               transition: "background-color 0.2s",
             }}
-            onClick={() => handleNavigation("summary")}
+            onClick={() => handleNavigation("archive")}
             onMouseEnter={(e) =>
               (e.target.style.backgroundColor = "rgba(255,255,255,0.1)")
             }
@@ -777,24 +781,7 @@ function Coach() {
               (e.target.style.backgroundColor = "transparent")
             }
           >
-            요약
-          </li>
-          <li
-            style={{
-              cursor: "pointer",
-              padding: "8px",
-              borderRadius: "4px",
-              transition: "background-color 0.2s",
-            }}
-            onClick={() => handleNavigation("upload")}
-            onMouseEnter={(e) =>
-              (e.target.style.backgroundColor = "rgba(255,255,255,0.1)")
-            }
-            onMouseLeave={(e) =>
-              (e.target.style.backgroundColor = "transparent")
-            }
-          >
-            업로드
+            아카이브
           </li>
         </ul>
       </div>
