@@ -620,7 +620,7 @@ function Coach() {
               fontSize: "0.9rem",
             }}
           >
-            {sessionData?.situation} / {sessionData?.audience} /{" "}
+            {sessionData?.situation} ◦ {sessionData?.audience} ◦ {" "}
             {sessionData?.style}
           </p>
         </div>
