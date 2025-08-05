@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
-import axios from "axios";
 import godown from "../img/godown.png";
 
 function Coach() {
@@ -11,7 +9,7 @@ function Coach() {
   const [feedbackData, setFeedbackData] = useState(null);
   const [sessionData, setSessionData] = useState(null);
   const [showActionButtons, setShowActionButtons] = useState(false);
-  const [activeTab, setActiveTab] = useState("summary"); // 탭 상태
+  const [activeTab, setActiveTab] = useState("summary"); // 우측 탭 상태 기본값:
 
   const BoxRef = useRef();
 

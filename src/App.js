@@ -17,28 +17,6 @@ import {
 
 function App() {
   return (
-    // <Router>
-    //   <Routes>
-    //     <Route path="/reset-password" element={<Newpw />} />
-    //     {/* <Load />
-    //   <Main /> */}
-    //     {/* {/* <Login /> */}
-    //     {/* <Register /> */}
-    //     {/* <Forgot /> */}
-    //   </Routes>
-    // </Router>
-    // <div>
-    //   {/* <Register /> */}
-    //   {/* <Forgot /> */}
-    //   {/* <Login /> */}
-    //   {/* <Select /> */}
-    //   {/* <Coach /> */}
-    //   {/* <Load /> */}
-    //   {/* <Main /> */}
-    //   {/* <Upload /> */}
-    //   {/* <Archive /> */}
-    //   {/* <Sidebar /> */}
-    //   </div>
     <Router>
       <div className="App">
         <Routes>

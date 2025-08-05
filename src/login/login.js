@@ -1,10 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [rememberMe, setRememberMe] = useState(false); // 로그인 상태 관리
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("rememberedEmail");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleEmailChange = (e) => {
     const { value } = e.target;
@@ -35,10 +46,7 @@ function Login() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          email: email,
-          password: password,
-        }),
+        body: JSON.stringify({ email, password }),
       });
 
       const text = await response.text();
@@ -46,8 +54,14 @@ function Login() {
 
       if (text.includes("성공")) {
         alert("로그인 성공!");
-        // 임시 테스트용, 토큰 저장 로직 추가 필요
-        window.location.href = "/main.js";
+
+        if (rememberMe) {
+          localStorage.setItem("rememberedEmail", email);
+        } else {
+          localStorage.removeItem("rememberedEmail");
+        }
+
+        navigate("/main");
       } else if (text.includes("존재")) {
         alert("등록되지 않은 이메일입니다.");
       } else if (text.includes("비밀")) {
@@ -206,6 +220,8 @@ function Login() {
             <input
               type="checkbox"
               id="remember-me"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
               style={{ marginRight: "5px" }}
             />
             <label

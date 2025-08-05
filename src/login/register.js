@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Register() {
+  const navigate = useNavigate();
   const [nickname, setNickname] = useState("");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -68,7 +70,7 @@ const handleLogin = async () => {
     if (text.includes("성공")) {
       alert("회원 가입 성공!");
       // 임시 테스트용, 토큰 저장 로직 추가 필요
-      window.location.href = "/login.js";
+      navigate("/login");
     } else if (text.includes("이미")) {
       alert("이미 등록된 이메일입니다.");
     } else {
