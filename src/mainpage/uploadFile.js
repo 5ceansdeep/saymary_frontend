@@ -21,14 +21,6 @@ function UploadFile() {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      // 로그인 안 되어 있으면 /login으로 이동
-      navigate("/login");
-    }
-  }, [navigate]);
-
   // 상태 초기화 함수
   const resetUploadState = () => {
     setIsUploading(false);
@@ -123,6 +115,14 @@ function UploadFile() {
 
   // 파일 업로드 처리
   const handleFileUpload = (file) => {
+    const token = localStorage.getItem("accessToken");
+
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      navigate("/login");
+      return;
+    }
+
     if (file && file.type.startsWith("audio/")) {
       setSelectedFile(file);
       console.log("업로드된 파일:", file);
