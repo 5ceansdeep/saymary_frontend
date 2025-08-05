@@ -49,12 +49,16 @@ function Login() {
         body: JSON.stringify({ email, password }),
       });
 
-      const text = await response.text();
-      console.log("응답 내용:", text);
+      const result = await response.json();
+      console.log("응답 내용:", result);
 
-      if (text.includes("성공")) {
+      if (result.success) {
         alert("로그인 성공!");
 
+        // accessToken 저장
+        localStorage.setItem("accessToken", result.token);
+
+        // remember me 저장
         if (rememberMe) {
           localStorage.setItem("rememberedEmail", email);
         } else {
@@ -62,10 +66,8 @@ function Login() {
         }
 
         navigate("/main");
-      } else if (text.includes("존재")) {
-        alert("등록되지 않은 이메일입니다.");
-      } else if (text.includes("비밀")) {
-        alert("비밀번호가 일치하지 않습니다.");
+      } else {
+        alert(result.message); // 실패 메시지
       }
     } catch (error) {
       alert("서버 연결 실패!");
@@ -239,6 +241,7 @@ function Login() {
 
           {/* forgot password 링크 */}
           <label
+            onClick={() => navigate("/forgot")}
             style={{
               textDecoration: "underline",
               margin: 0,

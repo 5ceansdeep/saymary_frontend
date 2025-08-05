@@ -21,6 +21,14 @@ function UploadFile() {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      // 로그인 안 되어 있으면 /login으로 이동
+      navigate("/login");
+    }
+  }, [navigate]);
+
   // 상태 초기화 함수
   const resetUploadState = () => {
     setIsUploading(false);
