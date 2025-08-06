@@ -11,20 +11,22 @@ function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
-  // 이메일 입력 형식 제어
+  // 누락된 상태 변수들 추가
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   const handleEmailChange = (e) => {
     const { value } = e.target;
-    const filteredValue = value.replace(/[^a-zA-Z0-9@.!*$]/g, ""); // 이메일 input에 영어 대소문자, 숫자, @, ., !, *, $ 만 허용
+    const filteredValue = value.replace(/[^a-zA-Z0-9@.!*$]/g, "");
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     setEmail(filteredValue);
     if (filteredValue === "" || emailRegex.test(filteredValue)) {
-      setEmailError(""); // 통과하면 에러 제거
+      setEmailError("");
     } else {
       setEmailError("Please enter a valid email address.");
     }
   };
 
-  // 비밀번호 입력 형식 제어
   const handlePasswordChange = (e) => {
     const { value } = e.target;
     setPassword(value);
@@ -35,12 +37,11 @@ function Register() {
     }
     if (confirmPassword && value !== confirmPassword) {
       setConfirmPasswordError("Passwords do not match.");
-    } else {
+    } else if (confirmPassword && value === confirmPassword) {
       setConfirmPasswordError("");
     }
-  }; // 비밀번호 input에 최소 6자 이상 입력
+  };
 
-  // 비밀번호 확인 입력
   const handleConfirmPasswordChange = (e) => {
     const { value } = e.target;
     setConfirmPassword(value);
@@ -50,15 +51,20 @@ function Register() {
       setConfirmPasswordError("");
     }
   };
-  // 회원가입도 동일하게 처리
+
   const handleRegister = async () => {
-    if (!email || !password || !confirmPassword) {
+    if (!nickname || !email || !password || !confirmPassword) {
       setError("모든 필드를 입력해주세요.");
       return;
     }
 
     if (password !== confirmPassword) {
       setError("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+
+    if (emailError || passwordError || confirmPasswordError) {
+      setError("입력 오류를 수정해주세요.");
       return;
     }
 
@@ -74,13 +80,13 @@ function Register() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            nickname: nickname,
             email: email,
             password: password,
           }),
         }
       );
 
-      // 응답 형식 확인
       const contentType = response.headers.get("content-type");
       let result;
 
@@ -93,7 +99,6 @@ function Register() {
       console.log("회원가입 응답:", result);
 
       if (response.ok) {
-        // 성공 처리
         if (typeof result === "string" && result.includes("회원가입 성공")) {
           alert("회원가입이 완료되었습니다!");
           navigate("/login");
@@ -104,7 +109,6 @@ function Register() {
           throw new Error("회원가입에 실패했습니다.");
         }
       } else {
-        // 에러 처리
         let errorMessage =
           typeof result === "string"
             ? result
@@ -140,7 +144,6 @@ function Register() {
         backgroundColor: "#00492C",
       }}
     >
-      {/* 계정 생성 페이지 */}
       <h1
         style={{
           position: "absolute",
@@ -153,19 +156,19 @@ function Register() {
           textAlign: "center",
         }}
       >
-        Wecome :-)
+        Welcome :-)
       </h1>
-      {/* 회원가입 폼 박스 */}
+
       <div
         style={{
           position: "absolute",
           bottom: "0",
           left: "50%",
           transform: "translateX(-50%)",
-          width: "90%", // 전체 너비의 90%
-          maxWidth: "500px", // 최대 너비 제한
-          height: "60vh", // 전체 높이의 60%
-          padding: "5vw", // 반응형 여백
+          width: "90%",
+          maxWidth: "500px",
+          height: "60vh",
+          padding: "5vw",
           backgroundColor: "#FFFCE4",
           borderRadius: "10px",
           boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
@@ -178,7 +181,36 @@ function Register() {
           justifyContent: "center",
         }}
       >
-        {/* Nickname 인풋 */}
+        {/* 에러 메시지 표시 */}
+        {error && (
+          <div
+            style={{
+              color: "red",
+              fontSize: "0.9rem",
+              marginBottom: "15px",
+              marginLeft: "18%",
+              fontFamily: "Noto Sans KR, sans-serif",
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        {/* 로딩 상태 표시 */}
+        {loading && (
+          <div
+            style={{
+              color: "#00492C",
+              fontSize: "0.9rem",
+              marginBottom: "15px",
+              marginLeft: "18%",
+              fontFamily: "Noto Sans KR, sans-serif",
+            }}
+          >
+            회원가입 중...
+          </div>
+        )}
+
         <h3
           style={{
             marginBottom: "5px",
@@ -194,6 +226,7 @@ function Register() {
           placeholder="Enter your nickname"
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
+          disabled={loading}
           style={{
             marginBottom: "5px",
             fontSize: "1rem",
@@ -203,10 +236,10 @@ function Register() {
             padding: "10px",
             width: "300px",
             marginLeft: "18%",
+            opacity: loading ? 0.6 : 1,
           }}
         />
 
-        {/* 이메일 인풋 */}
         <h3
           style={{
             marginBottom: "5px",
@@ -222,6 +255,7 @@ function Register() {
           value={email}
           placeholder="Enter your email"
           onChange={handleEmailChange}
+          disabled={loading}
           style={{
             marginBottom: "5px",
             fontSize: "1rem",
@@ -231,6 +265,7 @@ function Register() {
             padding: "10px",
             width: "300px",
             marginLeft: "18%",
+            opacity: loading ? 0.6 : 1,
           }}
         />
         {emailError && (
@@ -248,7 +283,6 @@ function Register() {
           </p>
         )}
 
-        {/* pw 인풋 */}
         <h3
           style={{
             marginBottom: "5px",
@@ -264,6 +298,7 @@ function Register() {
           placeholder="Enter your password"
           value={password}
           onChange={handlePasswordChange}
+          disabled={loading}
           style={{
             marginBottom: "5px",
             fontSize: "1rem",
@@ -273,6 +308,7 @@ function Register() {
             padding: "10px",
             width: "300px",
             marginLeft: "18%",
+            opacity: loading ? 0.6 : 1,
           }}
         />
         {passwordError && (
@@ -290,7 +326,6 @@ function Register() {
           </p>
         )}
 
-        {/* pw 확인 인풋 */}
         <h3
           style={{
             marginBottom: "5px",
@@ -307,6 +342,7 @@ function Register() {
           placeholder="Enter your password"
           value={confirmPassword}
           onChange={handleConfirmPasswordChange}
+          disabled={loading}
           style={{
             marginBottom: "5px",
             fontSize: "1rem",
@@ -316,6 +352,7 @@ function Register() {
             padding: "10px",
             width: "300px",
             marginLeft: "18%",
+            opacity: loading ? 0.6 : 1,
           }}
         />
         {confirmPasswordError && (
@@ -333,24 +370,78 @@ function Register() {
           </p>
         )}
 
-        {/* sign up 버튼 */}
         <button
           onClick={handleRegister}
+          disabled={
+            loading ||
+            !nickname ||
+            !email ||
+            !password ||
+            !confirmPassword ||
+            emailError ||
+            passwordError ||
+            confirmPasswordError
+          }
           style={{
             padding: "12px",
             fontSize: "1rem",
             borderRadius: "5px",
-            backgroundColor: "#00492C",
+            backgroundColor: loading ? "#666" : "#00492C",
             color: "white",
             border: "none",
-            cursor: "pointer",
+            cursor: loading ? "default" : "pointer",
             marginLeft: "18%",
             marginTop: "10px",
             width: "320px",
+            opacity:
+              loading ||
+              !nickname ||
+              !email ||
+              !password ||
+              !confirmPassword ||
+              emailError ||
+              passwordError ||
+              confirmPasswordError
+                ? 0.6
+                : 1,
           }}
         >
-          Sign up
+          {loading ? "가입 중..." : "Sign up"}
         </button>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            paddingTop: "20px",
+          }}
+        >
+          <label
+            style={{
+              color: "#000000",
+              margin: 0,
+              fontSize: "1rem",
+              marginRight: "5px",
+            }}
+          >
+            Already have an account?
+          </label>
+          <label
+            onClick={!loading ? () => navigate("/login") : undefined}
+            style={{
+              color: "#000000",
+              fontWeight: "bold",
+              textDecoration: "underline",
+              margin: 0,
+              fontSize: "1rem",
+              cursor: loading ? "default" : "pointer",
+              opacity: loading ? 0.6 : 1,
+            }}
+          >
+            Sign in
+          </label>
+        </div>
       </div>
     </div>
   );
