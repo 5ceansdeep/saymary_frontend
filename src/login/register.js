@@ -52,7 +52,7 @@ function Register() {
   };
 const handleLogin = async () => {
   try {
-    const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user/signup`, {
+    const response = await fetch("https://3.34.19.178:8080/api/user/signup", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -84,13 +84,10 @@ function Select() {
 
     setIsLoading(true);
 try {
-  const res = await fetch(
-    `${process.env.REACT_APP_API_URL}/api/coaching/feedback`,
-    {
-      method: "POST",
-      body: formData,
-    }
-  );
+  const res = await fetch("https://3.34.19.178:8080/api/coaching/feedback", {
+    method: "POST",
+    body: formData,
+  });
 
   const result = await res.json();
   console.log("업로드 결과:", result);

@@ -21,7 +21,7 @@ function Forgot() {
   const handleLogin = async () => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/user/request-reset`,
+        "https://3.34.19.178:8080/api/user/request-reset",
         {
           method: "POST",
           headers: {
