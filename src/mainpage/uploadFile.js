@@ -77,17 +77,10 @@ function UploadFile() {
         });
       }, 500);
 
-      // 인증 헤더 추가해서 요청
       const response = await fetch(
         "https://3.34.19.178:8080/api/fastapi/upload",
         {
           method: "POST",
-          headers: {
-            // Authorization 헤더 추가 (여러 형태 시도)
-            Authorization: `Bearer ${token}`, // 가장 일반적인 형태
-            // "Authorization": `Token ${token}`, // Django REST 형태
-            // "x-access-token": token, // 커스텀 헤더 형태
-          },
           body: formData,
           signal: AbortSignal.timeout(30000),
         }
@@ -149,18 +142,17 @@ function UploadFile() {
         setTimeout(() => {
           navigate("/main");
         }, 1000);
-      // uploadFile.js에서 이 부분 수정
+        // uploadFile.js에서 이 부분 수정
 
-// uploadFile.js에서 이 부분 수정
-} else if (response.status === 401) {
-  // 401 에러 특별 처리 - 토큰 삭제하지 말고 경고만
-  console.log("⚠️ 401 에러 - 토큰 문제일 수 있음");
-  console.log("현재 토큰:", localStorage.getItem("accessToken"));
-  
-  // localStorage.removeItem("accessToken"); // 이 줄 주석 처리
-  throw new Error("서버에서 토큰을 인식하지 못합니다. 서버 개발자에게 인증 방식을 확인해주세요.");
-}
- else {
+        // uploadFile.js에서 이 부분 수정
+      } else if (response.status === 401) {
+        // 401 에러 특별 처리 - 토큰 삭제하지 말고 경고만
+        console.log("⚠️ 401 에러 - 토큰 문제일 수 있음");
+        console.log("현재 토큰:", localStorage.getItem("accessToken"));
+
+        // localStorage.removeItem("accessToken"); // 이 줄 주석 처리
+        throw new Error("서버에서 토큰을 인식하지 못합니다. ");
+      } else {
         // 다른 HTTP 에러들
         let errorMessage;
         if (typeof result === "string") {
