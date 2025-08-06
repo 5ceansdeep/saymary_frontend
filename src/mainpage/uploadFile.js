@@ -78,7 +78,7 @@ function UploadFile() {
 
       // 인증 헤더 추가해서 요청
       const response = await fetch(
-        "http://3.34.19.178:8080/api/fastapi/upload",
+        "https://3.34.19.178:8080/api/fastapi/upload",
         {
           method: "POST",
           headers: {
