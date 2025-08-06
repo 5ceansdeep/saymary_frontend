@@ -1,3 +1,5 @@
+// uploadFile.js - 인증 헤더 추가된 버전
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -8,11 +10,8 @@ function UploadFile() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState(null);
-
-  // 상태 관리
   const [animate1, setAnimate1] = useState(false);
 
-  // 0.1초 후 노란 박스 애니메이션 시작
   useEffect(() => {
     const timer = setTimeout(() => {
       setAnimate1(true);
@@ -21,7 +20,6 @@ function UploadFile() {
     return () => clearTimeout(timer);
   }, []);
 
-  // 상태 초기화 함수
   const resetUploadState = () => {
     setIsUploading(false);
     setSelectedFile(null);
@@ -41,11 +39,11 @@ function UploadFile() {
       }
     } catch (error) {
       console.error("응답 파싱 오류:", error);
-      return await response.text(); // JSON 파싱 실패 시 텍스트로 fallback
+      return await response.text();
     }
   };
 
-  // API 호출 함수 - 개선된 버전
+  // API 호출 함수 - 인증 헤더 추가
   const uploadFileToAPI = async (file) => {
     setIsUploading(true);
     setUploadProgress(0);
@@ -54,30 +52,42 @@ function UploadFile() {
     let progressInterval;
 
     try {
+      // 토큰 가져오기
+      const token = localStorage.getItem("accessToken");
+
+      if (!token) {
+        throw new Error("로그인 토큰이 없습니다. 다시 로그인해주세요.");
+      }
+
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("situation", "회의"); // 기본값으로 설정
-      formData.append("audience", "일반"); // 기본값으로 설정
-      formData.append("style", "친근"); // 기본값으로 설정
+      formData.append("situation", "회의");
+      formData.append("audience", "일반");
+      formData.append("style", "친근");
 
-      // 더 자연스러운 진행률 시뮬레이션
+      // 진행률 시뮬레이션
       progressInterval = setInterval(() => {
         setUploadProgress((prev) => {
           if (prev >= 90) {
             clearInterval(progressInterval);
             return 90;
           }
-          return prev + Math.random() * 15; // 더 자연스러운 진행률
+          return prev + Math.random() * 15;
         });
       }, 500);
 
-      // URL 수정
+      // 인증 헤더 추가해서 요청
       const response = await fetch(
-        "https://3.34.19.178:8080/api/fastapi/upload",
+        "http://3.34.19.178:8080/api/fastapi/upload",
         {
           method: "POST",
+          headers: {
+            // Authorization 헤더 추가 (여러 형태 시도)
+            Authorization: `Bearer ${token}`, // 가장 일반적인 형태
+            // "Authorization": `Token ${token}`, // Django REST 형태
+            // "x-access-token": token, // 커스텀 헤더 형태
+          },
           body: formData,
-          // 타임아웃 설정 (30초)
           signal: AbortSignal.timeout(30000),
         }
       );
@@ -91,11 +101,9 @@ function UploadFile() {
       console.log("API 응답:", result);
 
       if (response.ok) {
-        // 응답이 텍스트인지 객체인지 확인하여 처리
         let summaryData;
 
         if (typeof result === "string") {
-          // 텍스트 응답인 경우 - 성공 여부 확인
           if (result.includes("성공") || result.includes("success")) {
             summaryData = {
               text: "음성 파일이 성공적으로 처리되었습니다.",
@@ -109,7 +117,6 @@ function UploadFile() {
             throw new Error(result || "업로드에 실패했습니다.");
           }
         } else {
-          // JSON 객체인 경우
           if (result.success) {
             summaryData = {
               text:
@@ -138,17 +145,23 @@ function UploadFile() {
 
         localStorage.setItem("summaryData", JSON.stringify(summaryData));
 
-        // 성공 메시지 표시
         setTimeout(() => {
           navigate("/main");
         }, 1000);
+      } else if (response.status === 401) {
+        // 401 에러 특별 처리
+        localStorage.removeItem("accessToken"); // 무효한 토큰 제거
+        throw new Error("로그인이 만료되었습니다. 다시 로그인해주세요.");
       } else {
-        // HTTP 상태 코드별 상세 에러 메시지
+        // 다른 HTTP 에러들
         let errorMessage;
         if (typeof result === "string") {
           errorMessage = result;
         } else {
           switch (response.status) {
+            case 403:
+              errorMessage = "접근 권한이 없습니다.";
+              break;
             case 413:
               errorMessage = "파일 크기가 너무 큽니다. (최대 50MB)";
               break;
@@ -173,13 +186,13 @@ function UploadFile() {
     } catch (error) {
       console.error("업로드 오류:", error);
 
-      // 진행률 인터벌 정리
       if (progressInterval) {
         clearInterval(progressInterval);
       }
 
-      // 네트워크 에러나 타임아웃 처리
       let errorMessage = error.message;
+
+      // 특정 에러들에 대한 처리
       if (error.name === "AbortError" || error.name === "TimeoutError") {
         errorMessage =
           "업로드 시간이 초과되었습니다. 파일 크기를 확인하거나 네트워크 연결을 확인해주세요.";
@@ -191,18 +204,19 @@ function UploadFile() {
       ) {
         errorMessage =
           "서버 응답 형식에 오류가 있습니다. 관리자에게 문의하세요.";
+      } else if (
+        error.message.includes("로그인이 만료") ||
+        error.message.includes("로그인 토큰")
+      ) {
+        // 로그인 관련 에러는 로그인 페이지로 리다이렉트
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
       }
 
-      // 에러 상태 설정
       setUploadError(errorMessage);
-
-      // 진행률을 0으로 리셋
       setUploadProgress(0);
 
-      // 사용자에게 알림 (선택사항)
-      // alert(`업로드 실패: ${errorMessage}`);
-
-      // 2초 후 부분적 상태 초기화 (에러는 유지하고 파일만 리셋)
       setTimeout(() => {
         setIsUploading(false);
         setSelectedFile(null);
@@ -240,14 +254,13 @@ function UploadFile() {
     }
 
     if (file.size < 1024) {
-      // 1KB 미만
       throw new Error("파일이 너무 작습니다.");
     }
 
     return true;
   };
 
-  // 파일 업로드 처리
+  // 파일 업로드 처리 - 개선된 토큰 체크
   const handleFileUpload = (file) => {
     const token = localStorage.getItem("accessToken");
 
@@ -258,13 +271,9 @@ function UploadFile() {
     }
 
     try {
-      // 파일 검증
       validateFile(file);
-
       setSelectedFile(file);
       console.log("업로드된 파일:", file);
-
-      // API 호출
       uploadFileToAPI(file);
     } catch (error) {
       alert(error.message);
@@ -272,17 +281,15 @@ function UploadFile() {
     }
   };
 
-  // 파일 선택 핸들러
+  // 나머지 함수들은 기존과 동일...
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (file) {
       handleFileUpload(file);
     }
-    // input 값 초기화 (같은 파일을 다시 선택할 수 있도록)
     event.target.value = "";
   };
 
-  // 드래그 앤 드롭 핸들러 개선
   const handleDragOver = (event) => {
     event.preventDefault();
     if (!isUploading) {
@@ -292,7 +299,6 @@ function UploadFile() {
 
   const handleDragLeave = (event) => {
     event.preventDefault();
-    // 드래그가 실제로 영역을 벗어났는지 확인
     if (!event.currentTarget.contains(event.relatedTarget)) {
       setIsDragging(false);
     }
@@ -310,22 +316,18 @@ function UploadFile() {
     }
   };
 
-  // 파일 입력 클릭
   const handleClick = () => {
     if (!isUploading) {
       document.getElementById("fileInput").click();
     }
   };
 
-  // 업로드 취소 함수
   const handleCancelUpload = () => {
     if (isUploading) {
       resetUploadState();
-      // TODO: AbortController를 사용하여 실제 API 요청도 취소
     }
   };
 
-  // 업로드 상태에 따른 텍스트 결정
   const getStatusText = () => {
     if (uploadError) {
       return uploadError;
@@ -342,7 +344,6 @@ function UploadFile() {
     return "음성파일을 업로드 해주세요...";
   };
 
-  // 파일 크기를 읽기 쉬운 형태로 변환
   const formatFileSize = (bytes) => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
@@ -350,6 +351,10 @@ function UploadFile() {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
+
+  // 토큰 상태 확인 (디버깅용)
+  const token = localStorage.getItem("accessToken");
+  console.log("현재 토큰:", token ? "존재함" : "없음");
 
   return (
     <div
@@ -384,7 +389,22 @@ function UploadFile() {
         Saymary
       </h1>
 
-      {/* 노란박스 */}
+      {/* 토큰 상태 표시 (디버깅용 - 나중에 제거 가능) */}
+      <div
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+          fontSize: "12px",
+          color: token ? "green" : "red",
+          background: "rgba(255,255,255,0.8)",
+          padding: "5px 10px",
+          borderRadius: "5px",
+        }}
+      >
+        토큰: {token ? "✅ 있음" : "❌ 없음"}
+      </div>
+
       <div
         className="custom-scroll"
         style={{
@@ -402,7 +422,6 @@ function UploadFile() {
           overflowX: "hidden",
         }}
       >
-        {/* 업로드 박스 */}
         <div
           style={{
             color: "#656247",
@@ -453,7 +472,6 @@ function UploadFile() {
               {getStatusText()}
             </p>
 
-            {/* 선택된 파일 정보 표시 */}
             {selectedFile && !isUploading && !uploadError && (
               <div
                 style={{
@@ -467,7 +485,6 @@ function UploadFile() {
               </div>
             )}
 
-            {/* 업로드 진행률 표시 */}
             {isUploading && !uploadError && (
               <div style={{ margin: "20px 0" }}>
                 <div
@@ -500,7 +517,6 @@ function UploadFile() {
                   {Math.round(uploadProgress)}%
                 </p>
 
-                {/* 취소 버튼 */}
                 <button
                   onClick={handleCancelUpload}
                   style={{
@@ -575,36 +591,59 @@ function UploadFile() {
               </>
             )}
 
-            {/* 에러 시 다시 시도 버튼 */}
             {uploadError && (
-              <button
-                onClick={resetUploadState}
-                style={{
-                  padding: "10px 30px",
-                  borderRadius: "10px",
-                  border: "none",
-                  backgroundColor: "#F2C81B",
-                  color: "#ffffff",
-                  fontFamily: "Noto Sans KR, sans-serif",
-                  fontWeight: 500,
-                  fontSize: "0.7rem",
-                  cursor: "pointer",
-                  marginTop: "15px",
-                  transition: "all 0.3s ease-in-out",
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = "#d4a617";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = "#F2C81B";
-                }}
-              >
-                다시 시도
-              </button>
+              <>
+                <button
+                  onClick={resetUploadState}
+                  style={{
+                    padding: "10px 30px",
+                    borderRadius: "10px",
+                    border: "none",
+                    backgroundColor: "#F2C81B",
+                    color: "#ffffff",
+                    fontFamily: "Noto Sans KR, sans-serif",
+                    fontWeight: 500,
+                    fontSize: "0.7rem",
+                    cursor: "pointer",
+                    marginTop: "15px",
+                    transition: "all 0.3s ease-in-out",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = "#d4a617";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = "#F2C81B";
+                  }}
+                >
+                  다시 시도
+                </button>
+
+                {/* 로그인 관련 에러인 경우 로그인 버튼 표시 */}
+                {uploadError.includes("로그인") && (
+                  <button
+                    onClick={() => navigate("/login")}
+                    style={{
+                      padding: "10px 30px",
+                      borderRadius: "10px",
+                      border: "none",
+                      backgroundColor: "#00492C",
+                      color: "#ffffff",
+                      fontFamily: "Noto Sans KR, sans-serif",
+                      fontWeight: 500,
+                      fontSize: "0.7rem",
+                      cursor: "pointer",
+                      marginTop: "10px",
+                      marginLeft: "10px",
+                      transition: "all 0.3s ease-in-out",
+                    }}
+                  >
+                    로그인하러 가기
+                  </button>
+                )}
+              </>
             )}
           </div>
 
-          {/* 숨겨진 파일 입력 */}
           <input
             id="fileInput"
             type="file"
