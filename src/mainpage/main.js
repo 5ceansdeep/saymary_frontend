@@ -25,32 +25,21 @@ function Main() {
 
   // 컴포넌트 마운트 시 저장된 요약 데이터 불러오기
   useEffect(() => {
-     useEffect(() => {
-    const selected = localStorage.getItem("selectedFileData");
-    if (selected) {
-      try {
-        const parsed = JSON.parse(selected);
-        setSummaryData(parsed);
-        setCurrentSummary(parsed.간단요약 || parsed.text || "요약 없음");
-        localStorage.removeItem("selectedFileData");
-        return;
-      } catch (e) {
-        console.error("선택된 파일 파싱 오류", e);
-      }
-    }
-
     const savedData = localStorage.getItem("summaryData");
     if (savedData) {
       try {
-        const parsed = JSON.parse(savedData);
-        setSummaryData(parsed);
-        setCurrentSummary(parsed.간단요약 || parsed.text || "요약 데이터를 불러올 수 없습니다.");
+        const parsedData = JSON.parse(savedData);
+        setSummaryData(parsedData);
+        setCurrentSummary(
+          parsedData.간단요약 ||
+            parsedData.text ||
+            "요약 데이터를 불러올 수 없습니다."
+        );
       } catch (error) {
         console.error("데이터 파싱 오류:", error);
         setCurrentSummary("저장된 요약 데이터를 불러올 수 없습니다.");
       }
-    }
-     else {
+    } else {
       // 테스트용 기본 데이터
       const defaultData = {
         text: "회의 전체 텍스트 내용입니다...",
@@ -311,38 +300,6 @@ function Main() {
         position: "relative",
       }}
     >
-      {/*보관함에 저장버튼*/}
-      <button
-            onClick={() => {
-              const filename = prompt("저장할 파일명을 입력하세요");
-              if (!filename) return;
-              const date = new Date().toISOString().slice(2, 10).replace(/-/g, ".");
-              const file = {
-                name: filename,
-                date,
-                data: summaryData, // 요약 전체 저장
-              };
-              const existing = JSON.parse(localStorage.getItem("savedFiles")) || [];
-              localStorage.setItem("savedFiles", JSON.stringify([...existing, file]));
-              alert("보관함에 저장되었습니다!");
-            }}
-            style={{
-              position: "fixed",
-              top: "30px",
-              right: "40px",
-              backgroundColor: "#00492C",
-              color: "white",
-              padding: "10px 20px",
-              borderRadius: "10px",
-              fontSize: "14px",
-              fontWeight: "bold",
-              cursor: "pointer",
-              zIndex: 1000,
-            }}
-          >
-            보관함에 저장
-          </button>
-       
       {/* 제목 - 클릭하면 업로드 페이지로 이동 */}
       <h1
         style={{

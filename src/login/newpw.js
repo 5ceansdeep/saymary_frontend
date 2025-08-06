@@ -1,22 +1,10 @@
- import { useState } from "react"; 
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-function Login() {
-  const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
+function Newpw() {
+  const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
-
-  const handleEmailChange = (e) => {
-    const { value } = e.target;
-    const filteredValue = value.replace(/[^a-zA-Z0-9@.!*$]/g, ""); // 이메일 input에 영어 대소문자, 숫자, @, ., !, *, $ 만 허용
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    setEmail(filteredValue);
-    if (filteredValue === "" || emailRegex.test(filteredValue)) {
-      setEmailError(""); // 통과하면 에러 제거
-    } else {
-      setEmailError("Please enter a valid email address.");
-    }
-  };
 
   const handlePasswordChange = (e) => {
     const { value } = e.target;
@@ -28,33 +16,44 @@ function Login() {
     }
   }; // 비밀번호 input에 최소 6자 이상 입력
 
-  const handleLogin = async () => {
+  const handleNewpw = async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get("token");
+
+    console.log("보낼 token:", token); // 반드시 확인
+
+    if (!token) {
+      alert("토큰이 유효하지 않습니다.");
+      return;
+    }
+
     try {
-      const response = await fetch("http://localhost:8080/api/user/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email,
-          password: password,
-        }),
-      });
+      const API_BASE_URL =
+        process.env.REACT_APP_API_URL || "http://localhost:8080";
+
+      // 비밀번호 재설정 API 엔드포인트로 수정 (login이 아닌)
+      const response = await fetch(
+        "https://3.34.19.178:8080/api/user/reset-password", // 올바른 엔드포인트로 변경
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ token, password }), // email 대신 token과 password 전송
+        }
+      );
 
       const text = await response.text();
       console.log("응답 내용:", text);
 
-      if (text.includes("성공")) {
-        alert("로그인 성공!");
-        // 임시 테스트용, 토큰 저장 로직 추가 필요
-        window.location.href = "/main.js";
-      } else if (text.includes("존재")) {
-        alert("등록되지 않은 이메일입니다.");
-      } else if (text.includes("비밀")) {
-        alert("비밀번호가 일치하지 않습니다.");
+      if (response.ok && text.includes("변경")) {
+        alert("비밀번호가 성공적으로 변경되었습니다!");
+        navigate("/login");
+      } else {
+        alert("비밀번호 변경 실패: " + text);
       }
     } catch (error) {
-      alert("서버 연결 실패!");
+      alert("서버 오류 발생");
       console.error(error);
     }
   };
@@ -81,7 +80,7 @@ function Login() {
           textAlign: "center",
         }}
       >
-        Please Login.
+        Wipe the slate clean :)
       </h1>
 
       {/* 회원가입 폼 박스 */}
@@ -107,47 +106,6 @@ function Login() {
           justifyContent: "center",
         }}
       >
-        {/* 이메일 인풋 */}
-        <h3
-          style={{
-            marginBottom: "5px",
-            fontSize: "1.2rem",
-            marginLeft: "18%",
-          }}
-        >
-          Email ID
-        </h3>
-        <input
-          type="email"
-          placeholder="Enter your email"
-          value={email}
-          onChange={handleEmailChange}
-          style={{
-            marginBottom: "10px",
-            fontSize: "1rem",
-            borderRadius: "5px",
-            backgroundColor: "#FFFCE4",
-            border: "solid 2px #C7C29B",
-            padding: "10px",
-            width: "300px",
-            marginLeft: "18%",
-          }}
-        />
-        {emailError && (
-          <p
-            style={{
-              color: "red",
-              fontSize: "0.8rem",
-              marginLeft: "18%",
-              marginTop: "0",
-              marginBottom: "15px",
-              fontFamily: "Noto Sans KR, sans-serif",
-            }}
-          >
-            {emailError}
-          </p>
-        )}
-
         {/* pw 인풋 */}
         <h3
           style={{
@@ -190,68 +148,26 @@ function Login() {
           </p>
         )}
 
-        {/* remember me 체크박스 & forgot password 링크 */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginBottom: "20px",
-            fontSize: "0.9rem",
-          }}
-        >
-          <div
-            style={{ display: "flex", alignItems: "center", marginLeft: "18%" }}
-          >
-            {/* remember me 체크박스 */}
-            <input
-              type="checkbox"
-              id="remember-me"
-              style={{ marginRight: "5px" }}
-            />
-            <label
-              htmlFor="remember-me"
-              style={{
-                textDecoration: "underline",
-                margin: 0,
-                fontSize: "1rem",
-                cursor: "pointer",
-              }}
-            >
-              Remember me
-            </label>
-          </div>
-
-          {/* forgot password 링크 */}
-          <label
-            style={{
-              textDecoration: "underline",
-              margin: 0,
-              fontSize: "1rem",
-              cursor: "pointer",
-              marginRight: "18%",
-            }}
-          >
-            Forgot password
-          </label>
-        </div>
-        {/* 로그인 버튼 */}
+        {/* 제출 버튼 */}
         <button
-          onClick={handleLogin}
+          onClick={handleNewpw}
+          disabled={!password || passwordError}
           style={{
             padding: "12px",
             fontSize: "1rem",
             borderRadius: "5px",
-            backgroundColor: "#00492C",
+            backgroundColor: !password || passwordError ? "#C7C29B" : "#00492C",
             color: "white",
             border: "none",
-            cursor: "pointer",
+            cursor: !password || passwordError ? "not-allowed" : "pointer",
             marginLeft: "18%",
             marginTop: "10px",
             width: "320px",
           }}
         >
-          Sign in
+          Submit
         </button>
+
         {/* 계정 등록 링크 (sign up) */}
         <div
           style={{
@@ -272,6 +188,7 @@ function Login() {
             Don't have an account?
           </label>
           <label
+            onClick={() => navigate("/register")}
             style={{
               color: "#000000",
               fontWeight: "bold",
@@ -284,9 +201,40 @@ function Login() {
             Sign up
           </label>
         </div>
+        {/* or Sign in */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <label
+            style={{
+              color: "#000000",
+              margin: 0,
+              fontSize: "1rem",
+              marginRight: "5px",
+            }}
+          >
+            or
+          </label>
+          <label
+            onClick={() => navigate("/login")}
+            style={{
+              color: "#000000",
+              fontWeight: "bold",
+              textDecoration: "underline",
+              margin: 0,
+              fontSize: "1rem",
+              cursor: "pointer",
+            }}
+          >
+            Sign in
+          </label>
+        </div>
       </div>
     </div>
   );
 }
 
-export default Login;
+export default Newpw;
