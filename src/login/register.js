@@ -73,7 +73,7 @@ function Register() {
 
     try {
       const response = await fetch(
-        "http://3.34.19.178:8080/api/user/register",
+        "https://3.34.19.178:8080/api/user/register",
         {
           method: "POST",
           headers: {

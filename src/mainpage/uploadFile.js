@@ -71,9 +71,9 @@ function UploadFile() {
         });
       }, 500);
 
-      // URL 수정 (이중 슬래시 제거)
+      // URL 수정
       const response = await fetch(
-        "http://3.34.19.178:8080/api/fastapi/upload",
+        "https://3.34.19.178:8080/api/fastapi/upload",
         {
           method: "POST",
           body: formData,
