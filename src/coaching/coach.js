@@ -91,8 +91,8 @@ function Coach() {
       case "coaching":
         navigate("/coaching/select");
         break;
-        // case "archive":
-        //   navigate("/main"); 서진언니 커밋하면 추가하기
+      case "archive":
+        navigate("/archive");
         break;
       default:
         console.log(`${path} 페이지로 이동`);

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 function Select() {
   const navigate = useNavigate();
-  
+
   const situation1 = [
     "Lecture (강의)",
     "Interview (면접)",
