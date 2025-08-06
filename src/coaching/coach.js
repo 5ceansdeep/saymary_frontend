@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import godown from "../img/godown.png";
+import homeIcon from "../img/home.png";
+import coachingIcon from "../img/coaching.png";
+import archiveIcon from "../img/archive.png";
 
 function Coach() {
   const location = useLocation();
@@ -728,83 +731,86 @@ function Coach() {
       ></div>
 
       {/* 사이드바 */}
+      {/* 사이드바 */}
       <div
         style={{
           position: "fixed",
-          top: 0,
+          top: 100,
           left: 0,
           height: "100vh",
           width: "200px",
           backgroundColor: "#00492C",
-          color: "white",
           transform: hovered ? "translateX(0)" : "translateX(-200px)",
           transition: "transform 0.2s ease",
-          padding: "20px",
-          boxSizing: "border-box",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          paddingTop: "100px",
+          gap: "40px",
           zIndex: 15,
         }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          <li
-            style={{
-              marginBottom: "16px",
-              cursor: "pointer",
-              padding: "8px",
-              borderRadius: "4px",
-              transition: "background-color 0.2s",
-            }}
-            onClick={() => handleNavigation("home")}
-            onMouseEnter={(e) =>
-              (e.target.style.backgroundColor = "rgba(255,255,255,0.1)")
-            }
-            onMouseLeave={(e) =>
-              (e.target.style.backgroundColor = "transparent")
-            }
-          >
-            홈
-          </li>
-          <li
-            style={{
-              marginBottom: "16px",
-              cursor: "pointer",
-              padding: "8px",
-              borderRadius: "4px",
-              backgroundColor: "rgba(255,255,255,0.1)", // 현재 페이지 표시
-            }}
-            onClick={() => handleNavigation("coaching")}
-            onMouseEnter={(e) =>
-              (e.target.style.backgroundColor = "rgba(255,255,255,0.1)")
-            }
-            onMouseLeave={(e) =>
-              (e.target.style.backgroundColor = "transparent")
-            }
-          >
-            코칭
-          </li>
-          <li
-            style={{
-              marginBottom: "16px",
-              cursor: "pointer",
-              padding: "8px",
-              borderRadius: "4px",
-              transition: "background-color 0.2s",
-            }}
-            onClick={() => handleNavigation("archive")}
-            onMouseEnter={(e) =>
-              (e.target.style.backgroundColor = "rgba(255,255,255,0.1)")
-            }
-            onMouseLeave={(e) =>
-              (e.target.style.backgroundColor = "transparent")
-            }
-          >
-            아카이브
-          </li>
-        </ul>
+        <SidebarButton
+          label="Home"
+          icon={homeIcon}
+          isActive={location.pathname === "/"}
+          onClick={() => handleNavigation("home")}
+        />
+        <SidebarButton
+          label="Coaching"
+          icon={coachingIcon}
+          isActive={location.pathname.startsWith("/coaching")}
+          onClick={() => handleNavigation("coaching")}
+        />
+        <SidebarButton
+          label="Archive"
+          icon={archiveIcon}
+          isActive={location.pathname.startsWith("/archive")}
+          onClick={() => handleNavigation("archive")}
+        />
       </div>
     </div>
   );
 }
 
 export default Coach;
+
+function SidebarButton({ label, icon, isActive, onClick }) {
+  const buttonStyle = {
+    backgroundColor: isActive ? "#066c43" : "#00492C",
+    color: "white",
+    width: "80px",
+    height: "80px",
+    borderRadius: "20px",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "5px",
+    fontSize: "14px",
+    fontWeight: isActive ? "700" : "400",
+    transition: "background-color 0.3s",
+    border: "none",
+    cursor: "pointer",
+  };
+
+  return (
+    <button
+      style={buttonStyle}
+      onClick={onClick}
+      onMouseEnter={(e) => {
+        if (!isActive) e.target.style.backgroundColor = "#055538";
+      }}
+      onMouseLeave={(e) => {
+        if (!isActive) e.target.style.backgroundColor = "#00492C";
+      }}
+    >
+      {icon && (
+        <img src={icon} alt={label} style={{ width: "24px", height: "24px" }} />
+      )}
+      <span>{label}</span>
+    </button>
+  );
+}
