@@ -52,11 +52,11 @@ function UploadFile() {
     let progressInterval;
 
     try {
-      // 토큰 가져오기
-      const token = localStorage.getItem("accessToken");
-
-      if (!token) {
-        throw new Error("로그인 토큰이 없습니다. 다시 로그인해주세요.");
+      // 세션 기반 인증 확인 - 로그인 상태만 체크
+      const userEmail = localStorage.getItem("userEmail");
+      
+      if (!userEmail) {
+        throw new Error("로그인이 필요합니다. 다시 로그인해주세요.");
       }
 
       const formData = new FormData();
@@ -197,7 +197,7 @@ function UploadFile() {
           "서버 응답 형식에 오류가 있습니다. 관리자에게 문의하세요.";
       } else if (
         error.message.includes("로그인이 만료") ||
-        error.message.includes("로그인 토큰")
+        error.message.includes("로그인")
       ) {
         // 로그인 관련 에러는 로그인 페이지로 리다이렉트
         setTimeout(() => {
@@ -251,11 +251,11 @@ function UploadFile() {
     return true;
   };
 
-  // 파일 업로드 처리 - 개선된 토큰 체크
+  // 파일 업로드 처리 - 세션 기반 인증 체크
   const handleFileUpload = (file) => {
-    const token = localStorage.getItem("accessToken");
+    const userEmail = localStorage.getItem("userEmail");
 
-    if (!token) {
+    if (!userEmail) {
       alert("로그인이 필요합니다.");
       navigate("/login");
       return;
@@ -343,9 +343,8 @@ function UploadFile() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  // 토큰 상태 확인 (디버깅용)
-  const token = localStorage.getItem("accessToken");
-  console.log("현재 토큰:", token ? "존재함" : "없음");
+  // 로그인 상태 확인
+  const userEmail = localStorage.getItem("userEmail");
 
   return (
     <div
@@ -380,20 +379,20 @@ function UploadFile() {
         Saymary
       </h1>
 
-      {/* 토큰 상태 표시 (디버깅용 - 나중에 제거 가능) */}
+      {/* 로그인 상태 표시 */}
       <div
         style={{
           position: "absolute",
           top: "10px",
           right: "10px",
           fontSize: "12px",
-          color: token ? "green" : "red",
+          color: userEmail ? "green" : "red",
           background: "rgba(255,255,255,0.8)",
           padding: "5px 10px",
           borderRadius: "5px",
         }}
       >
-        토큰: {token ? "✅ 있음" : "❌ 없음"}
+        로그인: {userEmail ? "✅ " + userEmail : "❌ 로그아웃"}
       </div>
 
       <div
