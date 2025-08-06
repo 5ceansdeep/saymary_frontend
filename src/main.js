@@ -25,21 +25,32 @@ function Main() {
 
   // 컴포넌트 마운트 시 저장된 요약 데이터 불러오기
   useEffect(() => {
+     useEffect(() => {
+    const selected = localStorage.getItem("selectedFileData");
+    if (selected) {
+      try {
+        const parsed = JSON.parse(selected);
+        setSummaryData(parsed);
+        setCurrentSummary(parsed.간단요약 || parsed.text || "요약 없음");
+        localStorage.removeItem("selectedFileData");
+        return;
+      } catch (e) {
+        console.error("선택된 파일 파싱 오류", e);
+      }
+    }
+
     const savedData = localStorage.getItem("summaryData");
     if (savedData) {
       try {
-        const parsedData = JSON.parse(savedData);
-        setSummaryData(parsedData);
-        setCurrentSummary(
-          parsedData.간단요약 ||
-            parsedData.text ||
-            "요약 데이터를 불러올 수 없습니다."
-        );
+        const parsed = JSON.parse(savedData);
+        setSummaryData(parsed);
+        setCurrentSummary(parsed.간단요약 || parsed.text || "요약 데이터를 불러올 수 없습니다.");
       } catch (error) {
         console.error("데이터 파싱 오류:", error);
         setCurrentSummary("저장된 요약 데이터를 불러올 수 없습니다.");
       }
-    } else {
+    }
+     else {
       // 테스트용 기본 데이터
       const defaultData = {
         text: "회의 전체 텍스트 내용입니다...",
@@ -309,6 +320,7 @@ function Main() {
               const file = {
                 name: filename,
                 date,
+                data: summaryData, // 요약 전체 저장
               };
               const existing = JSON.parse(localStorage.getItem("savedFiles")) || [];
               localStorage.setItem("savedFiles", JSON.stringify([...existing, file]));
