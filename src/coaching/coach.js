@@ -17,39 +17,43 @@ function Coach() {
     if (location.state) {
       const receivedFeedback = location.state.feedback;
 
-      let parsed;
+      let parsed = {};
       if (typeof receivedFeedback === "string") {
         try {
           parsed = JSON.parse(receivedFeedback);
         } catch {
           parsed = { summary: receivedFeedback };
         }
-      } else {
+      } else if (
+        typeof receivedFeedback === "object" &&
+        receivedFeedback !== null
+      ) {
         parsed = receivedFeedback;
       }
 
-      // ✅ 응답 구조 변환 (실제 응답 필드에 맞게 가공)
       const feedbackDataFormatted = {
         original_text: parsed.original_text || "",
-        summary: parsed.summaries?.간단요약 || "",
-        keywords: parsed.summaries?.키워드요약 || "",
+        summary: parsed.summary || "",
+        keywords: Array.isArray(parsed.keywords)
+          ? parsed.keywords.join(", ")
+          : "",
         speaking_speed: {
-          average_wpm: parsed.speed_analysis?.wpm || 0,
-          comment: parsed.speed_analysis?.feedback || "",
+          average_wpm: parsed.speaking_speed?.average_wpm || 0,
+          comment: parsed.speaking_speed?.comment || "",
         },
         pause_analysis: {
-          pause_ratio: parsed.pause_analysis?.pause_stats?.pause_ratio || 0,
-          long_pauses: parsed.pause_analysis?.pause_stats?.long_pauses || [],
-          comment: parsed.pause_analysis?.feedback || "",
+          pause_ratio: parsed.pause_analysis?.pause_ratio || 0,
+          long_pauses: parsed.pause_analysis?.long_pauses || [],
+          comment: parsed.pause_analysis?.comment || "",
         },
       };
 
       setFeedbackData(feedbackDataFormatted);
       setSessionData({
-        situation: location.state.situation,
-        audience: location.state.audience,
-        style: location.state.style,
-        fileName: location.state.fileName,
+        situation: location.state.situation || "알 수 없음",
+        audience: location.state.audience || "알 수 없음",
+        style: location.state.style || "알 수 없음",
+        fileName: location.state.fileName || "파일 없음",
         uploadTime: location.state.uploadTime || new Date().toLocaleString(),
       });
     } else {
