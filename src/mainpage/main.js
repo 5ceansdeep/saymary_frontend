@@ -209,22 +209,22 @@ function Main() {
   const actionButtons = [
     {
       id: "copy",
-      text: "📄 텍스트 복사",
+      text: "텍스트 복사",
       title: "원본 텍스트와 선택된 요약을 클립보드에 복사합니다",
       onClick: copyToClipboard,
       style: {
-        backgroundColor: "#F2C81B",
+        backgroundColor: "#ecead5",
         color: "white",
         border: "none",
       },
     },
     {
       id: "export",
-      text: "💾 파일로 내보내기",
+      text: "txt 파일로 내보내기",
       title: "원본 텍스트와 선택된 요약을 텍스트 파일로 다운로드합니다",
       onClick: exportToFile,
       style: {
-        backgroundColor: "#F2C81B",
+        backgroundColor: "#ecead5",
         color: "white",
         border: "none",
       },

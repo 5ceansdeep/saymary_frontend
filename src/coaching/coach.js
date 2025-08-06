@@ -185,7 +185,7 @@ function Coach() {
       title: "코칭 피드백을 클립보드에 복사합니다",
       onClick: copyToClipboard,
       style: {
-        backgroundColor: "#F2C81B",
+        backgroundColor: "#ecead5",
         color: "white",
         border: "none",
       },
@@ -196,7 +196,7 @@ function Coach() {
       title: "코칭 피드백을 텍스트 파일로 다운로드합니다",
       onClick: exportToFile,
       style: {
-        backgroundColor: "#F2C81B",
+        backgroundColor: "#ecead5",
         color: "white",
         border: "none",
       },
