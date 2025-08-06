@@ -291,6 +291,7 @@ function Login() {
             Don't have an account?
           </label>
           <label
+            onClick={() => navigate("/signup")}
             style={{
               color: "#000000",
               fontWeight: "bold",
@@ -307,5 +308,3 @@ function Login() {
     </div>
   );
 }
-
-export default Login;
