@@ -14,21 +14,37 @@ function Coach() {
   const BoxRef = useRef();
 
   useEffect(() => {
-    // Select 페이지에서 전달받은 데이터 확인
     if (location.state) {
       const receivedFeedback = location.state.feedback;
 
-      // API 응답이 문자열인지 객체인지 확인
+      let parsed;
       if (typeof receivedFeedback === "string") {
         try {
-          setFeedbackData(JSON.parse(receivedFeedback));
+          parsed = JSON.parse(receivedFeedback);
         } catch {
-          setFeedbackData({ summary: receivedFeedback });
+          parsed = { summary: receivedFeedback };
         }
       } else {
-        setFeedbackData(receivedFeedback);
+        parsed = receivedFeedback;
       }
 
+      // ✅ 응답 구조 변환 (실제 응답 필드에 맞게 가공)
+      const feedbackDataFormatted = {
+        original_text: parsed.original_text || "",
+        summary: parsed.summaries?.간단요약 || "",
+        keywords: parsed.summaries?.키워드요약 || "",
+        speaking_speed: {
+          average_wpm: parsed.speed_analysis?.wpm || 0,
+          comment: parsed.speed_analysis?.feedback || "",
+        },
+        pause_analysis: {
+          pause_ratio: parsed.pause_analysis?.pause_stats?.pause_ratio || 0,
+          long_pauses: parsed.pause_analysis?.pause_stats?.long_pauses || [],
+          comment: parsed.pause_analysis?.feedback || "",
+        },
+      };
+
+      setFeedbackData(feedbackDataFormatted);
       setSessionData({
         situation: location.state.situation,
         audience: location.state.audience,
