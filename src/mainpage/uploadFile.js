@@ -83,6 +83,7 @@ function UploadFile() {
           method: "POST",
           body: formData,
           signal: AbortSignal.timeout(30000),
+          credentials: "include", // ✅ 이거 꼭 추가해야 쿠키가 같이 전송됨
         }
       );
 
@@ -142,16 +143,6 @@ function UploadFile() {
         setTimeout(() => {
           navigate("/main");
         }, 1000);
-        // uploadFile.js에서 이 부분 수정
-
-        // uploadFile.js에서 이 부분 수정
-      } else if (response.status === 401) {
-        // 401 에러 특별 처리 - 토큰 삭제하지 말고 경고만
-        console.log("⚠️ 401 에러 - 토큰 문제일 수 있음");
-        console.log("현재 토큰:", localStorage.getItem("accessToken"));
-
-        // localStorage.removeItem("accessToken"); // 이 줄 주석 처리
-        throw new Error("서버에서 토큰을 인식하지 못합니다. ");
       } else {
         // 다른 HTTP 에러들
         let errorMessage;
