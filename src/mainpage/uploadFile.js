@@ -83,7 +83,7 @@ function UploadFile() {
           method: "POST",
           body: formData,
           signal: AbortSignal.timeout(30000),
-          
+          credentials: "include",
         }
       );
 
