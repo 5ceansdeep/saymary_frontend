@@ -28,12 +28,10 @@ function Newpw() {
     }
 
     try {
-      const API_BASE_URL =
-        process.env.REACT_APP_API_URL || "http://localhost:8080";
 
       // 비밀번호 재설정 API 엔드포인트로 수정 (login이 아닌)
       const response = await fetch(
-        "www.saymary.com/api/user/reset-password", // 올바른 엔드포인트로 변경
+        "https://www.saymary.com/api/user/reset-password", // 올바른 엔드포인트로 변경
         {
           method: "POST",
           headers: {

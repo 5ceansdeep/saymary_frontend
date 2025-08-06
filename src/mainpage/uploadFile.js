@@ -77,12 +77,15 @@ function UploadFile() {
         });
       }, 500);
 
-      const response = await fetch("www.saymary.com/api/fastapi/upload", {
-        method: "POST",
-        body: formData,
-        signal: AbortSignal.timeout(30000),
-        credentials: "include",
-      });
+      const response = await fetch(
+        "https://www.saymary.com/api/fastapi/upload",
+        {
+          method: "POST",
+          body: formData,
+          signal: AbortSignal.timeout(30000),
+          credentials: "include",
+        }
+      );
 
       clearInterval(progressInterval);
       progressInterval = null;
