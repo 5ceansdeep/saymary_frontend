@@ -83,7 +83,7 @@ function UploadFile() {
           method: "POST",
           body: formData,
           signal: AbortSignal.timeout(30000),
-          credentials: "include", // ✅ 이거 꼭 추가해야 쿠키가 같이 전송됨
+          
         }
       );
 
