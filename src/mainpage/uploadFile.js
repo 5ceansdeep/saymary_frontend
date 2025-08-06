@@ -61,6 +61,7 @@ function UploadFile() {
 
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("filename", file.name);
       formData.append("situation", "회의");
       formData.append("audience", "일반");
       formData.append("style", "친근");
