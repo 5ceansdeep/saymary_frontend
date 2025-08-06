@@ -15,6 +15,7 @@ function Newpw() {
       setPasswordError("");
     }
   }; // 비밀번호 input에 최소 6자 이상 입력
+
   const handleNewpw = async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get("token");
@@ -27,17 +28,18 @@ function Newpw() {
     }
 
     try {
+      const API_BASE_URL =
+        process.env.REACT_APP_API_URL || "http://localhost:8080";
+
+      // 비밀번호 재설정 API 엔드포인트로 수정 (login이 아닌)
       const response = await fetch(
-        "http://localhost:8080/api/user/reset-password",
+        `${API_BASE_URL}/api/user/reset-password`, // 올바른 엔드포인트로 변경
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            token: token,
-            newPassword: password,
-          }),
+          body: JSON.stringify({ token, password }), // email 대신 token과 password 전송
         }
       );
 

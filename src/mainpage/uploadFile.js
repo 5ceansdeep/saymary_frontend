@@ -55,7 +55,7 @@ function UploadFile() {
         });
       }, 200);
 
-      const response = await fetch("/api/fastapi/upload", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api//fastapi/upload`, {
         method: "POST",
         body: formData,
       });

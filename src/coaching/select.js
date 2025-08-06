@@ -83,32 +83,35 @@ function Select() {
     formData.append("file", file);
 
     setIsLoading(true);
-    try {
-      const res = await fetch("http://localhost:8080/api/coaching/feedback", {
-        method: "POST",
-        body: formData,
-      });
-
-      const result = await res.json();
-      console.log("업로드 결과:", result);
-
-      // 성공 시 Coach 페이지로 이동하면서 데이터 전달
-      navigate("/coaching/result", {
-        state: {
-          feedback: result.feedback,
-          situation: selectedSituation,
-          audience: selectedAudience,
-          style: selectedStyle,
-          fileName: file.name,
-          uploadTime: new Date().toLocaleString(),
-        },
-      });
-    } catch (err) {
-      console.error("업로드 중 오류:", err);
-      alert("업로드 실패");
-    } finally {
-      setIsLoading(false);
+try {
+  const res = await fetch(
+    `${process.env.REACT_APP_API_URL}/api/coaching/feedback`,
+    {
+      method: "POST",
+      body: formData,
     }
+  );
+
+  const result = await res.json();
+  console.log("업로드 결과:", result);
+
+  // 성공 시 Coach 페이지로 이동하면서 데이터 전달
+  navigate("/coaching/result", {
+    state: {
+      feedback: result.feedback,
+      situation: selectedSituation,
+      audience: selectedAudience,
+      style: selectedStyle,
+      fileName: file.name,
+      uploadTime: new Date().toLocaleString(),
+    },
+  });
+} catch (err) {
+  console.error("업로드 중 오류:", err);
+  alert("업로드 실패");
+} finally {
+  setIsLoading(false);
+}
   };
 
   return (
