@@ -84,7 +84,7 @@ function Select() {
 
     setIsLoading(true);
 try {
-  const res = await fetch("https://3.34.19.178:8080/api/coaching/feedback", {
+  const res = await fetch("www.saymary.com/api/coaching/feedback", {
     method: "POST",
     body: formData,
   });

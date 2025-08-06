@@ -20,16 +20,13 @@ function Forgot() {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch(
-        "https://3.34.19.178:8080/api/user/request-reset",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
-        }
-      );
+      const response = await fetch("www.saymary.com/api/user/request-reset", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
 
       const text = await response.text();
       console.log("응답 내용:", text);

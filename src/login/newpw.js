@@ -33,7 +33,7 @@ function Newpw() {
 
       // 비밀번호 재설정 API 엔드포인트로 수정 (login이 아닌)
       const response = await fetch(
-        "https://3.34.19.178:8080/api/user/reset-password", // 올바른 엔드포인트로 변경
+        "www.saymary.com/api/user/reset-password", // 올바른 엔드포인트로 변경
         {
           method: "POST",
           headers: {

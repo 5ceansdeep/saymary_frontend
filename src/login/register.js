@@ -72,20 +72,17 @@ function Register() {
     setError(null);
 
     try {
-      const response = await fetch(
-        "https://3.34.19.178:8080/api/user/register",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            nickname: nickname,
-            email: email,
-            password: password,
-          }),
-        }
-      );
+      const response = await fetch("www.saymary.com/api/user/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nickname: nickname,
+          email: email,
+          password: password,
+        }),
+      });
 
       const contentType = response.headers.get("content-type");
       let result;
