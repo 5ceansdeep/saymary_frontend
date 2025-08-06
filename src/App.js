@@ -67,14 +67,7 @@ function App() {
               </Sidebar>
             }
           />
-          <Route
-            path="/coaching/result"
-            element={
-              <Sidebar>
-                <Coach />
-              </Sidebar>
-            }
-          />
+          <Route path="/coaching/result" element={<Coach />} />
 
           {/* 아카이브 라우트 (사이드바 있음) */}
           <Route
