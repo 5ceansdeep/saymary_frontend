@@ -53,7 +53,7 @@ function Login() {
     setError(null);
 
     try {
-      const response = await fetch("https://www.saymary.com/api/user/login", {
+      const response = await fetch("https://api.saymary.site/api/user/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

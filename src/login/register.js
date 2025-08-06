@@ -73,7 +73,7 @@ function Register() {
 
     try {
       const response = await fetch(
-        "https://www.saymary.com/api/user/register",
+        "https://api.saymary.site/api/user/register",
         {
           method: "POST",
           headers: {

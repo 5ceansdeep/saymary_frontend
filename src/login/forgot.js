@@ -21,7 +21,7 @@ function Forgot() {
   const handleLogin = async () => {
     try {
       const response = await fetch(
-        "https://www.saymary.com/api/user/request-reset",
+        "https://api.saymary.site/api/user/request-reset",
         {
           method: "POST",
           headers: {

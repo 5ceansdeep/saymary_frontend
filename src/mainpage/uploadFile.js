@@ -78,7 +78,7 @@ function UploadFile() {
       }, 500);
 
       const response = await fetch(
-        "https://www.saymary.com/api/fastapi/upload",
+        "https://api.saymary.site/api/fastapi/upload",
         {
           method: "POST",
           body: formData,
