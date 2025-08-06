@@ -1,11 +1,17 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-function Login() {
+function Register() {
+  const navigate = useNavigate();
+  const [nickname, setNickname] = useState("");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
+  // 이메일 입력 형식 제어
   const handleEmailChange = (e) => {
     const { value } = e.target;
     const filteredValue = value.replace(/[^a-zA-Z0-9@.!*$]/g, ""); // 이메일 input에 영어 대소문자, 숫자, @, ., !, *, $ 만 허용
@@ -18,6 +24,7 @@ function Login() {
     }
   };
 
+  // 비밀번호 입력 형식 제어
   const handlePasswordChange = (e) => {
     const { value } = e.target;
     setPassword(value);
@@ -26,38 +33,54 @@ function Login() {
     } else {
       setPasswordError("");
     }
+    if (confirmPassword && value !== confirmPassword) {
+      setConfirmPasswordError("Passwords do not match.");
+    } else {
+      setConfirmPasswordError("");
+    }
   }; // 비밀번호 input에 최소 6자 이상 입력
 
-  const handleLogin = async () => {
-    try {
-      const response = await fetch("http://localhost:8080/api/user/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email,
-          password: password,
-        }),
-      });
-
-      const text = await response.text();
-      console.log("응답 내용:", text);
-
-      if (text.includes("성공")) {
-        alert("로그인 성공!");
-        // 임시 테스트용, 토큰 저장 로직 추가 필요
-        window.location.href = "/main.js";
-      } else if (text.includes("존재")) {
-        alert("등록되지 않은 이메일입니다.");
-      } else if (text.includes("비밀")) {
-        alert("비밀번호가 일치하지 않습니다.");
-      }
-    } catch (error) {
-      alert("서버 연결 실패!");
-      console.error(error);
+  // 비밀번호 확인 입력
+  const handleConfirmPasswordChange = (e) => {
+    const { value } = e.target;
+    setConfirmPassword(value);
+    if (value !== password) {
+      setConfirmPasswordError("Passwords do not match.");
+    } else {
+      setConfirmPasswordError("");
     }
   };
+const handleLogin = async () => {
+  try {
+    const response = await fetch("http://localhost:8080/api/user/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: email,
+        password: password,
+        nickname: nickname,
+      }),
+    });
+
+    const text = await response.text();
+    console.log("응답 내용:", text);
+
+    if (text.includes("성공")) {
+      alert("회원 가입 성공!");
+      // 임시 테스트용, 토큰 저장 로직 추가 필요
+      navigate("/login");
+    } else if (text.includes("이미")) {
+      alert("이미 등록된 이메일입니다.");
+    } else {
+      alert("회원 가입 실패!");
+    }
+  } catch (error) {
+    alert("서버 연결 실패!");
+    console.error(error);
+  }
+}; 
 
   return (
     <div
@@ -81,9 +104,8 @@ function Login() {
           textAlign: "center",
         }}
       >
-        Please Login.
+        Wecome :-)
       </h1>
-
       {/* 회원가입 폼 박스 */}
       <div
         style={{
@@ -107,10 +129,39 @@ function Login() {
           justifyContent: "center",
         }}
       >
+        {/* Nickname 인풋 */}
+        <h3
+          style={{
+            marginBottom: "5px",
+            fontSize: "1.2rem",
+            margin: "0 auto",
+            marginLeft: "18%",
+          }}
+        >
+          Nickname
+        </h3>
+        <input
+          type="text"
+          placeholder="Enter your nickname"
+          value={nickname}
+          onChange={(e) => setNickname(e.target.value)}
+          style={{
+            marginBottom: "5px",
+            fontSize: "1rem",
+            borderRadius: "5px",
+            backgroundColor: "#FFFCE4",
+            border: "solid 2px #C7C29B",
+            padding: "10px",
+            width: "300px",
+            marginLeft: "18%",
+          }}
+        />
+
         {/* 이메일 인풋 */}
         <h3
           style={{
             marginBottom: "5px",
+            marginTop: "10px",
             fontSize: "1.2rem",
             marginLeft: "18%",
           }}
@@ -119,11 +170,11 @@ function Login() {
         </h3>
         <input
           type="email"
-          placeholder="Enter your email"
           value={email}
+          placeholder="Enter your email"
           onChange={handleEmailChange}
           style={{
-            marginBottom: "10px",
+            marginBottom: "5px",
             fontSize: "1rem",
             borderRadius: "5px",
             backgroundColor: "#FFFCE4",
@@ -165,7 +216,7 @@ function Login() {
           value={password}
           onChange={handlePasswordChange}
           style={{
-            marginBottom: "10px",
+            marginBottom: "5px",
             fontSize: "1rem",
             borderRadius: "5px",
             backgroundColor: "#FFFCE4",
@@ -190,51 +241,50 @@ function Login() {
           </p>
         )}
 
-        {/* remember me 체크박스 & forgot password 링크 */}
-        <div
+        {/* pw 확인 인풋 */}
+        <h3
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginBottom: "20px",
-            fontSize: "0.9rem",
+            marginBottom: "5px",
+            marginTop: "10px",
+            fontSize: "1.2rem",
+            marginLeft: "18%",
+            color: "#00492C",
           }}
         >
-          <div
-            style={{ display: "flex", alignItems: "center", marginLeft: "18%" }}
-          >
-            {/* remember me 체크박스 */}
-            <input
-              type="checkbox"
-              id="remember-me"
-              style={{ marginRight: "5px" }}
-            />
-            <label
-              htmlFor="remember-me"
-              style={{
-                textDecoration: "underline",
-                margin: 0,
-                fontSize: "1rem",
-                cursor: "pointer",
-              }}
-            >
-              Remember me
-            </label>
-          </div>
-
-          {/* forgot password 링크 */}
-          <label
+          Confirm Password
+        </h3>
+        <input
+          type="password"
+          placeholder="Enter your password"
+          value={confirmPassword}
+          onChange={handleConfirmPasswordChange}
+          style={{
+            marginBottom: "5px",
+            fontSize: "1rem",
+            borderRadius: "5px",
+            backgroundColor: "#FFFCE4",
+            border: "solid 2px #C7C29B",
+            padding: "10px",
+            width: "300px",
+            marginLeft: "18%",
+          }}
+        />
+        {confirmPasswordError && (
+          <p
             style={{
-              textDecoration: "underline",
-              margin: 0,
-              fontSize: "1rem",
-              cursor: "pointer",
-              marginRight: "18%",
+              color: "red",
+              fontSize: "0.8rem",
+              marginLeft: "18%",
+              marginTop: "0",
+              marginBottom: "15px",
+              fontFamily: "Noto Sans KR, sans-serif",
             }}
           >
-            Forgot password
-          </label>
-        </div>
-        {/* 로그인 버튼 */}
+            {confirmPasswordError}
+          </p>
+        )}
+
+        {/* sign up 버튼 */}
         <button
           onClick={handleLogin}
           style={{
@@ -250,43 +300,11 @@ function Login() {
             width: "320px",
           }}
         >
-          Sign in
+          Sign up
         </button>
-        {/* 계정 등록 링크 (sign up) */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            paddingTop: "20px",
-          }}
-        >
-          <label
-            style={{
-              color: "#000000",
-              margin: 0,
-              fontSize: "1rem",
-              marginRight: "5px",
-            }}
-          >
-            Don't have an account?
-          </label>
-          <label
-            style={{
-              color: "#000000",
-              fontWeight: "bold",
-              textDecoration: "underline",
-              margin: 0,
-              fontSize: "1rem",
-              cursor: "pointer",
-            }}
-          >
-            Sign up
-          </label>
-        </div>
       </div>
     </div>
   );
 }
 
-export default Login;
+export default Register;

@@ -1,27 +1,38 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./main.css"; // 스타일시트 임포트
 
 function Load() {
+  const navigate = useNavigate();
   const [animate1, setAnimate1] = useState(false);
   const [animate2, setAnimate2] = useState(false);
 
   useEffect(() => {
     // 2.5초 후 로고 애니메이션 시작
-    const timer = setTimeout(() => {
+    const timer1 = setTimeout(() => {
       setAnimate1(true);
     }, 2500);
 
-    return () => clearTimeout(timer);
+    return () => clearTimeout(timer1);
   }, []);
 
   useEffect(() => {
     // 2초 후 Voice to Text 애니메이션 시작
-    const timer = setTimeout(() => {
+    const timer2 = setTimeout(() => {
       setAnimate2(true);
     }, 2000);
 
-    return () => clearTimeout(timer);
+    return () => clearTimeout(timer2);
   }, []);
+
+  useEffect(() => {
+    // 5초 후 업로드 페이지로 자동 이동
+    const timer3 = setTimeout(() => {
+      navigate("/upload");
+    }, 5000);
+
+    return () => clearTimeout(timer3);
+  }, [navigate]);
 
   return (
     <div
@@ -54,7 +65,8 @@ function Load() {
       >
         | Voice to Text
       </h2>
-      {/* Lingro+ 로고 : animate1 */}
+
+      {/* Saymary 로고 : animate1 */}
       <h1
         style={{
           color: "#F2C81B",
@@ -69,7 +81,10 @@ function Load() {
           transform: animate1 ? "translate(0, 0)" : "translate(-50%, -50%)",
           opacity: 1,
           transition: "all 1.5s ease-in-out",
+          cursor: "pointer",
         }}
+        onClick={() => navigate("/upload")}
+        title="업로드 페이지로 이동"
       >
         Saymary
       </h1>

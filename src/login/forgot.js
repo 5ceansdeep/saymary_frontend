@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Forgot() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
-  
 
   const handleEmailChange = (e) => {
     const { value } = e.target;
@@ -173,7 +174,7 @@ function Forgot() {
             Don't have an account?
           </label>
           <label
-            onClick={() => (window.location.href = "/signup")}
+            onClick={() => navigate("/register")}
             style={{
               color: "#000000",
               fontWeight: "bold",
@@ -204,7 +205,7 @@ function Forgot() {
             or
           </label>
           <label
-            onClick={() => (window.location.href = "/signin")}
+            onClick={() => navigate("/login")}
             style={{
               color: "#000000",
               fontWeight: "bold",

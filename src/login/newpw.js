@@ -1,10 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Newpw() {
+  const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get("token");
 
   const handlePasswordChange = (e) => {
     const { value } = e.target;
@@ -46,7 +46,7 @@ function Newpw() {
 
       if (response.ok && text.includes("변경")) {
         alert("비밀번호가 성공적으로 변경되었습니다!");
-        window.location.href = "/signin";
+        navigate("/login");
       } else {
         alert("비밀번호 변경 실패: " + text);
       }
@@ -186,7 +186,7 @@ function Newpw() {
             Don't have an account?
           </label>
           <label
-            onClick={() => (window.location.href = "/signup")}
+            onClick={() => navigate("/register")}
             style={{
               color: "#000000",
               fontWeight: "bold",
@@ -217,7 +217,7 @@ function Newpw() {
             or
           </label>
           <label
-            onClick={() => (window.location.href = "/signin")}
+            onClick={() => navigate("/login")}
             style={{
               color: "#000000",
               fontWeight: "bold",
