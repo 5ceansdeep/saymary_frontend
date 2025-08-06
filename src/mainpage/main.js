@@ -8,10 +8,10 @@ function Main() {
 
   // 상태 관리
   const [animate1, setAnimate1] = useState(false);
-  const [activeButton, setActiveButton] = useState(null); // 초기값을 null로 변경
-  const [showActionButtons, setShowActionButtons] = useState(false);
+  const [activeButton, setActiveButton] = useState(null);
+  const [showActionMenu, setShowActionMenu] = useState({});
   const [summaryData, setSummaryData] = useState(null);
-  const [currentSummary, setCurrentSummary] = useState(""); // 초기값을 빈 문자열로 변경
+  const [currentSummary, setCurrentSummary] = useState("");
   const BoxRef = useRef();
 
   // 0.5초 후 노란 박스 애니메이션 시작
@@ -30,7 +30,6 @@ function Main() {
       try {
         const parsedData = JSON.parse(savedData);
         setSummaryData(parsedData);
-        // 기본값으로 간단요약 표시
         setCurrentSummary(
           parsedData.간단요약 ||
             parsedData.text ||
@@ -97,14 +96,17 @@ function Main() {
     }
   };
 
-  // exportButton 클릭 핸들러
-  const handleExportButtonClick = () => {
-    setShowActionButtons((prev) => !prev);
+  // 액션 메뉴 토글 함수
+  const toggleActionMenu = (fileId, event) => {
+    event.stopPropagation();
+    setShowActionMenu((prev) => ({
+      ...prev,
+      [fileId]: !prev[fileId],
+    }));
   };
 
   // 새 파일 업로드 핸들러
   const handleNewUpload = () => {
-    // 기존 데이터 삭제
     localStorage.removeItem("summaryData");
     navigate("/upload");
   };
@@ -214,7 +216,7 @@ function Main() {
       onClick: copyToClipboard,
       style: {
         backgroundColor: "#ecead5",
-        color: "white",
+        color: "#656247",
         border: "none",
       },
     },
@@ -225,7 +227,7 @@ function Main() {
       onClick: exportToFile,
       style: {
         backgroundColor: "#ecead5",
-        color: "white",
+        color: "#656247",
         border: "none",
       },
     },
@@ -241,6 +243,49 @@ function Main() {
       },
     },
   ];
+
+  // 스타일 정의
+  const dotsStyle = {
+    color: "#656247",
+    backgroundColor: "transparent",
+    fontFamily: "Noto Sans KR, sans-serif",
+    fontWeight: 600,
+    fontSize: "16px",
+    border: "none",
+    lineHeight: "1",
+    cursor: "pointer",
+    padding: "8px 10px",
+    marginLeft: "10px",
+    borderRadius: "4px",
+    transition: "all 0.2s ease-in-out",
+    userSelect: "none",
+  };
+
+  const actionMenuStyle = {
+    position: "absolute",
+    top: "100%",
+    right: "0",
+    zIndex: 1001,
+    display: "flex",
+    flexDirection: "column",
+    backgroundColor: "#fff", // or "#ecead5"
+    border: "1px solid #ccc",
+    borderRadius: "8px",
+    overflow: "hidden",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.15)", 
+  };
+
+  const actionButtonStyle = {
+    width: "100%",
+    padding: "12px 16px",
+    border: "none",
+    backgroundColor: "white",
+    textAlign: "left",
+    cursor: "pointer",
+    fontSize: "14px",
+    transition: "background-color 0.2s ease",
+    whiteSpace: "nowrap",
+  };
 
   return (
     <div
@@ -317,83 +362,55 @@ function Main() {
           }}
         >
           파일명: {summaryData?.fileName || "알 수 없음"}
-          {/* exportButton */}
-          <button
-            className="exportButton"
-            title="내보내기 옵션"
-            onClick={handleExportButtonClick}
-            style={{
-              color: "#656247",
-              backgroundColor: showActionButtons ? "#d4d1b8" : "#ecead5",
-              fontFamily: "Noto Sans KR, sans-serif",
-              fontWeight: 600,
-              fontSize: "11px",
-              border: "none",
-              lineHeight: "0.1",
-              justifyContent: "center",
-              textAlign: "center",
-              cursor: "pointer",
-              padding: "10px 10px",
-              marginLeft: "10px",
-              borderRadius: "15px",
-              transition: "all 0.2s ease-in-out",
-              position: "relative",
-            }}
-          >
-            . . .{/* 액션 버튼들 */}
-            <div
-              style={{
-                position: "absolute",
-                top: "100%",
-                left: "0",
-                zIndex: 1001,
-                display: "flex",
-                flexDirection: "column",
-                gap: "8px",
-                marginTop: "5px",
-                opacity: showActionButtons ? 1 : 0,
-                transform: showActionButtons
-                  ? "translateY(0)"
-                  : "translateY(-10px)",
-                transition: "all 0.3s ease-in-out",
-                visibility: showActionButtons ? "visible" : "hidden",
-                pointerEvents: showActionButtons ? "auto" : "none",
+          {/* 액션 버튼 컨테이너 */}
+          <div style={{ position: "relative", display: "inline-block" }}>
+            <span
+              style={dotsStyle}
+              onClick={(e) => toggleActionMenu("main", e)}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = "#ddd8c1";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = "transparent";
               }}
             >
-              {actionButtons.map((button) => (
-                <button
-                  key={button.id}
-                  title={button.title}
-                  aria-label={button.title}
-                  onClick={button.onClick}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: "6px",
-                    fontFamily: "Noto Sans KR, sans-serif",
-                    fontWeight: 500,
-                    fontSize: "0.7rem",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease-in-out",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                    border: "none",
-                    whiteSpace: "nowrap",
-                    minWidth: "140px",
-                    ...button.style,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.transform = "scale(1.02)";
-                    e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.25)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.transform = "scale(1)";
-                    e.target.style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)";
-                  }}
-                >
-                  {button.text}
-                </button>
-              ))}
-            </div>
-          </button>
+              ⋮
+            </span>
+
+            {/* 액션 메뉴 */}
+            {showActionMenu["main"] && (
+              <div style={actionMenuStyle}>
+                {actionButtons.map((button) => (
+                  <button
+                    key={button.id}
+                    style={{
+                      ...actionButtonStyle,
+                      ...button.style,
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      button.onClick();
+                      setShowActionMenu({});
+                    }}
+                    onMouseEnter={(e) => {
+                      if (button.id === "newUpload") {
+                        e.target.style.backgroundColor = "#005a35";
+                      } else {
+                        e.target.style.backgroundColor = "#f0f0f0";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor =
+                        button.style.backgroundColor;
+                    }}
+                    title={button.title}
+                  >
+                    {button.text}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </h1>
 
         {/* 날짜 표시 */}
@@ -428,7 +445,7 @@ function Main() {
             paddingRight: "40px",
             lineHeight: "2",
             borderRadius: "10px",
-            whiteSpace: "pre-line", // 줄바꿈 문자 처리
+            whiteSpace: "pre-line",
           }}
         >
           {summaryData?.text || "원본 텍스트를 불러올 수 없습니다."}

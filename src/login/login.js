@@ -291,7 +291,7 @@ function Login() {
             Don't have an account?
           </label>
           <label
-            onClick={() => navigate("/signup")}
+            onClick={() => navigate("/register")}
             style={{
               color: "#000000",
               fontWeight: "bold",

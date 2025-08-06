@@ -12,11 +12,11 @@ function UploadFile() {
   // 상태 관리
   const [animate1, setAnimate1] = useState(false);
 
-  // 0.5초 후 노란 박스 애니메이션 시작
+  // 0.1초 후 노란 박스 애니메이션 시작
   useEffect(() => {
     const timer = setTimeout(() => {
       setAnimate1(true);
-    }, 500);
+    }, 100);
 
     return () => clearTimeout(timer);
   }, []);
