@@ -40,38 +40,99 @@ function Login() {
   }; // 비밀번호 input에 최소 6자 이상 입력
 
   const handleLogin = async () => {
+    if (!email || !password) {
+      setError("이메일과 비밀번호를 입력해주세요.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
     try {
-      const response = await fetch("https://3.34.19.178:8080/api/user/login", {
+      const response = await fetch("http://3.34.19.178:8080/api/user/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
       });
 
-      const result = await response.json();
-      console.log("응답 내용:", result);
+      // 응답 내용 확인 (JSON인지 텍스트인지)
+      const contentType = response.headers.get("content-type");
+      let result;
 
-      if (result.success) {
-        alert("로그인 성공!");
+      if (contentType && contentType.includes("application/json")) {
+        // JSON 응답인 경우
+        result = await response.json();
+      } else {
+        // 텍스트 응답인 경우
+        result = await response.text();
+      }
 
-        // accessToken 저장
-        localStorage.setItem("accessToken", result.token);
+      console.log("서버 응답:", result);
 
-        // remember me 저장
-        if (rememberMe) {
-          localStorage.setItem("rememberedEmail", email);
+      if (response.ok) {
+        // 성공 처리
+        if (typeof result === "string") {
+          // 텍스트 응답인 경우
+          if (result.includes("로그인 성공") || result.includes("success")) {
+            // 로그인 성공 처리
+            localStorage.setItem("accessToken", "temp-token"); // 실제 토큰이 있다면 사용
+            localStorage.setItem("userEmail", email);
+            alert("로그인 성공!");
+            navigate("/upload");
+          } else {
+            throw new Error(result || "로그인에 실패했습니다.");
+          }
         } else {
-          localStorage.removeItem("rememberedEmail");
+          // JSON 응답인 경우
+          if (result.success || result.token) {
+            localStorage.setItem("accessToken", result.token || "temp-token");
+            localStorage.setItem("userEmail", email);
+            alert("로그인 성공!");
+            navigate("/upload");
+          } else {
+            throw new Error(result.message || "로그인에 실패했습니다.");
+          }
+        }
+      } else {
+        // 에러 처리
+        let errorMessage;
+
+        if (typeof result === "string") {
+          // 텍스트 에러 메시지
+          errorMessage = result;
+        } else {
+          // JSON 에러 메시지
+          errorMessage = result.message || `서버 오류: ${response.status}`;
         }
 
-        navigate("/main");
-      } else {
-        alert(result.message); // 실패 메시지
+        // 특정 에러 메시지 처리
+        if (errorMessage.includes("존재하지 않는 이메일")) {
+          setError("존재하지 않는 이메일입니다.");
+        } else if (errorMessage.includes("비밀번호")) {
+          setError("비밀번호가 일치하지 않습니다.");
+        } else if (response.status === 401) {
+          setError("인증에 실패했습니다. 이메일과 비밀번호를 확인해주세요.");
+        } else {
+          setError(errorMessage || "로그인에 실패했습니다.");
+        }
       }
     } catch (error) {
-      alert("서버 연결 실패!");
-      console.error(error);
+      console.error("로그인 오류:", error);
+
+      if (error.name === "SyntaxError" && error.message.includes("JSON")) {
+        setError("서버 응답 형식에 오류가 있습니다. 관리자에게 문의하세요.");
+      } else if (error.message.includes("Failed to fetch")) {
+        setError("네트워크 연결을 확인해주세요.");
+      } else {
+        setError(error.message || "로그인 중 오류가 발생했습니다.");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 

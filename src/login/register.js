@@ -50,37 +50,86 @@ function Register() {
       setConfirmPasswordError("");
     }
   };
-const handleLogin = async () => {
-  try {
-    const response = await fetch("https://3.34.19.178:8080/api/user/signup", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: email,
-        password: password,
-        nickname: nickname,
-      }),
-    });
-
-    const text = await response.text();
-    console.log("응답 내용:", text);
-
-    if (text.includes("성공")) {
-      alert("회원 가입 성공!");
-      // 임시 테스트용, 토큰 저장 로직 추가 필요
-      navigate("/login");
-    } else if (text.includes("이미")) {
-      alert("이미 등록된 이메일입니다.");
-    } else {
-      alert("회원 가입 실패!");
+  // 회원가입도 동일하게 처리
+  const handleRegister = async () => {
+    if (!email || !password || !confirmPassword) {
+      setError("모든 필드를 입력해주세요.");
+      return;
     }
-  } catch (error) {
-    alert("서버 연결 실패!");
-    console.error(error);
-  }
-}; 
+
+    if (password !== confirmPassword) {
+      setError("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(
+        "http://3.34.19.178:8080/api/user/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+            password: password,
+          }),
+        }
+      );
+
+      // 응답 형식 확인
+      const contentType = response.headers.get("content-type");
+      let result;
+
+      if (contentType && contentType.includes("application/json")) {
+        result = await response.json();
+      } else {
+        result = await response.text();
+      }
+
+      console.log("회원가입 응답:", result);
+
+      if (response.ok) {
+        // 성공 처리
+        if (typeof result === "string" && result.includes("회원가입 성공")) {
+          alert("회원가입이 완료되었습니다!");
+          navigate("/login");
+        } else if (typeof result === "object" && result.success) {
+          alert("회원가입이 완료되었습니다!");
+          navigate("/login");
+        } else {
+          throw new Error("회원가입에 실패했습니다.");
+        }
+      } else {
+        // 에러 처리
+        let errorMessage =
+          typeof result === "string"
+            ? result
+            : result.message || "회원가입에 실패했습니다.";
+
+        if (errorMessage.includes("이미 존재")) {
+          setError("이미 가입된 이메일입니다.");
+        } else {
+          setError(errorMessage);
+        }
+      }
+    } catch (error) {
+      console.error("회원가입 오류:", error);
+
+      if (error.name === "SyntaxError" && error.message.includes("JSON")) {
+        setError("서버 응답 형식에 오류가 있습니다. 관리자에게 문의하세요.");
+      } else if (error.message.includes("Failed to fetch")) {
+        setError("네트워크 연결을 확인해주세요.");
+      } else {
+        setError(error.message || "회원가입 중 오류가 발생했습니다.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div
@@ -286,7 +335,7 @@ const handleLogin = async () => {
 
         {/* sign up 버튼 */}
         <button
-          onClick={handleLogin}
+          onClick={handleRegister}
           style={{
             padding: "12px",
             fontSize: "1rem",
