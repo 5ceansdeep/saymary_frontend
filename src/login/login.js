@@ -43,6 +43,8 @@ function Login() {
     }
   };
 
+  // login.js 수정 - 사용자 정보 호출 실패 시에도 로그인 처리
+
   const handleLogin = async () => {
     if (!email || !password) {
       setError("이메일과 비밀번호를 입력해주세요.");
@@ -62,7 +64,7 @@ function Login() {
           email: email,
           password: password,
         }),
-        credentials: "include", 
+        credentials: "include",
       });
 
       const contentType = response.headers.get("content-type");
@@ -75,67 +77,53 @@ function Login() {
       }
 
       console.log("서버 응답:", result);
-      console.log("응답 타입:", typeof result);
 
       if (response.ok) {
-        // 세션 기반 인증 성공 처리
         console.log("로그인 성공, 쿠키 기반 세션 생성됨");
-        console.log("서버 응답:", result);
 
-        // 사용자 정보 가져오기 (/user/me API 호출)
+        // 사용자 정보 가져오기 시도
         try {
-          const userResponse = await fetch("https://api.saymary.site/api/user/me", {
-            method: "GET",
-            credentials: "include", // 세션 쿠키 포함
-          });
+          const userResponse = await fetch(
+            "https://api.saymary.site/api/user/me",
+            {
+              method: "GET",
+              credentials: "include",
+            }
+          );
 
           if (userResponse.ok) {
             const userData = await userResponse.json();
             console.log("사용자 정보:", userData);
-
-            // 사용자 정보를 localStorage에 저장
             localStorage.setItem("userEmail", userData.email || email);
             localStorage.setItem("userInfo", JSON.stringify(userData));
-
-            // Remember me 처리
-            if (rememberMe) {
-              localStorage.setItem("rememberedEmail", email);
-            } else {
-              localStorage.removeItem("rememberedEmail");
-            }
-
-            alert("로그인 성공!");
-            navigate("/upload");
           } else {
-            console.error("사용자 정보를 가져올 수 없습니다:", userResponse.status);
-            // 로그인은 성공했지만 사용자 정보를 못 가져온 경우
+            console.warn(
+              "사용자 정보 호출 실패, 하지만 로그인은 성공으로 처리"
+            );
+            // 사용자 정보를 못 가져와도 로그인은 성공으로 처리
             localStorage.setItem("userEmail", email);
-            
-            if (rememberMe) {
-              localStorage.setItem("rememberedEmail", email);
-            } else {
-              localStorage.removeItem("rememberedEmail");
-            }
-
-            alert("로그인 성공!");
-            navigate("/upload");
+            localStorage.setItem("loginTime", new Date().toISOString());
           }
         } catch (userInfoError) {
-          console.error("사용자 정보 요청 실패:", userInfoError);
-          // 사용자 정보는 못 가져왔지만 로그인은 성공
+          console.warn(
+            "사용자 정보 요청 실패, 하지만 로그인은 성공으로 처리:",
+            userInfoError
+          );
           localStorage.setItem("userEmail", email);
-          
-          if (rememberMe) {
-            localStorage.setItem("rememberedEmail", email);
-          } else {
-            localStorage.removeItem("rememberedEmail");
-          }
-
-          alert("로그인 성공!");
-          navigate("/upload");
+          localStorage.setItem("loginTime", new Date().toISOString());
         }
+
+        // Remember me 처리
+        if (rememberMe) {
+          localStorage.setItem("rememberedEmail", email);
+        } else {
+          localStorage.removeItem("rememberedEmail");
+        }
+
+        alert("로그인 성공!");
+        navigate("/upload");
       } else {
-        // 에러 처리 (기존과 동일)
+        // 로그인 실패 처리 (기존과 동일)
         let errorMessage;
 
         if (typeof result === "string") {
