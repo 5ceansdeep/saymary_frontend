@@ -1,51 +1,16 @@
 import React, { useState, useEffect } from "react";
 import Search from "../img/search.png";
 import { useNavigate } from "react-router-dom";
-const navigate = useNavigate();
 
 function Archive() {
+  const navigate = useNavigate();
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showActionMenu, setShowActionMenu] = useState({});
 
-  // Mock 데이터 (API 대신 사용)
-  const mockFiles = [
-    {
-      originalFileName: "회의록_2025_01_15.pdf",
-      transcript:
-        "오늘 회의에서는 새로운 프로젝트 기획안에 대해 논의했습니다. 마케팅 팀에서 제안한 전략이 매우 흥미로웠고...",
-      summary1: "주요 안건 논의 및 결정사항",
-      summary2: "다음 주까지 완료해야 할 업무들",
-      summary3: "예산 관련 검토 필요",
-      userId: 1,
-      fileId: 1,
-      createdAt: "2025-01-15T10:30:00Z",
-    },
-    {
-      originalFileName: "프레젠테이션_발표자료.pptx",
-      transcript:
-        "안녕하세요. 오늘 발표할 내용은 우리 회사의 새로운 비전에 관한 것입니다...",
-      summary1: "회사 비전 및 목표 설정",
-      summary2: "향후 3개년 계획 수립",
-      summary3: "조직 구조 개편 방안",
-      userId: 1,
-      fileId: 2,
-      createdAt: "2025-01-14T14:20:00Z",
-    },
-    {
-      originalFileName: "고객인터뷰_분석보고서.docx",
-      transcript:
-        "고객 만족도 조사 결과, 전반적으로 긍정적인 반응을 보였습니다. 특히 서비스 품질에 대한...",
-      summary1: "고객 만족도 조사 결과 분석",
-      summary2: "서비스 개선 포인트 도출",
-      summary3: "향후 고객 관리 전략",
-      userId: 1,
-      fileId: 3,
-      createdAt: "2025-01-13T16:45:00Z",
-    },
-  ];
+
    // localStorage 불러오기
   useEffect(() => {
   const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
@@ -99,10 +64,11 @@ function Archive() {
     setSearchTerm(value);
 
     // 검색어가 비어있으면 전체 목록 표시
-    if (!value.trim()) {
-      setFiles(mockFiles);
-    }
-  };
+  if (!value.trim()) {
+  const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
+  setFiles(saved);
+  return;
+}
 
   // 액션 메뉴 토글
   const toggleActionMenu = (fileId, e) => {
@@ -481,6 +447,7 @@ function Archive() {
       </div>
     </div>
   );
+}
 }
 
 export default Archive;
