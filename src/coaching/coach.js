@@ -797,6 +797,18 @@ function Coach() {
         onMouseLeave={() => setHovered(false)}
       >
         <SidebarButton
+          label="Home"
+          icon={homeIcon}
+          isActive={location.pathname === "/"}
+          onClick={() => handleNavigation("home")}
+        />
+        <SidebarButton
+          label="Coaching"
+          icon={coachingIcon}
+          isActive={location.pathname.startsWith("/coaching")}
+          onClick={() => handleNavigation("coaching")}
+        />
+        <SidebarButton
           label="Archive"
           icon={archiveIcon}
           isActive={location.pathname.startsWith("/archive")}
