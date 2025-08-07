@@ -12,13 +12,14 @@ function Coach() {
   const [feedbackData, setFeedbackData] = useState(null);
   const [sessionData, setSessionData] = useState(null);
   const [showActionButtons, setShowActionButtons] = useState(false);
-  const [activeTab, setActiveTab] = useState("summary"); // 우측 탭 상태 기본값:
+  const [activeTab, setActiveTab] = useState("summary"); // 우측 탭 상태 기본값
 
   const BoxRef = useRef();
 
   useEffect(() => {
     if (location.state) {
       const receivedFeedback = location.state.feedback;
+      console.log("받은 피드백 데이터:", receivedFeedback);
 
       let parsed = {};
       if (typeof receivedFeedback === "string") {
@@ -34,22 +35,31 @@ function Coach() {
         parsed = receivedFeedback;
       }
 
+      // 새로운 API 구조에 맞춰 데이터 매핑
       const feedbackDataFormatted = {
         original_text: parsed.original_text || "",
-        summary: parsed.summary || "",
-        keywords: Array.isArray(parsed.keywords)
-          ? parsed.keywords.join(", ")
-          : "",
+        // summaries 객체에서 요약 데이터 추출
+        summary: parsed.summaries?.["간단요약"] || parsed.summary || "",
+        detailed_summary: parsed.summaries?.["상세요약"] || "",
+        keywords: parsed.summaries?.["키워드요약"] || "",
+        // speed_analysis에서 말하기 속도 데이터 추출
         speaking_speed: {
-          average_wpm: parsed.speaking_speed?.average_wpm || 0,
-          comment: parsed.speaking_speed?.comment || "",
+          average_wpm: parsed.speed_analysis?.wpm || 0,
+          duration_seconds: parsed.speed_analysis?.duration_seconds || 0,
+          word_count: parsed.speed_analysis?.word_count || 0,
+          comment: parsed.speed_analysis?.feedback || "",
         },
+        // pause_analysis에서 말하기 템포 데이터 추출
         pause_analysis: {
-          pause_ratio: parsed.pause_analysis?.pause_ratio || 0,
-          long_pauses: parsed.pause_analysis?.long_pauses || [],
-          comment: parsed.pause_analysis?.comment || "",
+          pause_count: parsed.pause_analysis?.pause_stats?.pause_count || 0,
+          avg_pause_length: parsed.pause_analysis?.pause_stats?.avg_pause_length || 0,
+          total_silence: parsed.pause_analysis?.pause_stats?.total_silence || 0,
+          long_pauses: [], // 새 API에는 개별 pause 정보가 없음
+          comment: parsed.pause_analysis?.feedback || "",
         },
       };
+
+      console.log("변환된 피드백 데이터:", feedbackDataFormatted);
 
       setFeedbackData(feedbackDataFormatted);
       setSessionData({
@@ -65,17 +75,19 @@ function Coach() {
         original_text:
           "재택근무는 코로나19 팬데믹을 계기로 빠르게 확산된 근무 형태입니다.",
         summary: "발표력이 좋습니다.",
+        detailed_summary: "전반적으로 명확하고 체계적인 발표였습니다.",
         keywords: "재택근무, 코로나19, 팬데믹",
         speaking_speed: {
-          average_wpm: 212.5,
-          comment: "조금 빠른 말하기입니다.",
+          average_wpm: 160.37,
+          duration_seconds: 17.21,
+          word_count: 46,
+          comment: "적절한 말하기 속도입니다.",
         },
         pause_analysis: {
-          long_pauses: [
-            { start: "00:12.3", end: "00:14.8" },
-            { start: "00:34.0", end: "00:35.7" },
-          ],
-          pause_ratio: 0.17,
+          pause_count: 0,
+          avg_pause_length: 0,
+          total_silence: 0,
+          long_pauses: [],
           comment: "자연스러운 말하기입니다.",
         },
       });
@@ -141,17 +153,18 @@ function Coach() {
         content += `=== 원본 텍스트 ===\n${
           feedbackData.original_text || "원본 텍스트 없음"
         }\n\n`;
-        content += `=== 요약 ===\n${feedbackData.summary || "요약 없음"}\n\n`;
+        content += `=== 간단 요약 ===\n${feedbackData.summary || "요약 없음"}\n\n`;
+        content += `=== 상세 요약 ===\n${feedbackData.detailed_summary || "상세 요약 없음"}\n\n`;
         content += `=== 키워드 ===\n${
           feedbackData.keywords || "키워드 없음"
         }\n\n`;
 
         if (feedbackData.speaking_speed) {
-          content += `=== 말하기 속도 분석 ===\n평균 WPM: ${feedbackData.speaking_speed.average_wpm}\n코멘트: ${feedbackData.speaking_speed.comment}\n\n`;
+          content += `=== 말하기 속도 분석 ===\n평균 WPM: ${feedbackData.speaking_speed.average_wpm}\n발화 시간: ${feedbackData.speaking_speed.duration_seconds}초\n단어 수: ${feedbackData.speaking_speed.word_count}개\n코멘트: ${feedbackData.speaking_speed.comment}\n\n`;
         }
 
         if (feedbackData.pause_analysis) {
-          content += `=== 말하기 템포 분석 ===\n잠깐 쉬는 비율: ${feedbackData.pause_analysis.pause_ratio}\n코멘트: ${feedbackData.pause_analysis.comment}\n`;
+          content += `=== 말하기 템포 분석 ===\n멈춤 횟수: ${feedbackData.pause_analysis.pause_count}회\n평균 멈춤 길이: ${feedbackData.pause_analysis.avg_pause_length}초\n총 침묵 시간: ${feedbackData.pause_analysis.total_silence}초\n코멘트: ${feedbackData.pause_analysis.comment}\n`;
         }
       }
 
@@ -175,17 +188,18 @@ function Coach() {
       content += `=== 원본 텍스트 ===\n${
         feedbackData.original_text || "원본 텍스트 없음"
       }\n\n`;
-      content += `=== 요약 ===\n${feedbackData.summary || "요약 없음"}\n\n`;
+      content += `=== 간단 요약 ===\n${feedbackData.summary || "요약 없음"}\n\n`;
+      content += `=== 상세 요약 ===\n${feedbackData.detailed_summary || "상세 요약 없음"}\n\n`;
       content += `=== 키워드 ===\n${
         feedbackData.keywords || "키워드 없음"
       }\n\n`;
 
       if (feedbackData.speaking_speed) {
-        content += `=== 말하기 속도 분석 ===\n평균 WPM: ${feedbackData.speaking_speed.average_wpm}\n코멘트: ${feedbackData.speaking_speed.comment}\n\n`;
+        content += `=== 말하기 속도 분석 ===\n평균 WPM: ${feedbackData.speaking_speed.average_wpm}\n발화 시간: ${feedbackData.speaking_speed.duration_seconds}초\n단어 수: ${feedbackData.speaking_speed.word_count}개\n코멘트: ${feedbackData.speaking_speed.comment}\n\n`;
       }
 
       if (feedbackData.pause_analysis) {
-        content += `=== 말하기 템포 분석 ===\n잠깐 쉬는 비율: ${feedbackData.pause_analysis.pause_ratio}\n코멘트: ${feedbackData.pause_analysis.comment}\n`;
+        content += `=== 말하기 템포 분석 ===\n멈춤 횟수: ${feedbackData.pause_analysis.pause_count}회\n평균 멈춤 길이: ${feedbackData.pause_analysis.avg_pause_length}초\n총 침묵 시간: ${feedbackData.pause_analysis.total_silence}초\n코멘트: ${feedbackData.pause_analysis.comment}\n`;
       }
     }
 
@@ -260,12 +274,28 @@ function Coach() {
                   fontSize: "1.1rem",
                 }}
               >
-                📝 요약
+                📝 간단 요약
               </h3>
-              <p style={{ lineHeight: "1.6", color: "#333" }}>
-                {feedbackData.summary || "요약이 없습니다."}
+              <p style={{ lineHeight: "1.6", color: "#333", marginBottom: "15px" }}>
+                {feedbackData.summary || "간단 요약이 없습니다."}
               </p>
             </div>
+            
+            <div style={{ marginBottom: "20px" }}>
+              <h3
+                style={{
+                  color: "#00492C",
+                  marginBottom: "10px",
+                  fontSize: "1.1rem",
+                }}
+              >
+                📄 상세 요약
+              </h3>
+              <p style={{ lineHeight: "1.6", color: "#333", marginBottom: "15px" }}>
+                {feedbackData.detailed_summary || "상세 요약이 없습니다."}
+              </p>
+            </div>
+
             <div>
               <h3
                 style={{
@@ -276,9 +306,9 @@ function Coach() {
               >
                 🔑 키워드
               </h3>
-              <p style={{ lineHeight: "1.6", color: "#333" }}>
+              <div style={{ lineHeight: "1.6", color: "#333", whiteSpace: "pre-line" }}>
                 {feedbackData.keywords || "키워드가 없습니다."}
-              </p>
+              </div>
             </div>
           </div>
         );
@@ -308,13 +338,31 @@ function Coach() {
                 >
                   <p
                     style={{
-                      margin: "0",
+                      margin: "0 0 10px 0",
                       fontSize: "1.2rem",
                       fontWeight: "bold",
                       color: "#00492C",
                     }}
                   >
                     평균 {feedbackData.speaking_speed.average_wpm} WPM
+                  </p>
+                  <p
+                    style={{
+                      margin: "5px 0",
+                      fontSize: "0.9rem",
+                      color: "#666",
+                    }}
+                  >
+                    발화 시간: {feedbackData.speaking_speed.duration_seconds}초
+                  </p>
+                  <p
+                    style={{
+                      margin: "5px 0",
+                      fontSize: "0.9rem",
+                      color: "#666",
+                    }}
+                  >
+                    총 단어 수: {feedbackData.speaking_speed.word_count}개
                   </p>
                   <p
                     style={{
@@ -375,38 +423,35 @@ function Coach() {
                       color: "#00492C",
                     }}
                   >
-                    잠깐 쉬는 비율:{" "}
-                    {(feedbackData.pause_analysis.pause_ratio * 100).toFixed(1)}
-                    %
+                    멈춤 통계
                   </p>
-                  {feedbackData.pause_analysis.long_pauses &&
-                    feedbackData.pause_analysis.long_pauses.length > 0 && (
-                      <div>
-                        <p
-                          style={{
-                            margin: "0 0 8px 0",
-                            fontWeight: "500",
-                            color: "#555",
-                          }}
-                        >
-                          오래 멈춘 구간:
-                        </p>
-                        {feedbackData.pause_analysis.long_pauses.map(
-                          (pause, index) => (
-                            <p
-                              key={index}
-                              style={{
-                                margin: "0",
-                                fontSize: "0.9rem",
-                                color: "#666",
-                              }}
-                            >
-                              • {pause.start} ~ {pause.end}
-                            </p>
-                          )
-                        )}
-                      </div>
-                    )}
+                  <p
+                    style={{
+                      margin: "5px 0",
+                      fontSize: "0.9rem",
+                      color: "#666",
+                    }}
+                  >
+                    멈춤 횟수: {feedbackData.pause_analysis.pause_count}회
+                  </p>
+                  <p
+                    style={{
+                      margin: "5px 0",
+                      fontSize: "0.9rem",
+                      color: "#666",
+                    }}
+                  >
+                    평균 멈춤 길이: {feedbackData.pause_analysis.avg_pause_length}초
+                  </p>
+                  <p
+                    style={{
+                      margin: "5px 0",
+                      fontSize: "0.9rem",
+                      color: "#666",
+                    }}
+                  >
+                    총 침묵 시간: {feedbackData.pause_analysis.total_silence}초
+                  </p>
                 </div>
                 <div
                   style={{
@@ -731,7 +776,6 @@ function Coach() {
       ></div>
 
       {/* 사이드바 */}
-      {/* 사이드바 */}
       <div
         style={{
           position: "fixed",
@@ -752,18 +796,6 @@ function Coach() {
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        <SidebarButton
-          label="Home"
-          icon={homeIcon}
-          isActive={location.pathname === "/"}
-          onClick={() => handleNavigation("home")}
-        />
-        <SidebarButton
-          label="Coaching"
-          icon={coachingIcon}
-          isActive={location.pathname.startsWith("/coaching")}
-          onClick={() => handleNavigation("coaching")}
-        />
         <SidebarButton
           label="Archive"
           icon={archiveIcon}

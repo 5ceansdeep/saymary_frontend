@@ -92,7 +92,7 @@ function UploadFile() {
       "audio/aac",
     ];
 
-    const maxSize = 10 * 1024 * 1024; // 임시로 10MB로 제한 (서버 이슈 해결 전까지)
+    const maxSize = 50 * 1024 * 1024; // 임시로 50MB로 제한 (서버 이슈 해결 전까지)
 
     if (
       !allowedTypes.includes(file.type) &&
@@ -105,7 +105,7 @@ function UploadFile() {
 
     if (file.size > maxSize) {
       throw new Error(
-        "파일 크기가 너무 큽니다. (현재 최대 10MB - 서버 설정 조정 중)"
+        "파일 크기가 너무 큽니다. (현재 최대 50MB)"
       );
     }
 
