@@ -12,19 +12,69 @@ function Main() {
   const [showActionMenu, setShowActionMenu] = useState({});
   const [summaryData, setSummaryData] = useState(null);
   const [currentSummary, setCurrentSummary] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const BoxRef = useRef();
 
-  // 0.5초 후 노란 박스 애니메이션 시작
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setAnimate1(true);
-    }, 500);
+  // localStorage 기준 인증 확인 함수
+  const checkAuthStatus = async () => {
+    const userEmail = localStorage.getItem("userEmail");
+    const loginTime = localStorage.getItem("loginTime");
 
-    return () => clearTimeout(timer);
-  }, []);
+    if (!userEmail) {
+      return false;
+    }
 
-  // 컴포넌트 마운트 시 저장된 요약 데이터 불러오기
+    // 로그인 시간이 24시간 이내인지 확인
+    if (loginTime) {
+      const loginDate = new Date(loginTime);
+      const now = new Date();
+      const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
+
+      if (hoursDiff > 24) {
+        console.warn("로그인 시간이 24시간을 초과했습니다.");
+        localStorage.removeItem("userEmail");
+        localStorage.removeItem("loginTime");
+        localStorage.removeItem("userInfo");
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  // 페이지 로드 시 인증 확인
   useEffect(() => {
+    const verifyAuth = async () => {
+      const authStatus = await checkAuthStatus();
+
+      if (!authStatus) {
+        console.warn("인증되지 않은 상태입니다. 로그인 페이지로 이동합니다.");
+        navigate("/login");
+        return;
+      }
+
+      console.log("localStorage 기준 인증 성공");
+      setIsAuthenticated(true);
+    };
+
+    verifyAuth();
+  }, [navigate]);
+
+  // 0.5초 후 노란 박스 애니메이션 시작 (인증된 경우에만)
+  useEffect(() => {
+    if (isAuthenticated) {
+      const timer = setTimeout(() => {
+        setAnimate1(true);
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated]);
+
+  // 컴포넌트 마운트 시 저장된 요약 데이터 불러오기 (인증된 경우에만)
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
     const savedData = localStorage.getItem("summaryData");
     if (savedData) {
       try {
@@ -55,7 +105,7 @@ function Main() {
       setSummaryData(defaultData);
       setCurrentSummary(defaultData.간단요약);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   // 스크롤 함수
   const scrollToBottom = () => {
@@ -109,6 +159,15 @@ function Main() {
   const handleNewUpload = () => {
     localStorage.removeItem("summaryData");
     navigate("/upload");
+  };
+
+  // 로그아웃 핸들러 추가
+  const handleLogout = () => {
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("loginTime");
+    localStorage.removeItem("userInfo");
+    localStorage.removeItem("summaryData");
+    navigate("/login");
   };
 
   // 요약 타입명 가져오기 함수
@@ -207,7 +266,7 @@ function Main() {
     },
   ];
 
-  // 액션 버튼 데이터 배열
+  // 액션 버튼 데이터 배열 (로그아웃 버튼 추가)
   const actionButtons = [
     {
       id: "copy",
@@ -242,6 +301,17 @@ function Main() {
         border: "none",
       },
     },
+    {
+      id: "logout",
+      text: "🚪 로그아웃",
+      title: "로그아웃하고 로그인 페이지로 이동합니다",
+      onClick: handleLogout,
+      style: {
+        backgroundColor: "#e74c3c",
+        color: "white",
+        border: "none",
+      },
+    },
   ];
 
   // 스타일 정의
@@ -268,11 +338,11 @@ function Main() {
     zIndex: 1001,
     display: "flex",
     flexDirection: "column",
-    backgroundColor: "#fff", // or "#ecead5"
+    backgroundColor: "#fff",
     border: "1px solid #ccc",
     borderRadius: "8px",
     overflow: "hidden",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.15)", 
+    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
   };
 
   const actionButtonStyle = {
@@ -287,6 +357,26 @@ function Main() {
     whiteSpace: "nowrap",
   };
 
+  // 인증되지 않은 경우 로딩 표시 또는 빈 화면
+  if (!isAuthenticated) {
+    return (
+      <div
+        style={{
+          backgroundColor: "#00492C",
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          color: "#F2C81B",
+          fontSize: "18px",
+          fontFamily: "Noto Sans KR, sans-serif",
+        }}
+      >
+        인증 확인 중...
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
@@ -300,6 +390,22 @@ function Main() {
         position: "relative",
       }}
     >
+      {/* 로그인 상태 표시 */}
+      <div
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+          fontSize: "12px",
+          color: "green",
+          background: "rgba(255,255,255,0.8)",
+          padding: "5px 10px",
+          borderRadius: "5px",
+        }}
+      >
+        로그인: ✅ {localStorage.getItem("userEmail")}
+      </div>
+
       {/* 제목 - 클릭하면 업로드 페이지로 이동 */}
       <h1
         style={{
@@ -395,6 +501,8 @@ function Main() {
                     onMouseEnter={(e) => {
                       if (button.id === "newUpload") {
                         e.target.style.backgroundColor = "#005a35";
+                      } else if (button.id === "logout") {
+                        e.target.style.backgroundColor = "#c0392b";
                       } else {
                         e.target.style.backgroundColor = "#f0f0f0";
                       }
