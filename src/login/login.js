@@ -62,7 +62,7 @@ function Login() {
           email: email,
           password: password,
         }),
-        credentials: "include", // ✅ 핵심 줄!
+        credentials: "include", 
       });
 
       const contentType = response.headers.get("content-type");

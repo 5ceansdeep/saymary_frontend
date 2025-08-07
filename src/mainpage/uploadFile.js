@@ -1,4 +1,4 @@
-// uploadFile.js - 인증 헤더 추가된 버전
+// uploadFile.js - 인증 확인 함수 추가
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -12,10 +12,48 @@ function UploadFile() {
   const [uploadError, setUploadError] = useState(null);
   const [animate1, setAnimate1] = useState(false);
 
+  // 인증 상태 확인 함수 추가
+  const checkAuthStatus = async () => {
+    try {
+      const response = await fetch("https://api.saymary.site/api/user/me", {
+        method: "GET",
+        credentials: "include", // 세션 쿠키 포함
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        localStorage.setItem("userEmail", userData.email);
+        localStorage.setItem("userInfo", JSON.stringify(userData));
+        return true;
+      } else {
+        localStorage.removeItem("userEmail");
+        localStorage.removeItem("userInfo");
+        return false;
+      }
+    } catch (error) {
+      console.error("인증 상태 확인 실패:", error);
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userInfo");
+      return false;
+    }
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setAnimate1(true);
     }, 100);
+
+    // 페이지 로드 시 인증 상태 확인
+    const verifyAuth = async () => {
+      const isAuthenticated = await checkAuthStatus();
+      if (!isAuthenticated) {
+        console.warn("인증되지 않은 상태입니다.");
+        // 필요하다면 로그인 페이지로 리다이렉트
+        // navigate("/login");
+      }
+    };
+
+    verifyAuth();
 
     return () => clearTimeout(timer);
   }, []);
@@ -43,7 +81,7 @@ function UploadFile() {
     }
   };
 
-  // API 호출 함수 - 인증 헤더 추가
+  // API 호출 함수 - 세션 기반 인증
   const uploadFileToAPI = async (file) => {
     setIsUploading(true);
     setUploadProgress(0);
@@ -53,9 +91,9 @@ function UploadFile() {
 
     try {
       // 세션 기반 인증 확인
-      const userEmail = localStorage.getItem("userEmail");
+      const isAuthenticated = await checkAuthStatus();
 
-      if (!userEmail) {
+      if (!isAuthenticated) {
         throw new Error("로그인이 필요합니다. 다시 로그인해주세요.");
       }
 
@@ -144,6 +182,11 @@ function UploadFile() {
           navigate("/main");
         }, 1000);
       } else {
+        // 401 Unauthorized 처리
+        if (response.status === 401) {
+          throw new Error("로그인이 만료되었습니다. 다시 로그인해주세요.");
+        }
+
         // 다른 HTTP 에러들
         let errorMessage;
         if (typeof result === "string") {
@@ -252,16 +295,17 @@ function UploadFile() {
   };
 
   // 파일 업로드 처리 - 세션 기반 인증 체크
-  const handleFileUpload = (file) => {
-    const userEmail = localStorage.getItem("userEmail");
-
-    if (!userEmail) {
-      alert("로그인이 필요합니다.");
-      navigate("/login");
-      return;
-    }
-
+  const handleFileUpload = async (file) => {
     try {
+      // 실시간 인증 확인
+      const isAuthenticated = await checkAuthStatus();
+
+      if (!isAuthenticated) {
+        alert("로그인이 필요합니다.");
+        navigate("/login");
+        return;
+      }
+
       validateFile(file);
       setSelectedFile(file);
       console.log("업로드된 파일:", file);
@@ -346,6 +390,7 @@ function UploadFile() {
   // 로그인 상태 확인
   const userEmail = localStorage.getItem("userEmail");
 
+  // 나머지 JSX는 기존과 동일하므로 생략...
   return (
     <div
       style={{
@@ -359,6 +404,7 @@ function UploadFile() {
         position: "relative",
       }}
     >
+      {/* 기존 JSX 코드와 동일 */}
       <h1
         style={{
           color: "#F2C81B",
