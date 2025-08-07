@@ -5,44 +5,86 @@ import godown from "../img/godown.png";
 
 function Main() {
   const navigate = useNavigate();
+
   // 상태 관리
   const [animate1, setAnimate1] = useState(false);
   const [activeButton, setActiveButton] = useState(null);
   const [showActionMenu, setShowActionMenu] = useState({});
   const [summaryData, setSummaryData] = useState(null);
   const [currentSummary, setCurrentSummary] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const BoxRef = useRef();
+
+  // localStorage 기준 인증 확인 함수
+  const checkAuthStatus = async () => {
+    const userEmail = localStorage.getItem("userEmail");
+    const loginTime = localStorage.getItem("loginTime");
+
+    if (!userEmail) {
+      return false;
+    }
+
+    // 로그인 시간이 24시간 이내인지 확인
+    if (loginTime) {
+      const loginDate = new Date(loginTime);
+      const now = new Date();
+      const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
+
+      if (hoursDiff > 24) {
+        console.warn("로그인 시간이 24시간을 초과했습니다.");
+        localStorage.removeItem("userEmail");
+        localStorage.removeItem("loginTime");
+        localStorage.removeItem("userInfo");
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  // 페이지 로드 시 인증 확인 (임시로 비활성화)
+  useEffect(() => {
+    const verifyAuth = async () => {
+      const authStatus = await checkAuthStatus();
+
+      if (!authStatus) {
+        console.warn("인증되지 않은 상태이지만 임시로 허용");
+        // navigate("/login"); // 임시로 주석 처리
+        // return;
+      }
+
+      console.log("localStorage 기준 인증 성공 또는 임시 허용");
+      setIsAuthenticated(true);
+    };
+
+    verifyAuth();
+  }, [navigate]);
 
   // 0.5초 후 노란 박스 애니메이션 시작
   useEffect(() => {
-    const timer = setTimeout(() => {
-      console.log("🎉 애니메이션 활성화됨");
-      setAnimate1(true);
-    }, 500);
+    if (isAuthenticated) {
+      const timer = setTimeout(() => {
+        setAnimate1(true);
+      }, 500);
 
-    return () => clearTimeout(timer);
-  }, []);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated]);
 
+  // 컴포넌트 마운트 시 저장된 요약 데이터 불러오기 (인증된 경우에만)
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     const savedData = localStorage.getItem("summaryData");
     if (savedData) {
       try {
         const parsedData = JSON.parse(savedData);
         setSummaryData(parsedData);
-
-        const type = parsedData.summaryType || "간단요약"; // ✅ 요약 타입 불러오기
-        setActiveButton(type); // ✅ 버튼도 같이 활성화
-
-        switch (type) {
-          case "상세요약":
-            setCurrentSummary(parsedData.상세요약 || parsedData.text);
-            break;
-          case "키워드요약":
-            setCurrentSummary(parsedData.키워드요약 || parsedData.text);
-            break;
-          default:
-            setCurrentSummary(parsedData.간단요약 || parsedData.text);
-        }
+        setCurrentSummary(
+          parsedData.간단요약 ||
+            parsedData.text ||
+            "요약 데이터를 불러올 수 없습니다."
+        );
       } catch (error) {
         console.error("데이터 파싱 오류:", error);
         setCurrentSummary("저장된 요약 데이터를 불러올 수 없습니다.");
@@ -50,13 +92,13 @@ function Main() {
     } else {
       // 테스트용 기본 데이터
       const defaultData = {
-        text: "회의 전체 텍스트 내용입니다...",
+        text: "안녕하세요. 오늘은 정보통신공학과에 대해 소개해드리겠습니다. 정보통신공학은 쉽게 말해 정보기술, 그러니까 IT와 통신기술이 결합된 분야라고 보시면 됩니다. 우리가 일상에서 사용하는 스마트폰, 인터넷, 인공지능, 이런 기술들이 전부 정보통신의 기반 위에서 작동하고 있어요. 학과에서는 디지털 신호처리나 무선통신, 네트워크 같은 핵심 이론은 물론이고, 프로그래밍이나 실습 수업도 많이 진행돼요. 요즘엔 5G나 6G, 사물인터넷, 자율주행차처럼 미래 산업과 관련된 기술을 배우는 기회도 많아지고 있습니다. 실제로 학생들은 캡스톤디자인이나 산학협력 프로젝트를 통해 직접 문제를 해결하고 결과물을 만들어보기도 해요. 졸업 후에는 KT나 SK텔레콤 같은 통신사, 삼성전자 같은 IT 기업, 또는 연구소나 공기업 등 다양한 진로가 열려 있고요. 해외 인턴십 프로그램도 있어서, 글로벌 환경에서도 경쟁력 있는 인재로 성장할 수 있도록 돕고 있습니다. 정보통신공학과는 단순한 기술자가 아니라, 변화에 대응하고 융합할 줄 아는 창의적인 공학 인재를 기르는 것을 목표로 하고 있습니다. 감사합니다.",
         간단요약:
-          "재택근무가 확산되면서 워라밸 향상과 비용 절감 등의 이점이 있지만, 소통 부족과 조직 소속감 약화 등의 문제도 존재한다.",
+          "정보통신공학과는 IT와 통신 기술을 바탕으로 다양한 실습과 프로젝트를 통해 실무 능력을 기르고, 5G·AI 등 미래 기술에 대응하는 융합형 인재를 양성합니다.",
         상세요약:
-          "재택근무는 코로나19 팬데믹을 계기로 빠르게 확산된 근무 형태이다. 직원들은 출퇴근 시간이 사라지면서 더 많은 여유 시간을 확보할 수 있게 되었다. 이는 워라밸(Work-Life Balance) 향상에 긍정적인 영향을 주었다. 또한, 자율적인 시간 관리가 가능해져 개인의 집중력이 오히려 높아지기도 한다. 기업 입장에서는 사무실 운영비용 절감 등의 경제적 이점이 존재한다. 반면, 팀원 간의 소통이 부족해지며 협업 효율이 낮아지는 경우도 있다.",
+          "정보통신공학과는 IT와 통신 기술을 융합한 분야로, 스마트폰과 인공지능 같은 일상 속 첨단 기술의 기반이 됩니다. 디지털 신호처리, 무선통신, 네트워크 등 다양한 이론과 실습 수업을 통해 실무 중심의 교육을 제공하며, 5G, IoT, 자율주행 같은 미래 산업 기술도 폭넓게 다룹니다. 학생들은 캡스톤디자인과 산학협력 프로젝트를 통해 문제 해결 능력을 키우고, 졸업 후에는 통신사, IT기업, 연구소 등으로 진출하게 됩니다. 또한 해외 인턴십 프로그램을 통해 글로벌 역량도 함께 갖출 수 있으며, 학과의 목표는 기술을 넘어 융합적 사고를 갖춘 창의적 공학 인재 양성입니다.",
         키워드요약:
-          "• 재택근무, 코로나19 팬데믹\n• 워라밸 향상, 여유 시간 확보\n• 자율적 시간 관리, 집중력 향상\n• 사무실 운영비용 절감\n• 소통 부족, 협업 효율 저하\n• 조직 소속감 약화\n• 하이브리드 근무 형태",
+          "• IT + 통신기술 융합\n• 디지털 신호처리, 무선통신, 네트워크, 프로그래밍\n• 5G, 6G, IoT, 자율주행\n• 실무 중심 교육, 캡스톤디자인\n• 산학협력 프로젝트\n• 통신사·IT기업·연구소 진출\n• 해외 인턴십, 글로벌 역량\n• 창의적·융합형 공학 인재",
         fileName: "sample_audio.mp3",
         uploadTime: new Date().toLocaleString(),
         summaryType: "간단요약", // ✅ 기본 요약 타입도 명시적으로 넣자
@@ -119,6 +161,16 @@ function Main() {
   const handleNewUpload = () => {
     localStorage.removeItem("summaryData");
     navigate("/upload");
+  };
+
+  // 로그아웃 핸들러 추가
+  const handleLogout = () => {
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("loginTime");
+    localStorage.removeItem("userInfo");
+    localStorage.removeItem("summaryData");
+    alert("로그아웃되셨습니다.");
+    navigate("/login", { replace: true });
   };
 
   // 요약 타입명 가져오기 함수
@@ -217,31 +269,21 @@ function Main() {
     },
   ];
 
+  //보관함에 저장 함수
   const saveToArchive = () => {
     const fileName = prompt("저장할 파일 이름을 입력하세요:");
     if (!fileName) return;
 
     const archiveList = JSON.parse(localStorage.getItem("archiveFiles")) || [];
 
-    // 현재 선택된 요약 종류에 따라 summary1에 저장될 텍스트 결정
-    let selectedSummary = "";
-    if (activeButton === "상세요약") {
-      selectedSummary = summaryData?.상세요약 || summaryData?.text || "";
-    } else if (activeButton === "키워드요약") {
-      selectedSummary = summaryData?.키워드요약 || summaryData?.text || "";
-    } else {
-      selectedSummary = summaryData?.간단요약 || summaryData?.text || "";
-    }
-
     const newFile = {
       fileId: Date.now(),
       originalFileName: fileName,
       createdAt: new Date().toISOString(),
       transcript: summaryData?.text || "",
-      summary1: selectedSummary, // 현재 선택된 요약만 저장
+      summary1: summaryData?.간단요약 || "",
       summary2: summaryData?.상세요약 || "",
       summary3: summaryData?.키워드요약 || "",
-      summaryType: activeButton || "간단요약",
     };
 
     archiveList.push(newFile);
@@ -249,7 +291,7 @@ function Main() {
     alert("보관함에 저장되었습니다!");
   };
 
-  // 액션 버튼 데이터 배열
+  // 액션 버튼 데이터 배열 (로그아웃 버튼 추가)
   const actionButtons = [
     {
       id: "copy",
@@ -262,12 +304,22 @@ function Main() {
         border: "none",
       },
     },
-
     {
       id: "export",
       text: "txt 파일로 내보내기",
       title: "원본 텍스트와 선택된 요약을 텍스트 파일로 다운로드합니다",
       onClick: exportToFile,
+      style: {
+        backgroundColor: "#ecead5",
+        color: "#656247",
+        border: "none",
+      },
+    },
+    {
+      id: "goToArchive",
+      text: "Archive에 저장",
+      title: "보관함에 저장",
+      onClick: saveToArchive,
       style: {
         backgroundColor: "#ecead5",
         color: "#656247",
@@ -311,7 +363,7 @@ function Main() {
     zIndex: 1001,
     display: "flex",
     flexDirection: "column",
-    backgroundColor: "#fff", // or "#ecead5"
+    backgroundColor: "#fff",
     border: "1px solid #ccc",
     borderRadius: "8px",
     overflow: "hidden",
@@ -330,6 +382,26 @@ function Main() {
     whiteSpace: "nowrap",
   };
 
+  // 인증되지 않은 경우 로딩 표시 또는 빈 화면
+  if (!isAuthenticated) {
+    return (
+      <div
+        style={{
+          backgroundColor: "#00492C",
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          color: "#F2C81B",
+          fontSize: "18px",
+          fontFamily: "Noto Sans KR, sans-serif",
+        }}
+      >
+        인증 확인 중...
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
@@ -343,6 +415,25 @@ function Main() {
         position: "relative",
       }}
     >
+      {/* 로그인 상태 표시
+      <button
+        onClick={handleLogout}
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+          fontSize: "12px",
+          color: "green",
+          background: "rgba(255,255,255,0.8)",
+          padding: "5px 10px",
+          borderRadius: "5px",
+          cursor: "pointer",
+          zIndex: 9999,
+        }}
+      >
+        로그인: ✅ {localStorage.getItem("userEmail")}
+      </button> */}
+
       {/* 제목 - 클릭하면 업로드 페이지로 이동 */}
       <h1
         style={{
@@ -370,28 +461,6 @@ function Main() {
       >
         Saymary
       </h1>
-
-      {/* 보관함에 저장 버튼 */}
-      <button
-        onClick={saveToArchive}
-        style={{
-          position: "absolute",
-          top: "4%",
-          right: "7%",
-          padding: "8px 18px",
-          backgroundColor: "#f2c81b",
-          color: "#333",
-          fontWeight: "bold",
-          fontSize: "14px",
-          border: "none",
-          borderRadius: "8px",
-          cursor: "pointer",
-          zIndex: 1001,
-          fontFamily: "Noto Sans KR, sans-serif",
-        }}
-      >
-        보관함에 저장
-      </button>
 
       {/* 메인 컨텐츠 박스 */}
       <div
@@ -460,6 +529,8 @@ function Main() {
                     onMouseEnter={(e) => {
                       if (button.id === "newUpload") {
                         e.target.style.backgroundColor = "#005a35";
+                      } else if (button.id === "logout") {
+                        e.target.style.backgroundColor = "#c0392b";
                       } else {
                         e.target.style.backgroundColor = "#f0f0f0";
                       }
@@ -494,7 +565,7 @@ function Main() {
         </h2>
 
         {/* 요약 텍스트 본문 - 원본 텍스트 표시 */}
-        <p
+        <div
           style={{
             color: "#656247",
             backgroundColor: "#ECEAD5",
@@ -554,7 +625,7 @@ function Main() {
               </button>
             ))}
           </div>
-        </p>
+        </div>
 
         {/* 선택된 요약본 표시 영역 */}
         <div

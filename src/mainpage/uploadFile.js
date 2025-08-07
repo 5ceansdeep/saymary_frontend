@@ -512,7 +512,7 @@ function UploadFile() {
         Saymary
       </h1>
 
-      {/* 로그인 상태 표시 */}
+      {/* 로그인 상태 표시
       <div
         style={{
           position: "absolute",
@@ -527,7 +527,7 @@ function UploadFile() {
         }}
       >
         로그인 상태 : {userEmail ? "✅ " + userEmail : "❌ 로그아웃"}
-      </div>
+      </div> */}
 
       <div
         className="custom-scroll"

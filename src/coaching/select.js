@@ -188,7 +188,7 @@ try {
                   cursor: "pointer",
                   fontFamily: "Noto Sans KR, sans-serif",
                   fontWeight: 500,
-                  fontSize: "1.1rem",
+                  fontSize: "0.9rem",
                   lineHeight: "normal",
                   border: "1px solid #C7C29B",
                   backgroundColor:
@@ -232,7 +232,7 @@ try {
                   cursor: "pointer",
                   fontFamily: "Noto Sans KR, sans-serif",
                   fontWeight: 500,
-                  fontSize: "1.1rem",
+                  fontSize: "0.9rem",
                   lineHeight: "normal",
                   border: "1px solid #C7C29B",
                   backgroundColor:
@@ -277,7 +277,7 @@ try {
                   cursor: "pointer",
                   fontFamily: "Noto Sans KR, sans-serif",
                   fontWeight: 500,
-                  fontSize: "1.1rem",
+                  fontSize: "0.9rem",
                   lineHeight: "normal",
                   border: "1px solid #C7C29B",
                   backgroundColor:
