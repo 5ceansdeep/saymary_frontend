@@ -682,7 +682,7 @@ function UploadFile() {
                     color: "#8a7d5c",
                   }}
                 >
-                  지원 형식: MP3, WAV, M4A, AAC (현재 최대 10MB - 서버 설정 조정
+                  지원 형식: MP3, WAV, M4A, AAC (현재 최대 50MB)
                   중)
                 </p>
                 <button
