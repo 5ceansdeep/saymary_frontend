@@ -16,7 +16,9 @@ function Main() {
 
   // 0.5초 후 노란 박스 애니메이션 시작
   useEffect(() => {
+    console.log("🚀 Main 컴포넌트 useEffect 작동함!");
     const timer = setTimeout(() => {
+      console.log("🎉 애니메이션 활성화됨");
       setAnimate1(true);
     }, 500);
 
