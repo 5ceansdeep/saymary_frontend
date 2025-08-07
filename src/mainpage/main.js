@@ -5,86 +5,44 @@ import godown from "../img/godown.png";
 
 function Main() {
   const navigate = useNavigate();
-
   // 상태 관리
   const [animate1, setAnimate1] = useState(false);
   const [activeButton, setActiveButton] = useState(null);
   const [showActionMenu, setShowActionMenu] = useState({});
   const [summaryData, setSummaryData] = useState(null);
   const [currentSummary, setCurrentSummary] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const BoxRef = useRef();
-
-  // localStorage 기준 인증 확인 함수
-  const checkAuthStatus = async () => {
-    const userEmail = localStorage.getItem("userEmail");
-    const loginTime = localStorage.getItem("loginTime");
-
-    if (!userEmail) {
-      return false;
-    }
-
-    // 로그인 시간이 24시간 이내인지 확인
-    if (loginTime) {
-      const loginDate = new Date(loginTime);
-      const now = new Date();
-      const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
-
-      if (hoursDiff > 24) {
-        console.warn("로그인 시간이 24시간을 초과했습니다.");
-        localStorage.removeItem("userEmail");
-        localStorage.removeItem("loginTime");
-        localStorage.removeItem("userInfo");
-        return false;
-      }
-    }
-
-    return true;
-  };
-
-  // 페이지 로드 시 인증 확인 (임시로 비활성화)
-  useEffect(() => {
-    const verifyAuth = async () => {
-      const authStatus = await checkAuthStatus();
-
-      if (!authStatus) {
-        console.warn("인증되지 않은 상태이지만 임시로 허용");
-        // navigate("/login"); // 임시로 주석 처리
-        // return;
-      }
-
-      console.log("localStorage 기준 인증 성공 또는 임시 허용");
-      setIsAuthenticated(true);
-    };
-
-    verifyAuth();
-  }, [navigate]);
 
   // 0.5초 후 노란 박스 애니메이션 시작
   useEffect(() => {
-    if (isAuthenticated) {
-      const timer = setTimeout(() => {
-        setAnimate1(true);
-      }, 500);
+    const timer = setTimeout(() => {
+      console.log("🎉 애니메이션 활성화됨");
+      setAnimate1(true);
+    }, 500);
 
-      return () => clearTimeout(timer);
-    }
-  }, [isAuthenticated]);
+    return () => clearTimeout(timer);
+  }, []);
 
-  // 컴포넌트 마운트 시 저장된 요약 데이터 불러오기 (인증된 경우에만)
   useEffect(() => {
-    if (!isAuthenticated) return;
-
     const savedData = localStorage.getItem("summaryData");
     if (savedData) {
       try {
         const parsedData = JSON.parse(savedData);
         setSummaryData(parsedData);
-        setCurrentSummary(
-          parsedData.간단요약 ||
-            parsedData.text ||
-            "요약 데이터를 불러올 수 없습니다."
-        );
+
+        const type = parsedData.summaryType || "간단요약"; // ✅ 요약 타입 불러오기
+        setActiveButton(type); // ✅ 버튼도 같이 활성화
+
+        switch (type) {
+          case "상세요약":
+            setCurrentSummary(parsedData.상세요약 || parsedData.text);
+            break;
+          case "키워드요약":
+            setCurrentSummary(parsedData.키워드요약 || parsedData.text);
+            break;
+          default:
+            setCurrentSummary(parsedData.간단요약 || parsedData.text);
+        }
       } catch (error) {
         console.error("데이터 파싱 오류:", error);
         setCurrentSummary("저장된 요약 데이터를 불러올 수 없습니다.");
@@ -101,11 +59,13 @@ function Main() {
           "• 재택근무, 코로나19 팬데믹\n• 워라밸 향상, 여유 시간 확보\n• 자율적 시간 관리, 집중력 향상\n• 사무실 운영비용 절감\n• 소통 부족, 협업 효율 저하\n• 조직 소속감 약화\n• 하이브리드 근무 형태",
         fileName: "sample_audio.mp3",
         uploadTime: new Date().toLocaleString(),
+        summaryType: "간단요약", // ✅ 기본 요약 타입도 명시적으로 넣자
       };
       setSummaryData(defaultData);
+      setActiveButton("간단요약");
       setCurrentSummary(defaultData.간단요약);
     }
-  }, [isAuthenticated]);
+  }, []);
 
   // 스크롤 함수
   const scrollToBottom = () => {
@@ -159,16 +119,6 @@ function Main() {
   const handleNewUpload = () => {
     localStorage.removeItem("summaryData");
     navigate("/upload");
-  };
-
-  // 로그아웃 핸들러 추가
-  const handleLogout = () => {
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("loginTime");
-    localStorage.removeItem("userInfo");
-    localStorage.removeItem("summaryData");
-    alert("로그아웃되셨습니다.");
-    navigate("/login", { replace: true });
   };
 
   // 요약 타입명 가져오기 함수
@@ -267,21 +217,31 @@ function Main() {
     },
   ];
 
-  //보관함에 저장 함수
   const saveToArchive = () => {
     const fileName = prompt("저장할 파일 이름을 입력하세요:");
     if (!fileName) return;
 
     const archiveList = JSON.parse(localStorage.getItem("archiveFiles")) || [];
 
+    // 현재 선택된 요약 종류에 따라 summary1에 저장될 텍스트 결정
+    let selectedSummary = "";
+    if (activeButton === "상세요약") {
+      selectedSummary = summaryData?.상세요약 || summaryData?.text || "";
+    } else if (activeButton === "키워드요약") {
+      selectedSummary = summaryData?.키워드요약 || summaryData?.text || "";
+    } else {
+      selectedSummary = summaryData?.간단요약 || summaryData?.text || "";
+    }
+
     const newFile = {
       fileId: Date.now(),
       originalFileName: fileName,
       createdAt: new Date().toISOString(),
       transcript: summaryData?.text || "",
-      summary1: summaryData?.간단요약 || "",
+      summary1: selectedSummary, // 현재 선택된 요약만 저장
       summary2: summaryData?.상세요약 || "",
       summary3: summaryData?.키워드요약 || "",
+      summaryType: activeButton || "간단요약",
     };
 
     archiveList.push(newFile);
@@ -289,7 +249,7 @@ function Main() {
     alert("보관함에 저장되었습니다!");
   };
 
-  // 액션 버튼 데이터 배열 (로그아웃 버튼 추가)
+  // 액션 버튼 데이터 배열
   const actionButtons = [
     {
       id: "copy",
@@ -302,22 +262,12 @@ function Main() {
         border: "none",
       },
     },
+
     {
       id: "export",
       text: "txt 파일로 내보내기",
       title: "원본 텍스트와 선택된 요약을 텍스트 파일로 다운로드합니다",
       onClick: exportToFile,
-      style: {
-        backgroundColor: "#ecead5",
-        color: "#656247",
-        border: "none",
-      },
-    },
-    {
-      id: "goToArchive",
-      text: "Archive에 저장",
-      title: "보관함에 저장",
-      onClick: saveToArchive,
       style: {
         backgroundColor: "#ecead5",
         color: "#656247",
@@ -361,7 +311,7 @@ function Main() {
     zIndex: 1001,
     display: "flex",
     flexDirection: "column",
-    backgroundColor: "#fff",
+    backgroundColor: "#fff", // or "#ecead5"
     border: "1px solid #ccc",
     borderRadius: "8px",
     overflow: "hidden",
@@ -380,26 +330,6 @@ function Main() {
     whiteSpace: "nowrap",
   };
 
-  // 인증되지 않은 경우 로딩 표시 또는 빈 화면
-  if (!isAuthenticated) {
-    return (
-      <div
-        style={{
-          backgroundColor: "#00492C",
-          height: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          color: "#F2C81B",
-          fontSize: "18px",
-          fontFamily: "Noto Sans KR, sans-serif",
-        }}
-      >
-        인증 확인 중...
-      </div>
-    );
-  }
-
   return (
     <div
       style={{
@@ -413,25 +343,6 @@ function Main() {
         position: "relative",
       }}
     >
-      {/* 로그인 상태 표시 */}
-      <button
-        onClick={handleLogout}
-        style={{
-          position: "absolute",
-          top: "10px",
-          right: "10px",
-          fontSize: "12px",
-          color: "green",
-          background: "rgba(255,255,255,0.8)",
-          padding: "5px 10px",
-          borderRadius: "5px",
-          cursor: "pointer",
-          zIndex: 9999,
-        }}
-      >
-        로그인: ✅ {localStorage.getItem("userEmail")}
-      </button>
-
       {/* 제목 - 클릭하면 업로드 페이지로 이동 */}
       <h1
         style={{
@@ -459,6 +370,28 @@ function Main() {
       >
         Saymary
       </h1>
+
+      {/* 보관함에 저장 버튼 */}
+      <button
+        onClick={saveToArchive}
+        style={{
+          position: "absolute",
+          top: "4%",
+          right: "7%",
+          padding: "8px 18px",
+          backgroundColor: "#f2c81b",
+          color: "#333",
+          fontWeight: "bold",
+          fontSize: "14px",
+          border: "none",
+          borderRadius: "8px",
+          cursor: "pointer",
+          zIndex: 1001,
+          fontFamily: "Noto Sans KR, sans-serif",
+        }}
+      >
+        보관함에 저장
+      </button>
 
       {/* 메인 컨텐츠 박스 */}
       <div
@@ -527,8 +460,6 @@ function Main() {
                     onMouseEnter={(e) => {
                       if (button.id === "newUpload") {
                         e.target.style.backgroundColor = "#005a35";
-                      } else if (button.id === "logout") {
-                        e.target.style.backgroundColor = "#c0392b";
                       } else {
                         e.target.style.backgroundColor = "#f0f0f0";
                       }
@@ -563,7 +494,7 @@ function Main() {
         </h2>
 
         {/* 요약 텍스트 본문 - 원본 텍스트 표시 */}
-        <div
+        <p
           style={{
             color: "#656247",
             backgroundColor: "#ECEAD5",
@@ -623,7 +554,7 @@ function Main() {
               </button>
             ))}
           </div>
-        </div>
+        </p>
 
         {/* 선택된 요약본 표시 영역 */}
         <div
