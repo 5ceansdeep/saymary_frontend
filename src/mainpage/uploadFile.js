@@ -1,35 +1,7 @@
+// uploadFile.js - 인증 헤더 추가된 버전
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api/api";
-
-export const uploadAudioFile = async (file, situation, audience, style) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  if (situation) formData.append("situation", situation);
-  if (audience) formData.append("audience", audience);
-  if (style) formData.append("style", style);
-
-  try {
-    const response = await api.post("/fastapi/upload", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-
-    const result = response.data;
-    if (!result.success) {
-      throw new Error(result.message || "요약 생성 실패");
-    }
-
-    return {
-      text: result.text,
-      summaries: result.summaries,
-    };
-  } catch (error) {
-    console.error("업로드 실패:", error.message);
-    throw error;
-  }
-};
 
 function UploadFile() {
   const navigate = useNavigate();
