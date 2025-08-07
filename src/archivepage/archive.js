@@ -5,9 +5,12 @@ import { useNavigate } from "react-router-dom";
 function Archive() {
   const navigate = useNavigate();
   const [files, setFiles] = useState([]);
+  const [allFiles, setAllFiles] = useState([]); // 전체 파일 목록 저장용
   const [searchTerm, setSearchTerm] = useState("");
   const [showActionMenu, setShowActionMenu] = useState({});
   const [userNickname, setUserNickname] = useState("누군가");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // 인증 상태 확인 함수
   const checkAuthStatus = async () => {
@@ -36,6 +39,123 @@ function Archive() {
     return true; // localStorage에 유효한 정보가 있으면 인증됨으로 처리
   };
 
+  // 서버에서 파일 목록 가져오기
+  const fetchFiles = async () => {
+    const accessToken = localStorage.getItem("accessToken");
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // accessToken이 없으면 바로 로컬스토리지로 우회
+      if (!accessToken) {
+        console.log("accessToken이 없어서 로컬스토리지로 우회합니다.");
+        const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
+        setAllFiles(saved);
+        setFiles(saved);
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch("https://api.saymary.site/api/files", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.status === 401) {
+        console.log("401 Unauthorized - 로컬스토리지로 우회합니다.");
+        // 401 에러 시 로컬스토리지로 우회
+        const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
+        setAllFiles(saved);
+        setFiles(saved);
+        setLoading(false);
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error("파일 목록을 불러오는 중 오류가 발생했습니다.");
+      }
+
+      const data = await response.json();
+      setAllFiles(data);
+      setFiles(data);
+    } catch (error) {
+      console.error("파일 목록 조회 오류:", error);
+      // 네트워크 오류나 기타 오류 시에도 로컬스토리지로 우회
+      console.log("API 오류로 인해 로컬스토리지로 우회합니다.");
+      const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
+      setAllFiles(saved);
+      setFiles(saved);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 파일 상세 정보 가져오기
+  const fetchFileDetails = async (fileId) => {
+    const accessToken = localStorage.getItem("accessToken");
+
+    // accessToken이 없거나 API 호출 실패 시 로컬스토리지에서 찾기
+    if (!accessToken) {
+      console.log(
+        "accessToken이 없어서 로컬스토리지에서 파일 상세 정보를 찾습니다."
+      );
+      return getFileDetailsFromLocalStorage(fileId);
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.saymary.site/api/files/${fileId}/details`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.status === 401 || !response.ok) {
+        console.log(
+          "API 호출 실패 - 로컬스토리지에서 파일 상세 정보를 찾습니다."
+        );
+        return getFileDetailsFromLocalStorage(fileId);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("파일 상세 정보 조회 오류:", error);
+      console.log(
+        "API 오류로 인해 로컬스토리지에서 파일 상세 정보를 찾습니다."
+      );
+      return getFileDetailsFromLocalStorage(fileId);
+    }
+  };
+
+  // 로컬스토리지에서 파일 상세 정보 가져오기
+  const getFileDetailsFromLocalStorage = (fileId) => {
+    const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
+    const file = saved.find(
+      (f) => f.fileId === fileId || saved.indexOf(f) === fileId
+    );
+
+    if (file) {
+      return {
+        originalText: file.transcript || "",
+        summaries: {
+          keypoint: file.summary3 || "", // 키워드 요약
+          default: file.summary2 || "", // 상세 요약
+          short: file.summary1 || "", // 간단 요약
+        },
+      };
+    }
+
+    return null;
+  };
+
   // localStorage 불러오기 및 사용자 정보 확인
   useEffect(() => {
     const loadData = async () => {
@@ -48,11 +168,18 @@ function Archive() {
         if (nickname) {
           setUserNickname(nickname);
         }
-      }
 
-      // 파일 데이터 로드
-      const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
-      setFiles(saved);
+        // 서버에서 파일 목록 가져오기
+        await fetchFiles();
+      } else {
+        // 인증되지 않은 경우에도 로컬스토리지의 파일 목록 사용
+        console.log(
+          "인증되지 않았으므로 로컬스토리지의 파일 목록을 사용합니다."
+        );
+        const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
+        setAllFiles(saved);
+        setFiles(saved);
+      }
     };
 
     loadData();
@@ -60,14 +187,12 @@ function Archive() {
 
   // 검색 실행 함수
   const handleSearch = () => {
-    const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
-
     if (!searchTerm.trim()) {
-      setFiles(saved);
+      setFiles(allFiles);
       return;
     }
 
-    const filtered = saved.filter(
+    const filtered = allFiles.filter(
       (file) =>
         file.originalFileName
           ?.toLowerCase()
@@ -81,18 +206,23 @@ function Archive() {
     setFiles(filtered);
   };
 
-  //파일 클릭 시 Main 페이지로 이동
-  const handleFileClick = (file) => {
-    const newSummaryData = {
-      fileName: file.originalFileName,
-      uploadTime: new Date(file.createdAt).toLocaleString(),
-      text: file.transcript,
-      간단요약: file.summary1,
-      상세요약: file.summary2,
-      키워드요약: file.summary3,
-    };
-    localStorage.setItem("summaryData", JSON.stringify(newSummaryData));
-    navigate("/main");
+  // 파일 클릭 시 Main 페이지로 이동
+  const handleFileClick = async (file) => {
+    // 파일 상세 정보 가져오기
+    const fileDetails = await fetchFileDetails(file.fileId);
+
+    if (fileDetails) {
+      const newSummaryData = {
+        fileName: file.originalFileName,
+        uploadTime: new Date().toLocaleString(), // 현재 시간 사용 (createdAt 정보가 API에 없음)
+        text: fileDetails.originalText,
+        간단요약: fileDetails.summaries.short,
+        상세요약: fileDetails.summaries.default,
+        키워드요약: fileDetails.summaries.keypoint,
+      };
+      localStorage.setItem("summaryData", JSON.stringify(newSummaryData));
+      navigate("/main");
+    }
   };
 
   // Enter 키 검색
@@ -109,8 +239,7 @@ function Archive() {
 
     // 검색어가 비어있으면 전체 목록 표시
     if (!value.trim()) {
-      const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
-      setFiles(saved);
+      setFiles(allFiles);
       return;
     }
   };
@@ -131,40 +260,52 @@ function Archive() {
 
   // 텍스트 복사
   const copyToClipboard = async (file) => {
-    const textToCopy = `파일명: ${file.originalFileName}\n\n원본 텍스트:\n${file.transcript}\n\n요약 1: ${file.summary1}\n요약 2: ${file.summary2}\n요약 3: ${file.summary3}`;
+    // 파일 상세 정보 가져오기
+    const fileDetails = await fetchFileDetails(file.fileId);
 
-    try {
-      await navigator.clipboard.writeText(textToCopy);
-      alert("클립보드에 복사되었습니다!");
-    } catch (err) {
-      console.error("복사 실패:", err);
-      alert("복사에 실패했습니다.");
+    if (fileDetails) {
+      const textToCopy = `파일명: ${file.originalFileName}\n\n원본 텍스트:\n${fileDetails.originalText}\n\n키워드 요약: ${fileDetails.summaries.keypoint}\n상세 요약: ${fileDetails.summaries.default}\n간단 요약: ${fileDetails.summaries.short}`;
+
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+        alert("클립보드에 복사되었습니다!");
+      } catch (err) {
+        console.error("복사 실패:", err);
+        alert("복사에 실패했습니다.");
+      }
     }
     setShowActionMenu({});
   };
 
   // 파일 내보내기
-  const exportToFile = (file) => {
-    const textToExport = `파일명: ${
-      file.originalFileName
-    }\n생성일: ${formatDate(file.createdAt)}\n\n원본 텍스트:\n${
-      file.transcript
-    }\n\n요약 1: ${file.summary1}\n\n요약 2: ${file.summary2}\n\n요약 3: ${
-      file.summary3
-    }`;
+  const exportToFile = async (file) => {
+    // 파일 상세 정보 가져오기
+    const fileDetails = await fetchFileDetails(file.fileId);
 
-    const blob = new Blob([textToExport], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${file.originalFileName.replace(
-      /\.[^/.]+$/,
-      ""
-    )}_요약.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    if (fileDetails) {
+      const textToExport = `파일명: ${
+        file.originalFileName
+      }\n생성일: ${new Date().toLocaleDateString()}\n\n원본 텍스트:\n${
+        fileDetails.originalText
+      }\n\n키워드 요약: ${fileDetails.summaries.keypoint}\n\n상세 요약: ${
+        fileDetails.summaries.default
+      }\n\n간단 요약: ${fileDetails.summaries.short}`;
+
+      const blob = new Blob([textToExport], {
+        type: "text/plain;charset=utf-8",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${file.originalFileName.replace(
+        /\.[^/.]+$/,
+        ""
+      )}_요약.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
 
     setShowActionMenu({});
   };
@@ -173,7 +314,22 @@ function Archive() {
   const handleNewUpload = () => {
     // 파일 업로드 페이지로 이동하는 로직
     console.log("새 파일 업로드");
-    alert("새 파일 업로드 페이지로 이동합니다!");
+    navigate("/upload"); // 실제 업로드 페이지 경로로 변경
+    setShowActionMenu({});
+  };
+
+  const deleteFile = (fileToDelete) => {
+    if (
+      !window.confirm(`"${fileToDelete.originalFileName}" 파일을 삭제할까요?`)
+    )
+      return;
+
+    const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
+
+    const updated = saved.filter((f) => f.fileId !== fileToDelete.fileId);
+
+    localStorage.setItem("archiveFiles", JSON.stringify(updated));
+    setFiles(updated);
     setShowActionMenu({});
   };
 
@@ -182,7 +338,7 @@ function Archive() {
     {
       id: "copy",
       text: "텍스트 복사",
-      title: "원본 텍스트와 선택된 요약을 클립보드에 복사합니다",
+      title: "원본 텍스트와 요약들을 클립보드에 복사합니다",
       onClick: copyToClipboard,
       style: {
         backgroundColor: "#ecead5",
@@ -193,7 +349,7 @@ function Archive() {
     {
       id: "export",
       text: "txt 파일로 내보내기",
-      title: "원본 텍스트와 선택된 요약을 텍스트 파일로 다운로드합니다",
+      title: "원본 텍스트와 요약들을 텍스트 파일로 다운로드합니다",
       onClick: exportToFile,
       style: {
         backgroundColor: "#ecead5",
@@ -212,12 +368,22 @@ function Archive() {
         border: "none",
       },
     },
+    {
+      id: "delete",
+      text: "🗑️ 삭제하기",
+      title: "이 파일을 보관함에서 삭제합니다",
+      onClick: deleteFile,
+      style: {
+        backgroundColor: "#ecead5",
+        color: "#B22222", // 붉은색 강조
+        border: "none",
+      },
+    },
   ];
 
-  // 날짜 포맷 함수
+  // 날짜 포맷 함수 (API에서 날짜 정보가 없으므로 임시로 현재 날짜 사용)
   const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
+    const date = new Date();
     const year = date.getFullYear().toString().slice(-2);
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const day = date.getDate().toString().padStart(2, "0");
@@ -330,6 +496,23 @@ function Archive() {
     color: "#666",
   };
 
+  const errorStyle = {
+    textAlign: "center",
+    padding: "50px",
+    fontSize: "16px",
+    color: "#ff6b6b",
+    backgroundColor: "#ffe0e0",
+    borderRadius: "10px",
+    margin: "20px 7%",
+  };
+
+  const loadingStyle = {
+    textAlign: "center",
+    padding: "50px",
+    fontSize: "16px",
+    color: "#666",
+  };
+
   return (
     <div
       style={{
@@ -388,28 +571,64 @@ function Archive() {
             onChange={handleSearchChange}
             onKeyPress={handleKeyPress}
             style={searchInputStyle}
+            disabled={loading}
           />
           <img
             src={Search}
             alt="search"
-            style={searchImageStyle}
-            onClick={handleSearch}
+            style={{ ...searchImageStyle, opacity: loading ? 0.3 : 0.7 }}
+            onClick={loading ? undefined : handleSearch}
             onMouseEnter={(e) => {
-              e.target.style.opacity = "1";
+              if (!loading) e.target.style.opacity = "1";
             }}
             onMouseLeave={(e) => {
-              e.target.style.opacity = "0.7";
+              if (!loading) e.target.style.opacity = "0.7";
             }}
           />
         </div>
 
+        {/* 에러 표시 */}
+        {error && (
+          <div style={errorStyle}>
+            {error}
+            <br />
+            <button
+              onClick={() => {
+                setError(null);
+                // 에러 발생 시에도 로컬스토리지로 우회 시도
+                console.log("에러 발생으로 로컬스토리지로 우회합니다.");
+                const saved =
+                  JSON.parse(localStorage.getItem("archiveFiles")) || [];
+                setAllFiles(saved);
+                setFiles(saved);
+              }}
+              style={{
+                marginTop: "10px",
+                padding: "8px 16px",
+                backgroundColor: "#00492C",
+                color: "white",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+              }}
+            >
+              로컬 데이터로 보기
+            </button>
+          </div>
+        )}
+
+        {/* 로딩 표시 */}
+        {loading && <div style={loadingStyle}>파일 목록을 불러오는 중...</div>}
+
         {/* 파일 목록 */}
         <div style={fileListStyle}>
-          {files.length === 0 ? (
+          {!loading && !error && files.length === 0 ? (
             <div style={noFilesStyle}>
               {searchTerm ? "검색 결과가 없습니다." : "저장된 파일이 없습니다."}
             </div>
           ) : (
+            !loading &&
+            !error &&
             files.map((file, idx) => (
               <div
                 style={fileItemStyle}
@@ -424,9 +643,7 @@ function Archive() {
               >
                 <div style={{ flex: 1 }}>
                   <strong>{file.originalFileName || "이름 없음"}</strong>{" "}
-                  <span style={fileItemSpanStyle}>
-                    {formatDate(file.createdAt)}
-                  </span>
+                  <span style={fileItemSpanStyle}>{formatDate()}</span>
                   {file.summary1 && (
                     <div style={{ ...fileItemSpanStyle, marginTop: "4px" }}>
                       {file.summary1.length > 50
