@@ -68,8 +68,9 @@ function Archive() {
   const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
   setFiles(saved);
   return;
-}
-
+  }
+  };
+  
   // 액션 메뉴 토글
   const toggleActionMenu = (fileId, e) => {
     e.stopPropagation();
@@ -448,6 +449,6 @@ function Archive() {
     </div>
   );
 }
-}
+
 
 export default Archive;

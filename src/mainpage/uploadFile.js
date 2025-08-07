@@ -229,7 +229,7 @@ function UploadFile() {
       "audio/aac",
     ];
 
-    const maxSize = 50 * 1024 * 1024; // 50MB
+    const maxSize = 100 * 1024 * 1024; // 100MB
 
     if (
       !allowedTypes.includes(file.type) &&
@@ -549,7 +549,7 @@ function UploadFile() {
                     color: "#8a7d5c",
                   }}
                 >
-                  지원 형식: MP3, WAV, M4A, AAC (최대 50MB)
+                  지원 형식: MP3, WAV, M4A, AAC (최대 100MB)
                 </p>
                 <button
                   style={{
