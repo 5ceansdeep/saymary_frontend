@@ -78,9 +78,6 @@ function UploadFile() {
         });
       }, 500);
 
-      // 토큰 가져오기
-      const token = localStorage.getItem("accessToken");
-      
       const headers = {};
       if (token) {
         headers.Authorization = `Bearer ${token}`;
