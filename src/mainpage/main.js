@@ -60,7 +60,7 @@ function Main() {
     verifyAuth();
   }, [navigate]);
 
-  // 0.5초 후 노란 박스 애니메이션 시작 (인증된 경우에만)
+  // 0.5초 후 노란 박스 애니메이션 시작
   useEffect(() => {
     if (isAuthenticated) {
       const timer = setTimeout(() => {
