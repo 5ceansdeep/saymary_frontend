@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import Search from "../img/search.png";
 import { useNavigate } from "react-router-dom";
 
+
+
 function Archive() {
   const navigate = useNavigate();
   const [files, setFiles] = useState([]);
@@ -9,7 +11,6 @@ function Archive() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showActionMenu, setShowActionMenu] = useState({});
-
 
    // localStorage 불러오기
   useEffect(() => {
@@ -71,6 +72,19 @@ function Archive() {
   }
   };
   
+  //파일 삭제 핸들러
+ const deleteFile = (fileToDelete) => {
+  if (!window.confirm(`"${fileToDelete.originalFileName}" 파일을 삭제할까요?`)) return;
+
+  const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
+
+  const updated = saved.filter((f) => f.fileId !== fileToDelete.fileId);
+
+  localStorage.setItem("archiveFiles", JSON.stringify(updated));
+  setFiles(updated);
+  setShowActionMenu({});
+};
+
   // 액션 메뉴 토글
   const toggleActionMenu = (fileId, e) => {
     e.stopPropagation();
@@ -145,6 +159,18 @@ function Archive() {
         color: "#333",
         border: "none",
       },
+    },
+    //파일삭제 버튼 추가
+    {
+    id: "delete",
+    text: "🗑 삭제하기",
+    title: "이 파일을 보관함에서 삭제합니다",
+    onClick: deleteFile,
+    style: {
+    backgroundColor: "#ecead5",
+    color: "#B22222", // 붉은색 강조
+    border: "none",
+    },
     },
     {
       id: "export",
@@ -386,10 +412,14 @@ function Archive() {
                   </span>
                   {file.summary1 && (
                     <div style={{ ...fileItemSpanStyle, marginTop: "4px" }}>
+                      <strong style={{ marginRight: "5px", color: "#333" }}>
+                         {file.summaryType || "간단요약"}:
+                      </strong>
                       {file.summary1.length > 50
                         ? `${file.summary1.substring(0, 50)}...`
-                        : file.summary1}
-                    </div>
+                        : file.summary1
+                        }
+                  </div>
                   )}
                 </div>
 

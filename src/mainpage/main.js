@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import "./main.css";
 import godown from "../img/godown.png";
 
+
+
 function Main() {
   const navigate = useNavigate();
-
   // 상태 관리
   const [animate1, setAnimate1] = useState(false);
   const [activeButton, setActiveButton] = useState(null);
@@ -16,7 +17,6 @@ function Main() {
 
   // 0.5초 후 노란 박스 애니메이션 시작
   useEffect(() => {
-    console.log("🚀 Main 컴포넌트 useEffect 작동함!");
     const timer = setTimeout(() => {
       console.log("🎉 애니메이션 활성화됨");
       setAnimate1(true);
@@ -25,39 +25,49 @@ function Main() {
     return () => clearTimeout(timer);
   }, []);
 
-  // 컴포넌트 마운트 시 저장된 요약 데이터 불러오기
   useEffect(() => {
-    const savedData = localStorage.getItem("summaryData");
-    if (savedData) {
-      try {
-        const parsedData = JSON.parse(savedData);
-        setSummaryData(parsedData);
-        setCurrentSummary(
-          parsedData.간단요약 ||
-            parsedData.text ||
-            "요약 데이터를 불러올 수 없습니다."
-        );
-      } catch (error) {
-        console.error("데이터 파싱 오류:", error);
-        setCurrentSummary("저장된 요약 데이터를 불러올 수 없습니다.");
+  const savedData = localStorage.getItem("summaryData");
+  if (savedData) {
+    try {
+      const parsedData = JSON.parse(savedData);
+      setSummaryData(parsedData);
+
+      const type = parsedData.summaryType || "간단요약"; // ✅ 요약 타입 불러오기
+      setActiveButton(type); // ✅ 버튼도 같이 활성화
+
+      switch (type) {
+        case "상세요약":
+          setCurrentSummary(parsedData.상세요약 || parsedData.text);
+          break;
+        case "키워드요약":
+          setCurrentSummary(parsedData.키워드요약 || parsedData.text);
+          break;
+        default:
+          setCurrentSummary(parsedData.간단요약 || parsedData.text);
       }
-    } else {
-      // 테스트용 기본 데이터
-      const defaultData = {
-        text: "회의 전체 텍스트 내용입니다...",
-        간단요약:
-          "재택근무가 확산되면서 워라밸 향상과 비용 절감 등의 이점이 있지만, 소통 부족과 조직 소속감 약화 등의 문제도 존재한다.",
-        상세요약:
-          "재택근무는 코로나19 팬데믹을 계기로 빠르게 확산된 근무 형태이다. 직원들은 출퇴근 시간이 사라지면서 더 많은 여유 시간을 확보할 수 있게 되었다. 이는 워라밸(Work-Life Balance) 향상에 긍정적인 영향을 주었다. 또한, 자율적인 시간 관리가 가능해져 개인의 집중력이 오히려 높아지기도 한다. 기업 입장에서는 사무실 운영비용 절감 등의 경제적 이점이 존재한다. 반면, 팀원 간의 소통이 부족해지며 협업 효율이 낮아지는 경우도 있다.",
-        키워드요약:
-          "• 재택근무, 코로나19 팬데믹\n• 워라밸 향상, 여유 시간 확보\n• 자율적 시간 관리, 집중력 향상\n• 사무실 운영비용 절감\n• 소통 부족, 협업 효율 저하\n• 조직 소속감 약화\n• 하이브리드 근무 형태",
-        fileName: "sample_audio.mp3",
-        uploadTime: new Date().toLocaleString(),
-      };
-      setSummaryData(defaultData);
-      setCurrentSummary(defaultData.간단요약);
+    } catch (error) {
+      console.error("데이터 파싱 오류:", error);
+      setCurrentSummary("저장된 요약 데이터를 불러올 수 없습니다.");
     }
-  }, []);
+  } else {
+    // 테스트용 기본 데이터
+    const defaultData = {
+      text: "회의 전체 텍스트 내용입니다...",
+      간단요약:
+        "재택근무가 확산되면서 워라밸 향상과 비용 절감 등의 이점이 있지만, 소통 부족과 조직 소속감 약화 등의 문제도 존재한다.",
+      상세요약:
+        "재택근무는 코로나19 팬데믹을 계기로 빠르게 확산된 근무 형태이다. 직원들은 출퇴근 시간이 사라지면서 더 많은 여유 시간을 확보할 수 있게 되었다. 이는 워라밸(Work-Life Balance) 향상에 긍정적인 영향을 주었다. 또한, 자율적인 시간 관리가 가능해져 개인의 집중력이 오히려 높아지기도 한다. 기업 입장에서는 사무실 운영비용 절감 등의 경제적 이점이 존재한다. 반면, 팀원 간의 소통이 부족해지며 협업 효율이 낮아지는 경우도 있다.",
+      키워드요약:
+        "• 재택근무, 코로나19 팬데믹\n• 워라밸 향상, 여유 시간 확보\n• 자율적 시간 관리, 집중력 향상\n• 사무실 운영비용 절감\n• 소통 부족, 협업 효율 저하\n• 조직 소속감 약화\n• 하이브리드 근무 형태",
+      fileName: "sample_audio.mp3",
+      uploadTime: new Date().toLocaleString(),
+      summaryType: "간단요약", // ✅ 기본 요약 타입도 명시적으로 넣자
+    };
+    setSummaryData(defaultData);
+    setActiveButton("간단요약");
+    setCurrentSummary(defaultData.간단요약);
+  }
+}, []);
 
   // 스크롤 함수
   const scrollToBottom = () => {
@@ -98,6 +108,7 @@ function Main() {
     }
   };
 
+ 
 
   // 액션 메뉴 토글 함수
   const toggleActionMenu = (fileId, event) => {
@@ -210,21 +221,31 @@ function Main() {
     },
   ];
   
-  //보관함에 저장 함수
   const saveToArchive = () => {
   const fileName = prompt("저장할 파일 이름을 입력하세요:");
   if (!fileName) return;
 
   const archiveList = JSON.parse(localStorage.getItem("archiveFiles")) || [];
 
+  // 현재 선택된 요약 종류에 따라 summary1에 저장될 텍스트 결정
+  let selectedSummary = "";
+  if (activeButton === "상세요약") {
+    selectedSummary = summaryData?.상세요약 || summaryData?.text || "";
+  } else if (activeButton === "키워드요약") {
+    selectedSummary = summaryData?.키워드요약 || summaryData?.text || "";
+  } else {
+    selectedSummary = summaryData?.간단요약 || summaryData?.text || "";
+  }
+
   const newFile = {
     fileId: Date.now(),
     originalFileName: fileName,
     createdAt: new Date().toISOString(),
     transcript: summaryData?.text || "",
-    summary1: summaryData?.간단요약 || "",
+    summary1: selectedSummary, // 현재 선택된 요약만 저장
     summary2: summaryData?.상세요약 || "",
     summary3: summaryData?.키워드요약 || "",
+    summaryType: activeButton || "간단요약",
   };
 
   archiveList.push(newFile);
@@ -245,6 +266,7 @@ function Main() {
         border: "none",
       },
     },
+    
     {
       id: "export",
       text: "txt 파일로 내보내기",
