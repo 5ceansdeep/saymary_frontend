@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Search from "../img/search.png";
+import { useNavigate } from "react-router-dom";
+const navigate = useNavigate();
 
 function Archive() {
   const [files, setFiles] = useState([]);
@@ -44,31 +46,45 @@ function Archive() {
       createdAt: "2025-01-13T16:45:00Z",
     },
   ];
-
-  // 컴포넌트 마운트 시 Mock 데이터 로드
+   // localStorage 불러오기
   useEffect(() => {
-    setFiles(mockFiles);
-  }, []);
+  const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
+  setFiles(saved);
+}, []);
 
   // 검색 실행 함수
   const handleSearch = () => {
-    if (!searchTerm.trim()) {
-      setFiles(mockFiles);
-      return;
-    }
+  const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
 
-    const filtered = mockFiles.filter(
-      (file) =>
-        file.originalFileName
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        file.transcript?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        file.summary1?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        file.summary2?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        file.summary3?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFiles(filtered);
+  if (!searchTerm.trim()) {
+    setFiles(saved);
+    return;
+  }
+
+  const filtered = saved.filter((file) =>
+    file.originalFileName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    file.transcript?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    file.summary1?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    file.summary2?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    file.summary3?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  setFiles(filtered);
+};
+
+  //파일 클릭 시 Main 페이지로 이동
+  const handleFileClick = (file) => {
+  const newSummaryData = {
+    fileName: file.originalFileName,
+    uploadTime: new Date(file.createdAt).toLocaleString(),
+    text: file.transcript,
+    간단요약: file.summary1,
+    상세요약: file.summary2,
+    키워드요약: file.summary3,
   };
+  localStorage.setItem("summaryData", JSON.stringify(newSummaryData));
+  navigate("/main");
+};
 
   // Enter 키 검색
   const handleKeyPress = (e) => {
@@ -197,12 +213,8 @@ function Archive() {
     return `${year}.${month}.${day}`;
   };
 
-  // 파일 클릭 핸들러
-  const handleFileClick = (file) => {
-    console.log("선택된 파일:", file);
+  
     // 파일 상세 보기 로직
-  };
-
   const archiveTitleStyle = {
     fontFamily: "Cormorant Garamond, serif",
     fontSize: "26px",

@@ -96,6 +96,7 @@ function Main() {
     }
   };
 
+
   // 액션 메뉴 토글 함수
   const toggleActionMenu = (fileId, event) => {
     event.stopPropagation();
@@ -206,6 +207,28 @@ function Main() {
       onClick: () => console.log("키워드 요약 클릭"),
     },
   ];
+  
+  //보관함에 저장 함수
+  const saveToArchive = () => {
+  const fileName = prompt("저장할 파일 이름을 입력하세요:");
+  if (!fileName) return;
+
+  const archiveList = JSON.parse(localStorage.getItem("archiveFiles")) || [];
+
+  const newFile = {
+    fileId: Date.now(),
+    originalFileName: fileName,
+    createdAt: new Date().toISOString(),
+    transcript: summaryData?.text || "",
+    summary1: summaryData?.간단요약 || "",
+    summary2: summaryData?.상세요약 || "",
+    summary3: summaryData?.키워드요약 || "",
+  };
+
+  archiveList.push(newFile);
+  localStorage.setItem("archiveFiles", JSON.stringify(archiveList));
+  alert("보관함에 저장되었습니다!");
+};
 
   // 액션 버튼 데이터 배열
   const actionButtons = [
@@ -328,6 +351,28 @@ function Main() {
         Saymary
       </h1>
 
+      {/* 보관함에 저장 버튼 */}
+      <button
+        onClick={saveToArchive}
+        style={{
+            position: "absolute",
+            top: "4%",
+            right: "7%",
+            padding: "8px 18px",
+            backgroundColor: "#f2c81b",
+            color: "#333",
+            fontWeight: "bold",
+            fontSize: "14px",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+            zIndex: 1001,
+            fontFamily: "Noto Sans KR, sans-serif",
+        }}
+        >
+        보관함에 저장
+        </button>
+
       {/* 메인 컨텐츠 박스 */}
       <div
         className="custom-scroll"
@@ -347,6 +392,7 @@ function Main() {
           zIndex: 1000,
         }}
       >
+        
         {/* 파일명 헤더 */}
         <h1
           style={{
