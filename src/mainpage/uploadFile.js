@@ -52,11 +52,10 @@ function UploadFile() {
     let progressInterval;
 
     try {
-      // 토큰 기반 인증 확인
+      // 세션 기반 인증 확인
       const userEmail = localStorage.getItem("userEmail");
-      const token = localStorage.getItem("accessToken");
 
-      if (!userEmail || !token) {
+      if (!userEmail) {
         throw new Error("로그인이 필요합니다. 다시 로그인해주세요.");
       }
 
@@ -78,19 +77,13 @@ function UploadFile() {
         });
       }, 500);
 
-      const headers = {};
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-
       const response = await fetch(
         "https://api.saymary.site/api/fastapi/upload",
         {
           method: "POST",
           body: formData,
-          headers,
           signal: AbortSignal.timeout(30000),
-          credentials: "include",
+          credentials: "include", // 세션 쿠키 포함
         }
       );
 
@@ -258,12 +251,11 @@ function UploadFile() {
     return true;
   };
 
-  // 파일 업로드 처리 - 토큰 기반 인증 체크
+  // 파일 업로드 처리 - 세션 기반 인증 체크
   const handleFileUpload = (file) => {
     const userEmail = localStorage.getItem("userEmail");
-    const token = localStorage.getItem("accessToken");
 
-    if (!userEmail || !token) {
+    if (!userEmail) {
       alert("로그인이 필요합니다.");
       navigate("/login");
       return;

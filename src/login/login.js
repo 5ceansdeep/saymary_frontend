@@ -78,66 +78,53 @@ function Login() {
       console.log("응답 타입:", typeof result);
 
       if (response.ok) {
-        // 성공 처리 - 실제 토큰 찾기
-        let actualToken = null;
+        // 세션 기반 인증 성공 처리
+        console.log("로그인 성공, 쿠키 기반 세션 생성됨");
+        console.log("서버 응답:", result);
 
-        if (typeof result === "string") {
-          // 텍스트 응답에서 토큰 추출 시도
-          if (result.includes("로그인 성공") || result.includes("success")) {
-            // 만약 응답이 단순 텍스트라면 서버에 토큰 요청 필요
-            console.log(
-              "⚠️ 텍스트 응답입니다. 서버에서 토큰을 제공하지 않는 것 같습니다."
-            );
-            console.log(
-              "서버 개발자에게 로그인 시 토큰 반환 요청이 필요합니다."
-            );
+        // 사용자 정보 가져오기 (/user/me API 호출)
+        try {
+          const userResponse = await fetch("https://api.saymary.site/api/user/me", {
+            method: "GET",
+            credentials: "include", // 세션 쿠키 포함
+          });
 
-            // 임시방편: 사용자 정보로 임시 토큰 생성 (실제로는 서버에서 해야 함)
-            actualToken = btoa(
-              JSON.stringify({
-                email: email,
-                timestamp: Date.now(),
-                type: "temp",
-              })
-            );
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            console.log("사용자 정보:", userData);
 
-            console.log("임시 토큰 생성:", actualToken);
+            // 사용자 정보를 localStorage에 저장
+            localStorage.setItem("userEmail", userData.email || email);
+            localStorage.setItem("userInfo", JSON.stringify(userData));
+
+            // Remember me 처리
+            if (rememberMe) {
+              localStorage.setItem("rememberedEmail", email);
+            } else {
+              localStorage.removeItem("rememberedEmail");
+            }
+
+            alert("로그인 성공!");
+            navigate("/upload");
           } else {
-            throw new Error(result || "로그인에 실패했습니다.");
+            console.error("사용자 정보를 가져올 수 없습니다:", userResponse.status);
+            // 로그인은 성공했지만 사용자 정보를 못 가져온 경우
+            localStorage.setItem("userEmail", email);
+            
+            if (rememberMe) {
+              localStorage.setItem("rememberedEmail", email);
+            } else {
+              localStorage.removeItem("rememberedEmail");
+            }
+
+            alert("로그인 성공!");
+            navigate("/upload");
           }
-        } else {
-          // JSON 응답에서 토큰 찾기
-          actualToken =
-            result.token ||
-            result.accessToken ||
-            result.access_token ||
-            result.authToken ||
-            result.jwt;
-
-          if (!actualToken && result.success) {
-            console.log("⚠️ JSON 응답이지만 토큰 필드가 없습니다:", result);
-
-            // 사용 가능한 모든 키 출력
-            console.log("응답의 모든 키:", Object.keys(result));
-
-            // 임시 토큰 생성
-            actualToken = btoa(
-              JSON.stringify({
-                email: email,
-                timestamp: Date.now(),
-                type: "temp",
-                response: result,
-              })
-            );
-          }
-        }
-
-        if (actualToken) {
-          console.log("✅ 토큰 저장:", actualToken.substring(0, 20) + "...");
-          localStorage.setItem("accessToken", actualToken);
+        } catch (userInfoError) {
+          console.error("사용자 정보 요청 실패:", userInfoError);
+          // 사용자 정보는 못 가져왔지만 로그인은 성공
           localStorage.setItem("userEmail", email);
-
-          // Remember me 처리
+          
           if (rememberMe) {
             localStorage.setItem("rememberedEmail", email);
           } else {
@@ -146,10 +133,6 @@ function Login() {
 
           alert("로그인 성공!");
           navigate("/upload");
-        } else {
-          throw new Error(
-            "서버에서 토큰을 받지 못했습니다. 서버 개발자에게 문의하세요."
-          );
         }
       } else {
         // 에러 처리 (기존과 동일)
