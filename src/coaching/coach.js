@@ -403,26 +403,34 @@ function Coach() {
                 </div>
                 <div
                   style={{
-                    margin: "0",
-                    lineHeight: "1.8",
-                    color: "#333",
-                    fontSize: "0.95rem",
+                    backgroundColor: "#e8f5e8",
+                    padding: "20px",
+                    borderRadius: "10px",
+                    border: "1px solid #c3e6c3",
                   }}
                 >
-                  💡
                   <div
                     style={{
-                      marginTop: "8px",
+                      margin: "0",
+                      lineHeight: "1.8",
+                      color: "#333",
+                      fontSize: "0.95rem",
                       wordBreak: "keep-all",
                       overflowWrap: "break-word",
+                      maxHeight: "400px",
+                      overflowY: "auto",
                     }}
-                    dangerouslySetInnerHTML={{
-                      __html: feedbackData.speaking_speed.comment
-                        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                        .replace(/\n(\d+)\. /g, "<br/><br/>$1. ")
-                        .replace(/\n/g, "<br/>"),
-                    }}
-                  />
+                  >
+                    💡
+                    <span
+                      dangerouslySetInnerHTML={{
+                        __html: feedbackData.speaking_speed.comment
+                          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                          .replace(/\n(\d+)\. /g, "<br/><br/>$1. ")
+                          .replace(/\n/g, "<br/>"),
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             ) : (
@@ -494,26 +502,34 @@ function Coach() {
                 </div>
                 <div
                   style={{
-                    margin: "0",
-                    lineHeight: "1.8",
-                    color: "#333",
-                    fontSize: "0.95rem",
+                    backgroundColor: "#e8f5e8",
+                    padding: "20px",
+                    borderRadius: "10px",
+                    border: "1px solid #c3e6c3",
                   }}
                 >
-                  💡
                   <div
                     style={{
-                      marginTop: "8px",
+                      margin: "0",
+                      lineHeight: "1.8",
+                      color: "#333",
+                      fontSize: "0.95rem",
                       wordBreak: "keep-all",
                       overflowWrap: "break-word",
+                      maxHeight: "400px",
+                      overflowY: "auto",
                     }}
-                    dangerouslySetInnerHTML={{
-                      __html: feedbackData.pause_analysis.comment
-                        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                        .replace(/\n(\d+)\. /g, "<br/><br/>$1. ")
-                        .replace(/\n/g, "<br/>"),
-                    }}
-                  />
+                  >
+                    💡
+                    <span
+                      dangerouslySetInnerHTML={{
+                        __html: feedbackData.pause_analysis.comment
+                          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                          .replace(/\n(\d+)\. /g, "<br/><br/>$1. ")
+                          .replace(/\n/g, "<br/>"),
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             ) : (
