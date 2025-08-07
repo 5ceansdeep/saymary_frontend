@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Search from "./img/search.png";
+import Search from "../img/search.png";
 
 function Archive() {
   const [files, setFiles] = useState([]);
