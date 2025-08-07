@@ -52,7 +52,8 @@ function Coach() {
         // pause_analysis에서 말하기 템포 데이터 추출
         pause_analysis: {
           pause_count: parsed.pause_analysis?.pause_stats?.pause_count || 0,
-          avg_pause_length: parsed.pause_analysis?.pause_stats?.avg_pause_length || 0,
+          avg_pause_length:
+            parsed.pause_analysis?.pause_stats?.avg_pause_length || 0,
           total_silence: parsed.pause_analysis?.pause_stats?.total_silence || 0,
           long_pauses: [], // 새 API에는 개별 pause 정보가 없음
           comment: parsed.pause_analysis?.feedback || "",
@@ -153,8 +154,12 @@ function Coach() {
         content += `=== 원본 텍스트 ===\n${
           feedbackData.original_text || "원본 텍스트 없음"
         }\n\n`;
-        content += `=== 간단 요약 ===\n${feedbackData.summary || "요약 없음"}\n\n`;
-        content += `=== 상세 요약 ===\n${feedbackData.detailed_summary || "상세 요약 없음"}\n\n`;
+        content += `=== 간단 요약 ===\n${
+          feedbackData.summary || "요약 없음"
+        }\n\n`;
+        content += `=== 상세 요약 ===\n${
+          feedbackData.detailed_summary || "상세 요약 없음"
+        }\n\n`;
         content += `=== 키워드 ===\n${
           feedbackData.keywords || "키워드 없음"
         }\n\n`;
@@ -188,8 +193,12 @@ function Coach() {
       content += `=== 원본 텍스트 ===\n${
         feedbackData.original_text || "원본 텍스트 없음"
       }\n\n`;
-      content += `=== 간단 요약 ===\n${feedbackData.summary || "요약 없음"}\n\n`;
-      content += `=== 상세 요약 ===\n${feedbackData.detailed_summary || "상세 요약 없음"}\n\n`;
+      content += `=== 간단 요약 ===\n${
+        feedbackData.summary || "요약 없음"
+      }\n\n`;
+      content += `=== 상세 요약 ===\n${
+        feedbackData.detailed_summary || "상세 요약 없음"
+      }\n\n`;
       content += `=== 키워드 ===\n${
         feedbackData.keywords || "키워드 없음"
       }\n\n`;
@@ -276,11 +285,17 @@ function Coach() {
               >
                 📝 간단 요약
               </h3>
-              <p style={{ lineHeight: "1.6", color: "#333", marginBottom: "15px" }}>
+              <p
+                style={{
+                  lineHeight: "1.6",
+                  color: "#333",
+                  marginBottom: "15px",
+                }}
+              >
                 {feedbackData.summary || "간단 요약이 없습니다."}
               </p>
             </div>
-            
+
             <div style={{ marginBottom: "20px" }}>
               <h3
                 style={{
@@ -291,7 +306,13 @@ function Coach() {
               >
                 📄 상세 요약
               </h3>
-              <p style={{ lineHeight: "1.6", color: "#333", marginBottom: "15px" }}>
+              <p
+                style={{
+                  lineHeight: "1.6",
+                  color: "#333",
+                  marginBottom: "15px",
+                }}
+              >
                 {feedbackData.detailed_summary || "상세 요약이 없습니다."}
               </p>
             </div>
@@ -306,7 +327,13 @@ function Coach() {
               >
                 🔑 키워드
               </h3>
-              <div style={{ lineHeight: "1.6", color: "#333", whiteSpace: "pre-line" }}>
+              <div
+                style={{
+                  lineHeight: "1.6",
+                  color: "#333",
+                  whiteSpace: "pre-line",
+                }}
+              >
                 {feedbackData.keywords || "키워드가 없습니다."}
               </div>
             </div>
@@ -376,15 +403,26 @@ function Coach() {
                 </div>
                 <div
                   style={{
-                    backgroundColor: "#e8f5e8",
-                    padding: "15px",
-                    borderRadius: "8px",
-                    border: "1px solid #c3e6c3",
+                    margin: "0",
+                    lineHeight: "1.8",
+                    color: "#333",
+                    fontSize: "0.95rem",
                   }}
                 >
-                  <p style={{ margin: "0", lineHeight: "1.6", color: "#333" }}>
-                    💡 {feedbackData.speaking_speed.comment}
-                  </p>
+                  💡
+                  <div
+                    style={{
+                      marginTop: "8px",
+                      wordBreak: "keep-all",
+                      overflowWrap: "break-word",
+                    }}
+                    dangerouslySetInnerHTML={{
+                      __html: feedbackData.speaking_speed.comment
+                        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                        .replace(/\n(\d+)\. /g, "<br/><br/>$1. ")
+                        .replace(/\n/g, "<br/>"),
+                    }}
+                  />
                 </div>
               </div>
             ) : (
@@ -441,7 +479,8 @@ function Coach() {
                       color: "#666",
                     }}
                   >
-                    평균 멈춤 길이: {feedbackData.pause_analysis.avg_pause_length}초
+                    평균 멈춤 길이:{" "}
+                    {feedbackData.pause_analysis.avg_pause_length}초
                   </p>
                   <p
                     style={{
@@ -455,15 +494,26 @@ function Coach() {
                 </div>
                 <div
                   style={{
-                    backgroundColor: "#e8f5e8",
-                    padding: "15px",
-                    borderRadius: "8px",
-                    border: "1px solid #c3e6c3",
+                    margin: "0",
+                    lineHeight: "1.8",
+                    color: "#333",
+                    fontSize: "0.95rem",
                   }}
                 >
-                  <p style={{ margin: "0", lineHeight: "1.6", color: "#333" }}>
-                    💡 {feedbackData.pause_analysis.comment}
-                  </p>
+                  💡
+                  <div
+                    style={{
+                      marginTop: "8px",
+                      wordBreak: "keep-all",
+                      overflowWrap: "break-word",
+                    }}
+                    dangerouslySetInnerHTML={{
+                      __html: feedbackData.pause_analysis.comment
+                        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                        .replace(/\n(\d+)\. /g, "<br/><br/>$1. ")
+                        .replace(/\n/g, "<br/>"),
+                    }}
+                  />
                 </div>
               </div>
             ) : (
