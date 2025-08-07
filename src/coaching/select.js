@@ -95,7 +95,7 @@ try {
   // 성공 시 Coach 페이지로 이동하면서 데이터 전달
   navigate("/coaching/result", {
     state: {
-      feedback: result.feedback,
+      feedback: result,
       situation: selectedSituation,
       audience: selectedAudience,
       style: selectedStyle,
