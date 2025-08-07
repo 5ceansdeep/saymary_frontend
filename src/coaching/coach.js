@@ -1,0 +1,926 @@
+import { useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import godown from "../img/godown.png";
+import homeIcon from "../img/home.png";
+import coachingIcon from "../img/coaching.png";
+import archiveIcon from "../img/archive.png";
+
+function Coach() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [hovered, setHovered] = useState(false);
+  const [feedbackData, setFeedbackData] = useState(null);
+  const [sessionData, setSessionData] = useState(null);
+  const [showActionButtons, setShowActionButtons] = useState(false);
+  const [activeTab, setActiveTab] = useState("summary"); // 우측 탭 상태 기본값
+
+  const BoxRef = useRef();
+
+  useEffect(() => {
+    if (location.state) {
+      const receivedFeedback = location.state.feedback;
+      console.log("받은 피드백 데이터:", receivedFeedback);
+
+      let parsed = {};
+      if (typeof receivedFeedback === "string") {
+        try {
+          parsed = JSON.parse(receivedFeedback);
+        } catch {
+          parsed = { summary: receivedFeedback };
+        }
+      } else if (
+        typeof receivedFeedback === "object" &&
+        receivedFeedback !== null
+      ) {
+        parsed = receivedFeedback;
+      }
+
+      // 새로운 API 구조에 맞춰 데이터 매핑
+      const feedbackDataFormatted = {
+        original_text: parsed.original_text || "",
+        // summaries 객체에서 요약 데이터 추출
+        summary: parsed.summaries?.["간단요약"] || parsed.summary || "",
+        detailed_summary: parsed.summaries?.["상세요약"] || "",
+        keywords: parsed.summaries?.["키워드요약"] || "",
+        // speed_analysis에서 말하기 속도 데이터 추출
+        speaking_speed: {
+          average_wpm: parsed.speed_analysis?.wpm || 0,
+          duration_seconds: parsed.speed_analysis?.duration_seconds || 0,
+          word_count: parsed.speed_analysis?.word_count || 0,
+          comment: parsed.speed_analysis?.feedback || "",
+        },
+        // pause_analysis에서 말하기 템포 데이터 추출
+        pause_analysis: {
+          pause_count: parsed.pause_analysis?.pause_stats?.pause_count || 0,
+          avg_pause_length:
+            parsed.pause_analysis?.pause_stats?.avg_pause_length || 0,
+          total_silence: parsed.pause_analysis?.pause_stats?.total_silence || 0,
+          long_pauses: [], // 새 API에는 개별 pause 정보가 없음
+          comment: parsed.pause_analysis?.feedback || "",
+        },
+      };
+
+      console.log("변환된 피드백 데이터:", feedbackDataFormatted);
+
+      setFeedbackData(feedbackDataFormatted);
+      setSessionData({
+        situation: location.state.situation || "알 수 없음",
+        audience: location.state.audience || "알 수 없음",
+        style: location.state.style || "알 수 없음",
+        fileName: location.state.fileName || "파일 없음",
+        uploadTime: location.state.uploadTime || new Date().toLocaleString(),
+      });
+    } else {
+      // 직접 접근한 경우 테스트 데이터 설정
+      setFeedbackData({
+        original_text:
+          "재택근무는 코로나19 팬데믹을 계기로 빠르게 확산된 근무 형태입니다.",
+        summary: "발표력이 좋습니다.",
+        detailed_summary: "전반적으로 명확하고 체계적인 발표였습니다.",
+        keywords: "재택근무, 코로나19, 팬데믹",
+        speaking_speed: {
+          average_wpm: 160.37,
+          duration_seconds: 17.21,
+          word_count: 46,
+          comment: "적절한 말하기 속도입니다.",
+        },
+        pause_analysis: {
+          pause_count: 0,
+          avg_pause_length: 0,
+          total_silence: 0,
+          long_pauses: [],
+          comment: "자연스러운 말하기입니다.",
+        },
+      });
+      setSessionData({
+        situation: "Presentation (발표)",
+        audience: "Colleague / Team member (동료 / 팀원)",
+        style: "Formal (격식형)",
+        fileName: "test_audio.mp3",
+        uploadTime: new Date().toLocaleString(),
+      });
+    }
+
+    setHovered(true);
+    const timer = setTimeout(() => {
+      setHovered(false);
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [location]);
+
+  const scrollToBottom = () => {
+    if (BoxRef.current) {
+      BoxRef.current.scrollTo({
+        top: BoxRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  // 사이드바 네비게이션 핸들러
+  const handleNavigation = (path) => {
+    switch (path) {
+      case "home":
+        navigate("/");
+        break;
+      case "coaching":
+        navigate("/coaching/select");
+        break;
+      case "archive":
+        navigate("/archive");
+        break;
+      default:
+        console.log(`${path} 페이지로 이동`);
+    }
+  };
+
+  // exportButton 클릭 핸들러
+  const handleExportButtonClick = () => {
+    setShowActionButtons((prev) => !prev);
+  };
+
+  // 새로운 코칭 시작
+  const handleNewCoaching = () => {
+    navigate("/coaching/select");
+  };
+
+  // 텍스트 복사 함수
+  const copyToClipboard = async () => {
+    try {
+      let content = `파일명: ${sessionData?.fileName}\n생성일시: ${sessionData?.uploadTime}\n설정: ${sessionData?.situation} / ${sessionData?.audience} / ${sessionData?.style}\n\n`;
+
+      if (feedbackData) {
+        content += `=== 원본 텍스트 ===\n${
+          feedbackData.original_text || "원본 텍스트 없음"
+        }\n\n`;
+        content += `=== 간단 요약 ===\n${
+          feedbackData.summary || "요약 없음"
+        }\n\n`;
+        content += `=== 상세 요약 ===\n${
+          feedbackData.detailed_summary || "상세 요약 없음"
+        }\n\n`;
+        content += `=== 키워드 ===\n${
+          feedbackData.keywords || "키워드 없음"
+        }\n\n`;
+
+        if (feedbackData.speaking_speed) {
+          content += `=== 말하기 속도 분석 ===\n평균 WPM: ${feedbackData.speaking_speed.average_wpm}\n발화 시간: ${feedbackData.speaking_speed.duration_seconds}초\n단어 수: ${feedbackData.speaking_speed.word_count}개\n코멘트: ${feedbackData.speaking_speed.comment}\n\n`;
+        }
+
+        if (feedbackData.pause_analysis) {
+          content += `=== 말하기 템포 분석 ===\n멈춤 횟수: ${feedbackData.pause_analysis.pause_count}회\n평균 멈춤 길이: ${feedbackData.pause_analysis.avg_pause_length}초\n총 침묵 시간: ${feedbackData.pause_analysis.total_silence}초\n코멘트: ${feedbackData.pause_analysis.comment}\n`;
+        }
+      }
+
+      await navigator.clipboard.writeText(content);
+      alert("코칭 피드백이 클립보드에 복사되었습니다.");
+    } catch (err) {
+      console.error("복사 실패:", err);
+      alert("복사에 실패했습니다.");
+    }
+  };
+
+  // 파일로 내보내기 함수
+  const exportToFile = () => {
+    const fileName = `코칭피드백_${
+      sessionData?.fileName?.replace(/\.[^/.]+$/, "") || "audio"
+    }_${new Date().toLocaleDateString("ko-KR").replace(/\./g, "")}.txt`;
+
+    let content = `파일명: ${sessionData?.fileName}\n생성일시: ${sessionData?.uploadTime}\n설정: ${sessionData?.situation} / ${sessionData?.audience} / ${sessionData?.style}\n\n`;
+
+    if (feedbackData) {
+      content += `=== 원본 텍스트 ===\n${
+        feedbackData.original_text || "원본 텍스트 없음"
+      }\n\n`;
+      content += `=== 간단 요약 ===\n${
+        feedbackData.summary || "요약 없음"
+      }\n\n`;
+      content += `=== 상세 요약 ===\n${
+        feedbackData.detailed_summary || "상세 요약 없음"
+      }\n\n`;
+      content += `=== 키워드 ===\n${
+        feedbackData.keywords || "키워드 없음"
+      }\n\n`;
+
+      if (feedbackData.speaking_speed) {
+        content += `=== 말하기 속도 분석 ===\n평균 WPM: ${feedbackData.speaking_speed.average_wpm}\n발화 시간: ${feedbackData.speaking_speed.duration_seconds}초\n단어 수: ${feedbackData.speaking_speed.word_count}개\n코멘트: ${feedbackData.speaking_speed.comment}\n\n`;
+      }
+
+      if (feedbackData.pause_analysis) {
+        content += `=== 말하기 템포 분석 ===\n멈춤 횟수: ${feedbackData.pause_analysis.pause_count}회\n평균 멈춤 길이: ${feedbackData.pause_analysis.avg_pause_length}초\n총 침묵 시간: ${feedbackData.pause_analysis.total_silence}초\n코멘트: ${feedbackData.pause_analysis.comment}\n`;
+      }
+    }
+
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // 액션 버튼 데이터 배열
+  const actionButtons = [
+    {
+      id: "copy",
+      text: "📄 텍스트 복사",
+      title: "코칭 피드백을 클립보드에 복사합니다",
+      onClick: copyToClipboard,
+      style: {
+        backgroundColor: "#ecead5",
+        color: "white",
+        border: "none",
+      },
+    },
+    {
+      id: "export",
+      text: "💾 파일로 내보내기",
+      title: "코칭 피드백을 텍스트 파일로 다운로드합니다",
+      onClick: exportToFile,
+      style: {
+        backgroundColor: "#ecead5",
+        color: "white",
+        border: "none",
+      },
+    },
+    {
+      id: "newCoaching",
+      text: "🎯 새 코칭 시작",
+      title: "새로운 코칭을 시작합니다",
+      onClick: handleNewCoaching,
+      style: {
+        backgroundColor: "#00492C",
+        color: "white",
+        border: "none",
+      },
+    },
+  ];
+
+  // 탭 데이터
+  const tabs = [
+    { id: "summary", label: "💬 요약 & 키워드", icon: "💬" },
+    { id: "speed", label: "⚡ 말하기 속도", icon: "⚡" },
+    { id: "pause", label: "⏸️ 말하기 템포", icon: "⏸️" },
+  ];
+
+  // 탭 컨텐츠 렌더링
+  const renderTabContent = () => {
+    if (!feedbackData) return <p>피드백 데이터를 불러오는 중...</p>;
+
+    switch (activeTab) {
+      case "summary":
+        return (
+          <div>
+            <div style={{ marginBottom: "20px" }}>
+              <h3
+                style={{
+                  color: "#00492C",
+                  marginBottom: "10px",
+                  fontSize: "1.1rem",
+                }}
+              >
+                📝 간단 요약
+              </h3>
+              <p
+                style={{
+                  lineHeight: "1.6",
+                  color: "#333",
+                  marginBottom: "15px",
+                }}
+              >
+                {feedbackData.summary || "간단 요약이 없습니다."}
+              </p>
+            </div>
+
+            <div style={{ marginBottom: "20px" }}>
+              <h3
+                style={{
+                  color: "#00492C",
+                  marginBottom: "10px",
+                  fontSize: "1.1rem",
+                }}
+              >
+                📄 상세 요약
+              </h3>
+              <p
+                style={{
+                  lineHeight: "1.6",
+                  color: "#333",
+                  marginBottom: "15px",
+                }}
+              >
+                {feedbackData.detailed_summary || "상세 요약이 없습니다."}
+              </p>
+            </div>
+
+            <div>
+              <h3
+                style={{
+                  color: "#00492C",
+                  marginBottom: "10px",
+                  fontSize: "1.1rem",
+                }}
+              >
+                🔑 키워드
+              </h3>
+              <div
+                style={{
+                  lineHeight: "1.6",
+                  color: "#333",
+                  whiteSpace: "pre-line",
+                }}
+              >
+                {feedbackData.keywords || "키워드가 없습니다."}
+              </div>
+            </div>
+          </div>
+        );
+
+      case "speed":
+        return (
+          <div>
+            <h3
+              style={{
+                color: "#00492C",
+                marginBottom: "15px",
+                fontSize: "1.1rem",
+              }}
+            >
+              ⚡ 말하기 속도 분석
+            </h3>
+            {feedbackData.speaking_speed ? (
+              <div>
+                <div
+                  style={{
+                    backgroundColor: "#f8f9fa",
+                    padding: "15px",
+                    borderRadius: "8px",
+                    marginBottom: "15px",
+                    border: "1px solid #e9ecef",
+                  }}
+                >
+                  <p
+                    style={{
+                      margin: "0 0 10px 0",
+                      fontSize: "1.2rem",
+                      fontWeight: "bold",
+                      color: "#00492C",
+                    }}
+                  >
+                    평균 {feedbackData.speaking_speed.average_wpm} WPM
+                  </p>
+                  <p
+                    style={{
+                      margin: "5px 0",
+                      fontSize: "0.9rem",
+                      color: "#666",
+                    }}
+                  >
+                    발화 시간: {feedbackData.speaking_speed.duration_seconds}초
+                  </p>
+                  <p
+                    style={{
+                      margin: "5px 0",
+                      fontSize: "0.9rem",
+                      color: "#666",
+                    }}
+                  >
+                    총 단어 수: {feedbackData.speaking_speed.word_count}개
+                  </p>
+                  <p
+                    style={{
+                      margin: "5px 0 0 0",
+                      fontSize: "0.9rem",
+                      color: "#666",
+                    }}
+                  >
+                    Words Per Minute (분당 단어 수)
+                  </p>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#e8f5e8",
+                    padding: "20px",
+                    borderRadius: "10px",
+                    border: "1px solid #c3e6c3",
+                  }}
+                >
+                  <div
+                    style={{
+                      margin: "0",
+                      lineHeight: "1.8",
+                      color: "#333",
+                      fontSize: "0.95rem",
+                      wordBreak: "keep-all",
+                      overflowWrap: "break-word",
+                      maxHeight: "400px",
+                      overflowY: "auto",
+                    }}
+                  >
+                    💡
+                    <span
+                      dangerouslySetInnerHTML={{
+                        __html: feedbackData.speaking_speed.comment
+                          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                          .replace(/\n(\d+)\. /g, "<br/><br/>$1. ")
+                          .replace(/\n/g, "<br/>"),
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p>말하기 속도 데이터가 없습니다.</p>
+            )}
+          </div>
+        );
+
+      case "pause":
+        return (
+          <div>
+            <h3
+              style={{
+                color: "#00492C",
+                marginBottom: "15px",
+                fontSize: "1.1rem",
+              }}
+            >
+              ⏸️ 말하기 템포 분석
+            </h3>
+            {feedbackData.pause_analysis ? (
+              <div>
+                <div
+                  style={{
+                    backgroundColor: "#f8f9fa",
+                    padding: "15px",
+                    borderRadius: "8px",
+                    marginBottom: "15px",
+                    border: "1px solid #e9ecef",
+                  }}
+                >
+                  <p
+                    style={{
+                      margin: "0 0 10px 0",
+                      fontWeight: "bold",
+                      color: "#00492C",
+                    }}
+                  >
+                    멈춤 통계
+                  </p>
+                  <p
+                    style={{
+                      margin: "5px 0",
+                      fontSize: "0.9rem",
+                      color: "#666",
+                    }}
+                  >
+                    멈춤 횟수: {feedbackData.pause_analysis.pause_count}회
+                  </p>
+                  <p
+                    style={{
+                      margin: "5px 0",
+                      fontSize: "0.9rem",
+                      color: "#666",
+                    }}
+                  >
+                    평균 멈춤 길이:{" "}
+                    {feedbackData.pause_analysis.avg_pause_length}초
+                  </p>
+                  <p
+                    style={{
+                      margin: "5px 0",
+                      fontSize: "0.9rem",
+                      color: "#666",
+                    }}
+                  >
+                    총 침묵 시간: {feedbackData.pause_analysis.total_silence}초
+                  </p>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#e8f5e8",
+                    padding: "20px",
+                    borderRadius: "10px",
+                    border: "1px solid #c3e6c3",
+                  }}
+                >
+                  <div
+                    style={{
+                      margin: "0",
+                      lineHeight: "1.8",
+                      color: "#333",
+                      fontSize: "0.95rem",
+                      wordBreak: "keep-all",
+                      overflowWrap: "break-word",
+                      maxHeight: "400px",
+                      overflowY: "auto",
+                    }}
+                  >
+                    💡
+                    <span
+                      dangerouslySetInnerHTML={{
+                        __html: feedbackData.pause_analysis.comment
+                          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                          .replace(/\n(\d+)\. /g, "<br/><br/>$1. ")
+                          .replace(/\n/g, "<br/>"),
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p>말하기 템포 분석 데이터가 없습니다.</p>
+            )}
+          </div>
+        );
+
+      default:
+        return <p>잘못된 탭입니다.</p>;
+    }
+  };
+
+  return (
+    <div
+      className="custom-scroll"
+      style={{
+        backgroundColor: "#FFFCE4",
+        height: "100vh",
+        display: "flex",
+        padding: "0px",
+        margin: "0px",
+        position: "relative",
+      }}
+    >
+      {/* 좌측 영역 - 원본 텍스트 */}
+      <div
+        ref={BoxRef}
+        style={{
+          width: "50%",
+          height: "100%",
+          overflowY: "auto",
+          overflowX: "hidden",
+          justifyContent: "center",
+          padding: "20px",
+          boxSizing: "border-box",
+          borderRight: "2px solid #ECEAD5",
+        }}
+      >
+        <div style={{ minHeight: "100%" }}>
+          <h1
+            style={{
+              color: "#656247",
+              fontFamily: "Noto Sans KR, sans-serif",
+              fontWeight: 500,
+              fontSize: "1.5rem",
+              margin: "0px",
+              paddingTop: "3%",
+              paddingBottom: "5px",
+              paddingLeft: "7%",
+              position: "relative",
+            }}
+          >
+            파일명 : {sessionData?.fileName || "알 수 없음"}
+            {/* exportButton */}
+            <button
+              className="exportButton"
+              title="내보내기 옵션"
+              onClick={handleExportButtonClick}
+              style={{
+                color: "#656247",
+                backgroundColor: showActionButtons ? "#d4d1b8" : "#ecead5",
+                fontFamily: "Noto Sans KR, sans-serif",
+                fontWeight: 600,
+                fontSize: "11px",
+                border: "none",
+                lineHeight: "0.1",
+                justifyContent: "center",
+                textAlign: "center",
+                cursor: "pointer",
+                padding: "10px 10px",
+                marginLeft: "10px",
+                borderRadius: "15px",
+                transition: "all 0.2s ease-in-out",
+                position: "relative",
+              }}
+            >
+              . . .{/* 액션 버튼들 */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: "0",
+                  zIndex: 1001,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "8px",
+                  marginTop: "5px",
+                  opacity: showActionButtons ? 1 : 0,
+                  transform: showActionButtons
+                    ? "translateY(0)"
+                    : "translateY(-10px)",
+                  transition: "all 0.3s ease-in-out",
+                  visibility: showActionButtons ? "visible" : "hidden",
+                  pointerEvents: showActionButtons ? "auto" : "none",
+                }}
+              >
+                {actionButtons.map((button) => (
+                  <button
+                    key={button.id}
+                    title={button.title}
+                    onClick={button.onClick}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: "6px",
+                      fontFamily: "Noto Sans KR, sans-serif",
+                      fontWeight: 500,
+                      fontSize: "0.7rem",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease-in-out",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                      border: "none",
+                      whiteSpace: "nowrap",
+                      minWidth: "140px",
+                      ...button.style,
+                    }}
+                  >
+                    {button.text}
+                  </button>
+                ))}
+              </div>
+            </button>
+          </h1>
+          <h2
+            style={{
+              color: "#656247",
+              fontFamily: "Noto Sans KR, sans-serif",
+              fontWeight: 300,
+              fontSize: "0.84rem",
+              paddingLeft: "7%",
+              paddingTop: "0px",
+              margin: "0px",
+            }}
+          >
+            {sessionData?.uploadTime}
+          </h2>
+
+          <div
+            style={{
+              color: "#656247",
+              backgroundColor: "#ECEAD5",
+              fontFamily: "Noto Sans KR, sans-serif",
+              fontWeight: 400,
+              fontSize: "1rem",
+              marginTop: "20px",
+              marginLeft: "7%",
+              marginRight: "5%",
+              paddingTop: "40px",
+              paddingBottom: "50px",
+              paddingLeft: "7%",
+              paddingRight: "7%",
+              lineHeight: "1.8",
+              borderRadius: "10px",
+            }}
+          >
+            <h3
+              style={{
+                margin: "0 0 20px 0",
+                color: "#4a4332",
+                fontSize: "1.1rem",
+              }}
+            >
+              📄 원본 텍스트
+            </h3>
+            <p style={{ margin: "0", lineHeight: "1.8" }}>
+              {feedbackData?.original_text ||
+                "원본 텍스트를 불러올 수 없습니다."}
+            </p>
+          </div>
+
+          <img
+            src={godown}
+            onClick={scrollToBottom}
+            alt="최하단으로 이동"
+            style={{
+              position: "fixed",
+              left: "25%",
+              bottom: "50px",
+              transform: "translateX(-50%)",
+              cursor: "pointer",
+              width: "50px",
+              height: "30px",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* 우측 영역 - 피드백 */}
+      <div
+        style={{
+          width: "50%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          backgroundColor: "#ECEAD5",
+          padding: "20px",
+          boxSizing: "border-box",
+        }}
+      >
+        {/* 세션 정보 표시 */}
+        <div
+          style={{
+            marginBottom: "20px",
+            textAlign: "center",
+            padding: "15px",
+            backgroundColor: "#ffffff",
+            borderRadius: "10px",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          }}
+        >
+          <p
+            style={{
+              margin: "0",
+              fontWeight: "bold",
+              color: "#00492C",
+              fontFamily: "Noto Sans KR, sans-serif",
+              fontSize: "0.9rem",
+            }}
+          >
+            {sessionData?.situation} ◦ {sessionData?.audience} ◦{" "}
+            {sessionData?.style}
+          </p>
+        </div>
+
+        {/* 탭 메뉴 */}
+        <div
+          style={{
+            display: "flex",
+            marginBottom: "20px",
+            backgroundColor: "#ffffff",
+            borderRadius: "10px",
+            padding: "5px",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          }}
+        >
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                flex: 1,
+                padding: "10px 5px",
+                border: "none",
+                backgroundColor:
+                  activeTab === tab.id ? "#00492C" : "transparent",
+                color: activeTab === tab.id ? "white" : "#666",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontFamily: "Noto Sans KR, sans-serif",
+                fontSize: "0.8rem",
+                fontWeight: "500",
+                transition: "all 0.2s ease",
+              }}
+            >
+              {tab.icon} {tab.label.split(" ")[1]}
+            </button>
+          ))}
+        </div>
+
+        {/* 탭 컨텐츠 */}
+        <div
+          style={{
+            flex: 1,
+            backgroundColor: "#ffffff",
+            borderRadius: "10px",
+            padding: "20px",
+            overflowY: "auto",
+            fontFamily: "Noto Sans KR, sans-serif",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          }}
+        >
+          {renderTabContent()}
+        </div>
+
+        {/* 새로운 코칭 시작 버튼 */}
+        <button
+          onClick={handleNewCoaching}
+          style={{
+            marginTop: "15px",
+            padding: "12px 24px",
+            backgroundColor: "#00492C",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontFamily: "Noto Sans KR, sans-serif",
+            fontSize: "14px",
+            fontWeight: "500",
+            transition: "all 0.2s ease",
+          }}
+          onMouseEnter={(e) => (e.target.style.backgroundColor = "#003d25")}
+          onMouseLeave={(e) => (e.target.style.backgroundColor = "#00492C")}
+        >
+          🎯 새로운 코칭 시작하기
+        </button>
+      </div>
+
+      {/* 마우스 감지 영역 */}
+      <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          height: "100vh",
+          width: "20px",
+          zIndex: 1000,
+        }}
+      ></div>
+
+      {/* 사이드바 */}
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          height: "100vh",
+          width: "200px",
+          backgroundColor: "#00492C",
+          transform: hovered ? "translateX(0)" : "translateX(-200px)",
+          transition: "transform 0.2s ease",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          paddingTop: "100px",
+          gap: "40px",
+          zIndex: 15,
+        }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <SidebarButton
+          label="Home"
+          icon={homeIcon}
+          isActive={location.pathname === "/"}
+          onClick={() => handleNavigation("home")}
+        />
+        <SidebarButton
+          label="Coaching"
+          icon={coachingIcon}
+          isActive={location.pathname.startsWith("/coaching")}
+          onClick={() => handleNavigation("coaching")}
+        />
+        <SidebarButton
+          label="Archive"
+          icon={archiveIcon}
+          isActive={location.pathname.startsWith("/archive")}
+          onClick={() => handleNavigation("archive")}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default Coach;
+
+function SidebarButton({ label, icon, isActive, onClick }) {
+  const buttonStyle = {
+    backgroundColor: isActive ? "#066c43" : "#00492C",
+    color: "white",
+    width: "80px",
+    height: "80px",
+    borderRadius: "20px",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "5px",
+    fontSize: "14px",
+    fontWeight: isActive ? "700" : "400",
+    transition: "background-color 0.3s",
+    border: "none",
+    cursor: "pointer",
+  };
+
+  return (
+    <button
+      style={buttonStyle}
+      onClick={onClick}
+      onMouseEnter={(e) => {
+        if (!isActive) e.target.style.backgroundColor = "#055538";
+      }}
+      onMouseLeave={(e) => {
+        if (!isActive) e.target.style.backgroundColor = "#00492C";
+      }}
+    >
+      {icon && (
+        <img src={icon} alt={label} style={{ width: "24px", height: "24px" }} />
+      )}
+      <span>{label}</span>
+    </button>
+  );
+}
