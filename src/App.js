@@ -9,7 +9,7 @@ import Coach from "./coaching/coach.js";
 import UploadFile from "./mainpage/uploadFile.js";
 
 import Sidebar from "./mainpage/sideBar.js";
-import Archive from "./archive.js";
+import Archive from "./archivepage/archive.js";
 
 import {
   Routes,
