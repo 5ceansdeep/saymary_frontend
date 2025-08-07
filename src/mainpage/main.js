@@ -167,7 +167,8 @@ function Main() {
     localStorage.removeItem("loginTime");
     localStorage.removeItem("userInfo");
     localStorage.removeItem("summaryData");
-    navigate("/login");
+    alert("로그아웃되셨습니다.");
+    navigate("/login", { replace: true });
   };
 
   // 요약 타입명 가져오기 함수
@@ -266,6 +267,28 @@ function Main() {
     },
   ];
 
+  //보관함에 저장 함수
+  const saveToArchive = () => {
+    const fileName = prompt("저장할 파일 이름을 입력하세요:");
+    if (!fileName) return;
+
+    const archiveList = JSON.parse(localStorage.getItem("archiveFiles")) || [];
+
+    const newFile = {
+      fileId: Date.now(),
+      originalFileName: fileName,
+      createdAt: new Date().toISOString(),
+      transcript: summaryData?.text || "",
+      summary1: summaryData?.간단요약 || "",
+      summary2: summaryData?.상세요약 || "",
+      summary3: summaryData?.키워드요약 || "",
+    };
+
+    archiveList.push(newFile);
+    localStorage.setItem("archiveFiles", JSON.stringify(archiveList));
+    alert("보관함에 저장되었습니다!");
+  };
+
   // 액션 버튼 데이터 배열 (로그아웃 버튼 추가)
   const actionButtons = [
     {
@@ -291,23 +314,23 @@ function Main() {
       },
     },
     {
+      id: "goToArchive",
+      text: "Archive에 저장",
+      title: "보관함에 저장",
+      onClick: saveToArchive,
+      style: {
+        backgroundColor: "#ecead5",
+        color: "#656247",
+        border: "none",
+      },
+    },
+    {
       id: "newUpload",
       text: "📁 새 파일 업로드",
       title: "새로운 파일을 업로드합니다",
       onClick: handleNewUpload,
       style: {
         backgroundColor: "#00492C",
-        color: "white",
-        border: "none",
-      },
-    },
-    {
-      id: "logout",
-      text: "🚪 로그아웃",
-      title: "로그아웃하고 로그인 페이지로 이동합니다",
-      onClick: handleLogout,
-      style: {
-        backgroundColor: "#e74c3c",
         color: "white",
         border: "none",
       },
@@ -391,7 +414,8 @@ function Main() {
       }}
     >
       {/* 로그인 상태 표시 */}
-      <div
+      <button
+        onClick={handleLogout}
         style={{
           position: "absolute",
           top: "10px",
@@ -401,10 +425,12 @@ function Main() {
           background: "rgba(255,255,255,0.8)",
           padding: "5px 10px",
           borderRadius: "5px",
+          cursor: "pointer",
+          zIndex: 9999,
         }}
       >
         로그인: ✅ {localStorage.getItem("userEmail")}
-      </div>
+      </button>
 
       {/* 제목 - 클릭하면 업로드 페이지로 이동 */}
       <h1
@@ -537,7 +563,7 @@ function Main() {
         </h2>
 
         {/* 요약 텍스트 본문 - 원본 텍스트 표시 */}
-        <p
+        <div
           style={{
             color: "#656247",
             backgroundColor: "#ECEAD5",
@@ -597,7 +623,7 @@ function Main() {
               </button>
             ))}
           </div>
-        </p>
+        </div>
 
         {/* 선택된 요약본 표시 영역 */}
         <div

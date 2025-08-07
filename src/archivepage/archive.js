@@ -1,63 +1,73 @@
 import React, { useState, useEffect } from "react";
 import Search from "../img/search.png";
+import { useNavigate } from "react-router-dom";
 
 function Archive() {
+  const navigate = useNavigate();
   const [files, setFiles] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showActionMenu, setShowActionMenu] = useState({});
+  const [userNickname, setUserNickname] = useState("누군가");
 
-  // Mock 데이터 (API 대신 사용)
-  const mockFiles = [
-    {
-      originalFileName: "회의록_2025_01_15.pdf",
-      transcript:
-        "오늘 회의에서는 새로운 프로젝트 기획안에 대해 논의했습니다. 마케팅 팀에서 제안한 전략이 매우 흥미로웠고...",
-      summary1: "주요 안건 논의 및 결정사항",
-      summary2: "다음 주까지 완료해야 할 업무들",
-      summary3: "예산 관련 검토 필요",
-      userId: 1,
-      fileId: 1,
-      createdAt: "2025-01-15T10:30:00Z",
-    },
-    {
-      originalFileName: "프레젠테이션_발표자료.pptx",
-      transcript:
-        "안녕하세요. 오늘 발표할 내용은 우리 회사의 새로운 비전에 관한 것입니다...",
-      summary1: "회사 비전 및 목표 설정",
-      summary2: "향후 3개년 계획 수립",
-      summary3: "조직 구조 개편 방안",
-      userId: 1,
-      fileId: 2,
-      createdAt: "2025-01-14T14:20:00Z",
-    },
-    {
-      originalFileName: "고객인터뷰_분석보고서.docx",
-      transcript:
-        "고객 만족도 조사 결과, 전반적으로 긍정적인 반응을 보였습니다. 특히 서비스 품질에 대한...",
-      summary1: "고객 만족도 조사 결과 분석",
-      summary2: "서비스 개선 포인트 도출",
-      summary3: "향후 고객 관리 전략",
-      userId: 1,
-      fileId: 3,
-      createdAt: "2025-01-13T16:45:00Z",
-    },
-  ];
+  // 인증 상태 확인 함수
+  const checkAuthStatus = async () => {
+    const userEmail = localStorage.getItem("userEmail");
+    const loginTime = localStorage.getItem("loginTime");
 
-  // 컴포넌트 마운트 시 Mock 데이터 로드
+    if (!userEmail) {
+      return false;
+    }
+
+    // 로그인 시간이 24시간 이내인지 확인
+    if (loginTime) {
+      const loginDate = new Date(loginTime);
+      const now = new Date();
+      const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
+
+      if (hoursDiff > 24) {
+        console.warn("로그인 시간이 24시간을 초과했습니다.");
+        localStorage.removeItem("userEmail");
+        localStorage.removeItem("userNickname");
+        localStorage.removeItem("loginTime");
+        return false;
+      }
+    }
+
+    return true; // localStorage에 유효한 정보가 있으면 인증됨으로 처리
+  };
+
+  // localStorage 불러오기 및 사용자 정보 확인
   useEffect(() => {
-    setFiles(mockFiles);
+    const loadData = async () => {
+      // 인증 상태 확인
+      const isAuthenticated = await checkAuthStatus();
+
+      if (isAuthenticated) {
+        // 사용자 닉네임 설정
+        const nickname = localStorage.getItem("userNickname");
+        if (nickname) {
+          setUserNickname(nickname);
+        }
+      }
+
+      // 파일 데이터 로드
+      const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
+      setFiles(saved);
+    };
+
+    loadData();
   }, []);
 
   // 검색 실행 함수
   const handleSearch = () => {
+    const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
+
     if (!searchTerm.trim()) {
-      setFiles(mockFiles);
+      setFiles(saved);
       return;
     }
 
-    const filtered = mockFiles.filter(
+    const filtered = saved.filter(
       (file) =>
         file.originalFileName
           ?.toLowerCase()
@@ -67,7 +77,22 @@ function Archive() {
         file.summary2?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         file.summary3?.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
     setFiles(filtered);
+  };
+
+  //파일 클릭 시 Main 페이지로 이동
+  const handleFileClick = (file) => {
+    const newSummaryData = {
+      fileName: file.originalFileName,
+      uploadTime: new Date(file.createdAt).toLocaleString(),
+      text: file.transcript,
+      간단요약: file.summary1,
+      상세요약: file.summary2,
+      키워드요약: file.summary3,
+    };
+    localStorage.setItem("summaryData", JSON.stringify(newSummaryData));
+    navigate("/main");
   };
 
   // Enter 키 검색
@@ -84,7 +109,9 @@ function Archive() {
 
     // 검색어가 비어있으면 전체 목록 표시
     if (!value.trim()) {
-      setFiles(mockFiles);
+      const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
+      setFiles(saved);
+      return;
     }
   };
 
@@ -197,12 +224,7 @@ function Archive() {
     return `${year}.${month}.${day}`;
   };
 
-  // 파일 클릭 핸들러
-  const handleFileClick = (file) => {
-    console.log("선택된 파일:", file);
-    // 파일 상세 보기 로직
-  };
-
+  // 파일 상세 보기 로직
   const archiveTitleStyle = {
     fontFamily: "Cormorant Garamond, serif",
     fontSize: "26px",
@@ -355,7 +377,7 @@ function Archive() {
           overflowX: "hidden",
         }}
       >
-        <h1 style={archiveTitleStyle}>누군가의 보관함</h1>
+        <h1 style={archiveTitleStyle}>{userNickname}의 보관함</h1>
 
         {/* 검색 박스 */}
         <div style={searchBoxStyle}>

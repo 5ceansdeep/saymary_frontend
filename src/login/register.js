@@ -97,9 +97,19 @@ function Register() {
 
       if (response.ok) {
         if (typeof result === "string" && result.includes("회원가입 성공")) {
+          // 회원가입 성공 시 로컬스토리지에 사용자 정보 저장
+          localStorage.setItem("userEmail", email);
+          localStorage.setItem("userNickname", nickname);
+          localStorage.setItem("loginTime", new Date().toISOString());
+
           alert("회원가입이 완료되었습니다!");
           navigate("/login");
         } else if (typeof result === "object" && result.success) {
+          // 회원가입 성공 시 로컬스토리지에 사용자 정보 저장
+          localStorage.setItem("userEmail", email);
+          localStorage.setItem("userNickname", nickname);
+          localStorage.setItem("loginTime", new Date().toISOString());
+
           alert("회원가입이 완료되었습니다!");
           navigate("/login");
         } else {

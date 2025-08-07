@@ -516,16 +516,17 @@ function UploadFile() {
       <div
         style={{
           position: "absolute",
-          top: "10px",
+          top: "13%",
           right: "10px",
+          fontFamily: "Noto Sans KR, sans-serif",
           fontSize: "12px",
-          color: userEmail ? "green" : "red",
-          background: "rgba(255,255,255,0.8)",
+          color: userEmail ? "#003520" : "#FFFFFF",
+          backgroundColor: userEmail ? "#F2C81B" : "#003520",
           padding: "5px 10px",
           borderRadius: "5px",
         }}
       >
-        로그인: {userEmail ? "✅ " + userEmail : "❌ 로그아웃"}
+        로그인 상태 : {userEmail ? "✅ " + userEmail : "❌ 로그아웃"}
       </div>
 
       <div
@@ -683,7 +684,6 @@ function UploadFile() {
                   }}
                 >
                   지원 형식: MP3, WAV, M4A, AAC (현재 최대 50MB)
-                  중)
                 </p>
                 <button
                   style={{
