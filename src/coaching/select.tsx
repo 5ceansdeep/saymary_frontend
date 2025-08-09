@@ -91,10 +91,10 @@ function Select() {
     }
 
     const formData = new FormData();
+    formData.append("file", file);
     formData.append("situation", selectedSituation);
     formData.append("audience", selectedAudience);
     formData.append("style", selectedStyle);
-    formData.append("file", file);
 
     setIsLoading(true);
     try {

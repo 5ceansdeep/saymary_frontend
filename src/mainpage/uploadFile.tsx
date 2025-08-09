@@ -30,6 +30,56 @@ type SummaryData = {
   uploadTime: string;
 };
 
+import axios from "axios";
+
+const api = axios.create({
+  baseURL: "https://api.saymary.site",
+  timeout: 300_000, // 5분
+});
+
+api.interceptors.request.use((c) => {
+  console.log("[REQ]", c.method, c.baseURL, c.url, c.headers?.toJSON?.());
+  return c;
+});
+api.interceptors.response.use(
+  (r) => {
+    console.log("[RES]", r.status, r.config.url);
+    return r;
+  },
+  (e) => {
+    console.log("[ERR]", e?.response?.status, e?.config?.url, e?.message);
+    return Promise.reject(e);
+  }
+);
+
+async function uploadFileToAPI(file: File) {
+  try {
+    const token = localStorage.getItem("access_token");
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const headers: Record<string, string> = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const res = await api.post("/api/fastapi/upload", formData, {
+      headers,
+      onUploadProgress: (evt) => {
+        if (evt.total) {
+          const percent = Math.round((evt.loaded / evt.total) * 100);
+          console.log(`업로드 진행률: ${percent}%`);
+        }
+      },
+    });
+
+    console.log("API 응답:", res.data);
+    return res.data;
+  } catch (err) {
+    console.error("업로드 오류:", err);
+    throw err;
+  }
+}
+
 function UploadFile() {
   const navigate = useNavigate();
 
@@ -184,10 +234,6 @@ function UploadFile() {
 
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("filename", file.name);
-        formData.append("situation", "회의");
-        formData.append("audience", "일반");
-        formData.append("style", "친근");
 
         const response = await fetchWithTimeout(
           "https://api.saymary.site/api/fastapi/upload",
