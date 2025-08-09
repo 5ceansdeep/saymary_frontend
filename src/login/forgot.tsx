@@ -1,32 +1,36 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Forgot() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
+  const [email, setEmail] = useState<string>("");
+  const [emailError, setEmailError] = useState<string>("");
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
-  const handleEmailChange = (e) => {
+  const handleEmailChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const { value } = e.target;
-    const filteredValue = value.replace(/[^a-zA-Z0-9@._+-]/g, ""); // 이메일 input에 영어 대소문자, 숫자, @, ., !, *, $ 만 허용
+    // 이메일 인풋에 영어 대소문자, 숫자, @, ., _, +, - 만 허용
+    const filteredValue = value.replace(/[^a-zA-Z0-9@._+-]/g, "");
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     setEmail(filteredValue);
+
     if (filteredValue === "" || emailRegex.test(filteredValue)) {
-      setEmailError(""); // 통과하면 에러 제거
+      setEmailError("");
     } else {
       setEmailError("Please enter a valid email address.");
     }
   };
 
-  const handleLogin = async () => {
+  const handleSubmit = async () => {
+    if (!email || !!emailError) return;
+    setSubmitting(true);
     try {
       const response = await fetch(
         "https://api.saymary.site/api/user/request-reset",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email }),
         }
       );
@@ -34,16 +38,29 @@ function Forgot() {
       const text = await response.text();
       console.log("응답 내용:", text);
 
+      if (!response.ok) {
+        // 서버가 에러 코드를 반환하는 경우에도 사용자에게 메시지 제공
+        alert("요청 처리 중 오류가 발생했습니다.");
+        return;
+      }
+
       if (text.includes("재설정")) {
         alert("비밀번호 재설정 메일이 발송되었습니다.");
       } else if (text.includes("존재")) {
         alert("등록되지 않은 이메일입니다.");
+      } else {
+        // 백엔드 응답 문구가 바뀌더라도 사용자 경험을 보장
+        alert("요청이 접수되었습니다. 메일함을 확인해주세요.");
       }
     } catch (error) {
       alert("서버 연결 실패!");
       console.error("fetch error:", error);
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  const canSubmit = Boolean(email) && !emailError && !submitting;
 
   return (
     <div
@@ -54,7 +71,7 @@ function Forgot() {
         backgroundColor: "#00492C",
       }}
     >
-      {/* 계정 생성 페이지 */}
+      {/* 타이틀 */}
       <h1
         style={{
           position: "absolute",
@@ -70,17 +87,17 @@ function Forgot() {
         I forgot my password :(
       </h1>
 
-      {/* 회원가입 폼 박스 */}
+      {/* 폼 박스 */}
       <div
         style={{
           position: "absolute",
           bottom: "0",
           left: "50%",
           transform: "translateX(-50%)",
-          width: "90%", // 전체 너비의 90%
-          maxWidth: "500px", // 최대 너비 제한
-          height: "60vh", // 전체 높이의 60%
-          padding: "5vw", // 반응형 여백
+          width: "90%",
+          maxWidth: "500px",
+          height: "60vh",
+          padding: "5vw",
           backgroundColor: "#FFFCE4",
           borderRadius: "10px",
           boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
@@ -95,11 +112,7 @@ function Forgot() {
       >
         {/* 이메일 인풋 */}
         <h3
-          style={{
-            marginBottom: "5px",
-            fontSize: "1.2rem",
-            marginLeft: "18%",
-          }}
+          style={{ marginBottom: "5px", fontSize: "1.2rem", marginLeft: "18%" }}
         >
           Email ID
         </h3>
@@ -108,6 +121,9 @@ function Forgot() {
           placeholder="Enter your email"
           value={email}
           onChange={handleEmailChange}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && canSubmit) handleSubmit();
+          }}
           style={{
             marginBottom: "10px",
             fontSize: "1rem",
@@ -119,7 +135,7 @@ function Forgot() {
             marginLeft: "18%",
           }}
         />
-        {emailError && (
+        {!!emailError && (
           <p
             style={{
               color: "red",
@@ -136,22 +152,22 @@ function Forgot() {
 
         {/* 제출 버튼 */}
         <button
-          onClick={handleLogin}
-          disabled={!email || emailError}
+          onClick={handleSubmit}
+          disabled={!canSubmit}
           style={{
             padding: "12px",
             fontSize: "1rem",
             borderRadius: "5px",
-            backgroundColor: !email || emailError ? "#C7C29B" : "#00492C",
+            backgroundColor: canSubmit ? "#00492C" : "#C7C29B",
             color: "white",
             border: "none",
-            cursor: !email || emailError ? "not-allowed" : "pointer",
+            cursor: canSubmit ? "pointer" : "not-allowed",
             marginLeft: "18%",
             marginTop: "10px",
             width: "320px",
           }}
         >
-          Submit
+          {submitting ? "Submitting..." : "Submit"}
         </button>
 
         {/* 계정 등록 링크 (sign up) */}
@@ -188,12 +204,7 @@ function Forgot() {
           </label>
         </div>
         {/* or Sign in */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
+        <div style={{ display: "flex", justifyContent: "center" }}>
           <label
             style={{
               color: "#000000",

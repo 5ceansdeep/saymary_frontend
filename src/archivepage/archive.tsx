@@ -1,86 +1,125 @@
+import React from "react";
 import { useState, useEffect } from "react";
 import Search from "../img/search.png";
 import { useNavigate } from "react-router-dom";
 
+// --- Types ---
+interface FileItem {
+  fileId?: string | number;
+  originalFileName?: string;
+  transcript?: string;
+  summary1?: string;
+  summary2?: string;
+  summary3?: string;
+  createdAt?: string | number | Date;
+  summaryType?: string;
+}
+
+type ActionMenuState = Record<string | number, boolean>;
+
+interface ActionButton {
+  id: string;
+  text: string;
+  title: string;
+  onClick: (file: FileItem) => void;
+  style: React.CSSProperties;
+}
+
 function Archive() {
   const navigate = useNavigate();
-  const [files, setFiles] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showActionMenu, setShowActionMenu] = useState({});
+
+  const [files, setFiles] = useState<FileItem[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [showActionMenu, setShowActionMenu] = useState<ActionMenuState>({});
+
+  // --- helpers ---
+  const safeParse = <T,>(raw: string | null, fallback: T): T => {
+    if (!raw) return fallback;
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      return fallback;
+    }
+  };
+
+  const getSaved = (): FileItem[] =>
+    safeParse<FileItem[]>(localStorage.getItem("archiveFiles"), []);
 
   // localStorage 불러오기
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
-    setFiles(saved);
-  }, []);
+    setFiles(getSaved());
+  }, [getSaved]);
 
   // 검색 실행 함수
   const handleSearch = () => {
-    const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
+    const saved = getSaved();
 
     if (!searchTerm.trim()) {
       setFiles(saved);
       return;
     }
 
-    const filtered = saved.filter(
-      (file) =>
-        file.originalFileName
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        file.transcript?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        file.summary1?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        file.summary2?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        file.summary3?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const keyword = searchTerm.toLowerCase();
+    const filtered = saved.filter((file) => {
+      const inName = file.originalFileName?.toLowerCase().includes(keyword);
+      const inTranscript = file.transcript?.toLowerCase().includes(keyword);
+      const inS1 = file.summary1?.toLowerCase().includes(keyword);
+      const inS2 = file.summary2?.toLowerCase().includes(keyword);
+      const inS3 = file.summary3?.toLowerCase().includes(keyword);
+      return Boolean(inName || inTranscript || inS1 || inS2 || inS3);
+    });
 
     setFiles(filtered);
   };
 
   //파일 클릭 시 Main 페이지로 이동
-  const handleFileClick = (file) => {
+  const handleFileClick = (file: FileItem) => {
+    const created = file.createdAt ? new Date(file.createdAt) : new Date();
+
     const newSummaryData = {
       fileName: file.originalFileName,
-      uploadTime: new Date(file.createdAt).toLocaleString(),
+      uploadTime: created.toLocaleString(),
       text: file.transcript,
       간단요약: file.summary1,
       상세요약: file.summary2,
       키워드요약: file.summary3,
       summaryType: file.summaryType,
-    };
+    } as const;
+
     localStorage.setItem("summaryData", JSON.stringify(newSummaryData));
     navigate("/main");
   };
 
-  // Enter 키 검색
-  const handleKeyPress = (e) => {
+  // Enter 키 검색 (onKeyPress는 deprecated → onKeyDown 사용)
+  const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
     if (e.key === "Enter") {
       handleSearch();
     }
   };
 
-  // 검색어 초기화
-  const handleSearchChange = (e) => {
+  // 검색어 변경
+  const handleSearchChange: React.ChangeEventHandler<HTMLInputElement> = (
+    e
+  ) => {
     const value = e.target.value;
     setSearchTerm(value);
 
     // 검색어가 비어있으면 전체 목록 표시
     if (!value.trim()) {
-      const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
-      setFiles(saved);
-      return;
+      setFiles(getSaved());
     }
   };
 
   //파일 삭제 핸들러
-  const deleteFile = (fileToDelete) => {
+  const deleteFile = (fileToDelete: FileItem) => {
     if (
-      !window.confirm(`"${fileToDelete.originalFileName}" 파일을 삭제할까요?`)
+      !window.confirm(
+        `"${fileToDelete.originalFileName ?? "이름 없음"}" 파일을 삭제할까요?`
+      )
     )
       return;
 
-    const saved = JSON.parse(localStorage.getItem("archiveFiles")) || [];
-
+    const saved = getSaved();
     const updated = saved.filter((f) => f.fileId !== fileToDelete.fileId);
 
     localStorage.setItem("archiveFiles", JSON.stringify(updated));
@@ -89,7 +128,7 @@ function Archive() {
   };
 
   // 액션 메뉴 토글
-  const toggleActionMenu = (fileId, e) => {
+  const toggleActionMenu = (fileId: string | number, e: React.MouseEvent) => {
     e.stopPropagation();
     setShowActionMenu((prev) => ({
       ...prev,
@@ -103,8 +142,12 @@ function Archive() {
   };
 
   // 텍스트 복사
-  const copyToClipboard = async (file) => {
-    const textToCopy = `파일명: ${file.originalFileName}\n\n원본 텍스트:\n${file.transcript}\n\n요약 1: ${file.summary1}\n요약 2: ${file.summary2}\n요약 3: ${file.summary3}`;
+  const copyToClipboard = async (file: FileItem) => {
+    const textToCopy = `파일명: ${
+      file.originalFileName ?? ""
+    }\n\n원본 텍스트:\n${file.transcript ?? ""}\n\n요약 1: ${
+      file.summary1 ?? ""
+    }\n요약 2: ${file.summary2 ?? ""}\n요약 3: ${file.summary3 ?? ""}`;
 
     try {
       await navigator.clipboard.writeText(textToCopy);
@@ -117,23 +160,23 @@ function Archive() {
   };
 
   // 파일 내보내기
-  const exportToFile = (file) => {
+  const exportToFile = (file: FileItem) => {
     const textToExport = `파일명: ${
-      file.originalFileName
+      file.originalFileName ?? ""
     }\n생성일: ${formatDate(file.createdAt)}\n\n원본 텍스트:\n${
-      file.transcript
-    }\n\n요약 1: ${file.summary1}\n\n요약 2: ${file.summary2}\n\n요약 3: ${
-      file.summary3
-    }`;
+      file.transcript ?? ""
+    }\n\n요약 1: ${file.summary1 ?? ""}\n\n요약 2: ${
+      file.summary2 ?? ""
+    }\n\n요약 3: ${file.summary3 ?? ""}`;
 
     const blob = new Blob([textToExport], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${file.originalFileName.replace(
+    link.download = `${(file.originalFileName ?? "export").replace(
       /\.[^/.]+$/,
       ""
-    )}_요약.txt`;
+    )}__요약.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -142,16 +185,15 @@ function Archive() {
     setShowActionMenu({});
   };
 
-  // 새 파일 업로드
+  // 새 파일 업로드 (라우팅 연결 전 임시)
   const handleNewUpload = () => {
-    // 파일 업로드 페이지로 이동하는 로직
     console.log("새 파일 업로드");
     alert("새 파일 업로드 페이지로 이동합니다!");
     setShowActionMenu({});
   };
 
   // 액션 버튼 데이터 배열
-  const actionButtons = [
+  const actionButtons: ActionButton[] = [
     {
       id: "copy",
       text: "텍스트 복사",
@@ -163,7 +205,7 @@ function Archive() {
         border: "none",
       },
     },
-    //파일삭제 버튼 추가
+    //파일삭제 버튼
     {
       id: "delete",
       text: "🗑 삭제하기",
@@ -171,7 +213,7 @@ function Archive() {
       onClick: deleteFile,
       style: {
         backgroundColor: "#ecead5",
-        color: "#B22222", // 붉은색 강조
+        color: "#B22222",
         border: "none",
       },
     },
@@ -200,17 +242,18 @@ function Archive() {
   ];
 
   // 날짜 포맷 함수
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
+  const formatDate = (dateInput: FileItem["createdAt"]) => {
+    if (!dateInput) return "";
+    const date = new Date(dateInput);
+    if (Number.isNaN(date.getTime())) return "";
     const year = date.getFullYear().toString().slice(-2);
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const day = date.getDate().toString().padStart(2, "0");
     return `${year}.${month}.${day}`;
   };
 
-  // 파일 상세 보기 로직
-  const archiveTitleStyle = {
+  // --- Styles ---
+  const archiveTitleStyle: React.CSSProperties = {
     fontFamily: "Cormorant Garamond, serif",
     fontSize: "26px",
     fontWeight: "bold",
@@ -219,7 +262,7 @@ function Archive() {
     paddingLeft: "7%",
   };
 
-  const searchBoxStyle = {
+  const searchBoxStyle: React.CSSProperties = {
     display: "flex",
     justifyContent: "flex-end",
     alignItems: "center",
@@ -228,7 +271,7 @@ function Archive() {
     position: "relative",
   };
 
-  const searchInputStyle = {
+  const searchInputStyle: React.CSSProperties = {
     width: "220px",
     height: "30px",
     borderRadius: "20px",
@@ -238,7 +281,7 @@ function Archive() {
     fontSize: "14px",
   };
 
-  const searchImageStyle = {
+  const searchImageStyle: React.CSSProperties = {
     position: "absolute",
     right: "calc(7% + 10px)",
     width: "20px",
@@ -248,7 +291,7 @@ function Archive() {
     transition: "opacity 0.2s ease",
   };
 
-  const fileListStyle = {
+  const fileListStyle: React.CSSProperties = {
     fontFamily: "Noto Sans KR, sans-serif",
     display: "flex",
     flexDirection: "column",
@@ -258,7 +301,7 @@ function Archive() {
     paddingBottom: "20px",
   };
 
-  const fileItemStyle = {
+  const fileItemStyle: React.CSSProperties = {
     backgroundColor: "#e8e4cf",
     borderRadius: "10px",
     padding: "12px 20px",
@@ -270,12 +313,12 @@ function Archive() {
     position: "relative",
   };
 
-  const fileItemSpanStyle = {
+  const fileItemSpanStyle: React.CSSProperties = {
     fontSize: "13px",
     color: "#444",
   };
 
-  const dotsStyle = {
+  const dotsStyle: React.CSSProperties = {
     fontWeight: "bold",
     fontSize: "16px",
     cursor: "pointer",
@@ -284,7 +327,7 @@ function Archive() {
     transition: "background-color 0.2s ease",
   };
 
-  const actionMenuStyle = {
+  const actionMenuStyle: React.CSSProperties = {
     position: "absolute",
     right: "0",
     top: "100%",
@@ -292,12 +335,12 @@ function Archive() {
     border: "1px solid #ccc",
     borderRadius: "8px",
     boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-    zIndex: 1000,
+    zIndex: 0,
     minWidth: "180px",
     overflow: "hidden",
   };
 
-  const actionButtonStyle = {
+  const actionButtonStyle: React.CSSProperties = {
     width: "100%",
     padding: "12px 16px",
     border: "none",
@@ -308,7 +351,7 @@ function Archive() {
     transition: "background-color 0.2s ease",
   };
 
-  const noFilesStyle = {
+  const noFilesStyle: React.CSSProperties = {
     textAlign: "center",
     padding: "50px",
     fontSize: "16px",
@@ -371,7 +414,7 @@ function Archive() {
             placeholder="파일 검색..."
             value={searchTerm}
             onChange={handleSearchChange}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             style={searchInputStyle}
           />
           <img
@@ -380,10 +423,10 @@ function Archive() {
             style={searchImageStyle}
             onClick={handleSearch}
             onMouseEnter={(e) => {
-              e.target.style.opacity = "1";
+              (e.currentTarget as HTMLImageElement).style.opacity = "1";
             }}
             onMouseLeave={(e) => {
-              e.target.style.opacity = "0.7";
+              (e.currentTarget as HTMLImageElement).style.opacity = "0.7";
             }}
           />
         </div>
@@ -395,85 +438,98 @@ function Archive() {
               {searchTerm ? "검색 결과가 없습니다." : "저장된 파일이 없습니다."}
             </div>
           ) : (
-            files.map((file, idx) => (
-              <div
-                style={fileItemStyle}
-                key={file.fileId || idx}
-                onClick={() => handleFileClick(file)}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#ddd8c1";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#e8e4cf";
-                }}
-              >
-                <div style={{ flex: 1 }}>
-                  <strong>{file.originalFileName || "이름 없음"}</strong>{" "}
-                  <span style={fileItemSpanStyle}>
-                    {formatDate(file.createdAt)}
-                  </span>
-                  {file.summary1 && (
-                    <div style={{ ...fileItemSpanStyle, marginTop: "4px" }}>
-                      <strong style={{ marginRight: "5px", color: "#333" }}>
-                        {file.summaryType || "간단요약"}:
-                      </strong>
-                      {file.summary1.length > 50
-                        ? `${file.summary1.substring(0, 50)}...`
-                        : file.summary1}
-                    </div>
-                  )}
-                </div>
+            files.map((file, idx) => {
+              const key = file.fileId ?? idx;
+              return (
+                <div
+                  style={fileItemStyle}
+                  key={key}
+                  onClick={() => handleFileClick(file)}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.backgroundColor =
+                      "#ddd8c1";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.backgroundColor =
+                      "#e8e4cf";
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <strong>{file.originalFileName || "이름 없음"}</strong>{" "}
+                    <span style={fileItemSpanStyle}>
+                      {formatDate(file.createdAt)}
+                    </span>
+                    {file.summary1 && (
+                      <div style={{ ...fileItemSpanStyle, marginTop: "4px" }}>
+                        <strong style={{ marginRight: "5px", color: "#333" }}>
+                          {file.summaryType || "간단요약"}:
+                        </strong>
+                        {file.summary1.length > 50
+                          ? `${file.summary1.substring(0, 50)}...`
+                          : file.summary1}
+                      </div>
+                    )}
+                  </div>
 
-                {/* 액션 버튼 컨테이너 */}
-                <div style={{ position: "relative" }}>
-                  <span
-                    style={dotsStyle}
-                    onClick={(e) => toggleActionMenu(file.fileId || idx, e)}
-                    onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = "#ddd8c1";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = "transparent";
-                    }}
-                  >
-                    ⋮
-                  </span>
+                  {/* 액션 버튼 컨테이너 */}
+                  <div style={{ position: "relative" }}>
+                    <span
+                      style={dotsStyle}
+                      onClick={(e) => toggleActionMenu(key, e)}
+                      onMouseEnter={(e) => {
+                        (
+                          e.currentTarget as HTMLSpanElement
+                        ).style.backgroundColor = "#ddd8c1";
+                      }}
+                      onMouseLeave={(e) => {
+                        (
+                          e.currentTarget as HTMLSpanElement
+                        ).style.backgroundColor = "transparent";
+                      }}
+                    >
+                      ⋮
+                    </span>
 
-                  {/* 액션 메뉴 */}
-                  {showActionMenu[file.fileId || idx] && (
-                    <div style={actionMenuStyle}>
-                      {actionButtons.map((button) => (
-                        <button
-                          key={button.id}
-                          style={{
-                            ...actionButtonStyle,
-                            ...button.style,
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            button.onClick(file);
-                          }}
-                          onMouseEnter={(e) => {
-                            if (button.id === "newUpload") {
-                              e.target.style.backgroundColor = "#005a35";
-                            } else {
-                              e.target.style.backgroundColor = "#f0f0f0";
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            e.target.style.backgroundColor =
-                              button.style.backgroundColor;
-                          }}
-                          title={button.title}
-                        >
-                          {button.text}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                    {/* 액션 메뉴 */}
+                    {showActionMenu[key] && (
+                      <div style={actionMenuStyle}>
+                        {actionButtons.map((button) => (
+                          <button
+                            key={button.id}
+                            style={{
+                              ...actionButtonStyle,
+                              ...button.style,
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              button.onClick(file);
+                            }}
+                            onMouseEnter={(e) => {
+                              const target =
+                                e.currentTarget as HTMLButtonElement;
+                              if (button.id === "newUpload") {
+                                target.style.backgroundColor = "#005a35";
+                              } else {
+                                target.style.backgroundColor = "#f0f0f0";
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              (
+                                e.currentTarget as HTMLButtonElement
+                              ).style.backgroundColor = button.style
+                                .backgroundColor as string;
+                            }}
+                            title={button.title}
+                          >
+                            {button.text}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

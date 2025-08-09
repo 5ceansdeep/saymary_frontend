@@ -1,15 +1,15 @@
-import Load from "./mainpage/load.js";
-import Main from "./mainpage/main.js";
-import Login from "./login/login.js";
-import Register from "./login/register.js";
-import Forgot from "./login/forgot.js";
-import Newpw from "./login/newpw.js";
-import Select from "./coaching/select.js";
-import Coach from "./coaching/coach.js";
-import UploadFile from "./mainpage/uploadFile.js";
-
-import Sidebar from "./mainpage/sideBar.js";
-import Archive from "./archivepage/archive.js";
+// App.tsx 수정본
+import Load from "./mainpage/load";
+import Main from "./mainpage/main";
+import Login from "./login/login";
+import Register from "./login/register";
+import Forgot from "./login/forgot";
+import Newpw from "./login/newpw";
+import Select from "./coaching/select";
+import Coach from "./coaching/coach";
+import UploadFile from "./mainpage/uploadFile";
+import Sidebar from "./mainpage/sideBar";
+import Archive from "./archivepage/archive";
 
 import {
   BrowserRouter as Router,

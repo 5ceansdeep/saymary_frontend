@@ -1,27 +1,87 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import godown from "../img/godown.png";
 import homeIcon from "../img/home.png";
 import coachingIcon from "../img/coaching.png";
 import archiveIcon from "../img/archive.png";
 
-function Coach() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [hovered, setHovered] = useState(false);
-  const [feedbackData, setFeedbackData] = useState(null);
-  const [sessionData, setSessionData] = useState(null);
-  const [showActionButtons, setShowActionButtons] = useState(false);
-  const [activeTab, setActiveTab] = useState("summary"); // 우측 탭 상태 기본값
+// ---------------- Types ----------------
+interface SpeakingSpeed {
+  average_wpm: number;
+  duration_seconds: number;
+  word_count: number;
+  comment: string;
+}
 
-  const BoxRef = useRef();
+interface PauseAnalysis {
+  pause_count: number;
+  avg_pause_length: number;
+  total_silence: number;
+  long_pauses: unknown[]; // API상 개별 정보 없음
+  comment: string;
+}
+
+interface FeedbackData {
+  original_text: string;
+  summary: string;
+  detailed_summary: string;
+  keywords: string;
+  speaking_speed?: SpeakingSpeed;
+  pause_analysis?: PauseAnalysis;
+}
+
+interface SessionData {
+  situation: string;
+  audience: string;
+  style: string;
+  fileName: string;
+  uploadTime: string;
+}
+
+interface NavState {
+  feedback?: unknown;
+  situation?: string;
+  audience?: string;
+  style?: string;
+  fileName?: string;
+  uploadTime?: string;
+}
+
+interface ActionButton {
+  id: string;
+  text: string;
+  title: string;
+  onClick: () => void;
+  style: React.CSSProperties;
+}
+
+type TabId = "summary" | "speed" | "pause";
+
+interface TabItem {
+  id: TabId;
+  label: string;
+  icon: string;
+}
+
+function Coach() {
+  const navigate = useNavigate();
+  // 타입 안정성을 위해 location을 별도 변수에 제네릭 형태로 보관
+  const location = useLocation() as { state?: NavState; pathname: string };
+
+  const [hovered, setHovered] = useState<boolean>(false);
+  const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null);
+  const [sessionData, setSessionData] = useState<SessionData | null>(null);
+  const [showActionButtons, setShowActionButtons] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<TabId>("summary"); // 우측 탭 상태 기본값
+
+  const BoxRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (location.state) {
       const receivedFeedback = location.state.feedback;
-      console.log("받은 피드백 데이터:", receivedFeedback);
+      // console.log("받은 피드백 데이터:", receivedFeedback);
 
-      let parsed = {};
+      let parsed: any = {};
       if (typeof receivedFeedback === "string") {
         try {
           parsed = JSON.parse(receivedFeedback);
@@ -36,31 +96,33 @@ function Coach() {
       }
 
       // 새로운 API 구조에 맞춰 데이터 매핑
-      const feedbackDataFormatted = {
+      const feedbackDataFormatted: FeedbackData = {
         original_text: parsed.original_text || "",
-        // summaries 객체에서 요약 데이터 추출
         summary: parsed.summaries?.["간단요약"] || parsed.summary || "",
         detailed_summary: parsed.summaries?.["상세요약"] || "",
         keywords: parsed.summaries?.["키워드요약"] || "",
-        // speed_analysis에서 말하기 속도 데이터 추출
-        speaking_speed: {
-          average_wpm: parsed.speed_analysis?.wpm || 0,
-          duration_seconds: parsed.speed_analysis?.duration_seconds || 0,
-          word_count: parsed.speed_analysis?.word_count || 0,
-          comment: parsed.speed_analysis?.feedback || "",
-        },
-        // pause_analysis에서 말하기 템포 데이터 추출
-        pause_analysis: {
-          pause_count: parsed.pause_analysis?.pause_stats?.pause_count || 0,
-          avg_pause_length:
-            parsed.pause_analysis?.pause_stats?.avg_pause_length || 0,
-          total_silence: parsed.pause_analysis?.pause_stats?.total_silence || 0,
-          long_pauses: [], // 새 API에는 개별 pause 정보가 없음
-          comment: parsed.pause_analysis?.feedback || "",
-        },
+        speaking_speed: parsed.speed_analysis
+          ? {
+              average_wpm: parsed.speed_analysis?.wpm || 0,
+              duration_seconds: parsed.speed_analysis?.duration_seconds || 0,
+              word_count: parsed.speed_analysis?.word_count || 0,
+              comment: parsed.speed_analysis?.feedback || "",
+            }
+          : undefined,
+        pause_analysis: parsed.pause_analysis
+          ? {
+              pause_count: parsed.pause_analysis?.pause_stats?.pause_count || 0,
+              avg_pause_length:
+                parsed.pause_analysis?.pause_stats?.avg_pause_length || 0,
+              total_silence:
+                parsed.pause_analysis?.pause_stats?.total_silence || 0,
+              long_pauses: [],
+              comment: parsed.pause_analysis?.feedback || "",
+            }
+          : undefined,
       };
 
-      console.log("변환된 피드백 데이터:", feedbackDataFormatted);
+      // console.log("변환된 피드백 데이터:", feedbackDataFormatted);
 
       setFeedbackData(feedbackDataFormatted);
       setSessionData({
@@ -102,24 +164,22 @@ function Coach() {
     }
 
     setHovered(true);
-    const timer = setTimeout(() => {
+    const timer = window.setTimeout(() => {
       setHovered(false);
     }, 1200);
 
-    return () => clearTimeout(timer);
+    return () => window.clearTimeout(timer);
   }, [location]);
 
   const scrollToBottom = () => {
-    if (BoxRef.current) {
-      BoxRef.current.scrollTo({
-        top: BoxRef.current.scrollHeight,
-        behavior: "smooth",
-      });
+    const el = BoxRef.current;
+    if (el) {
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
     }
   };
 
   // 사이드바 네비게이션 핸들러
-  const handleNavigation = (path) => {
+  const handleNavigation = (path: "home" | "coaching" | "archive") => {
     switch (path) {
       case "home":
         navigate("/");
@@ -131,7 +191,8 @@ function Coach() {
         navigate("/archive");
         break;
       default:
-        console.log(`${path} 페이지로 이동`);
+        // noop
+        break;
     }
   };
 
@@ -224,7 +285,7 @@ function Coach() {
   };
 
   // 액션 버튼 데이터 배열
-  const actionButtons = [
+  const actionButtons: ActionButton[] = [
     {
       id: "copy",
       text: "📄 텍스트 복사",
@@ -251,7 +312,7 @@ function Coach() {
       id: "newCoaching",
       text: "🎯 새 코칭 시작",
       title: "새로운 코칭을 시작합니다",
-      onClick: handleNewCoaching,
+      onClick: () => handleNewCoaching(),
       style: {
         backgroundColor: "#00492C",
         color: "white",
@@ -261,7 +322,7 @@ function Coach() {
   ];
 
   // 탭 데이터
-  const tabs = [
+  const tabs: TabItem[] = [
     { id: "summary", label: "💬 요약 & 키워드", icon: "💬" },
     { id: "speed", label: "⚡ 말하기 속도", icon: "⚡" },
     { id: "pause", label: "⏸️ 말하기 템포", icon: "⏸️" },
@@ -424,7 +485,7 @@ function Coach() {
                     💡
                     <span
                       dangerouslySetInnerHTML={{
-                        __html: feedbackData.speaking_speed.comment
+                        __html: (feedbackData.speaking_speed.comment ?? "")
                           .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
                           .replace(/\n(\d+)\. /g, "<br/><br/>$1. ")
                           .replace(/\n/g, "<br/>"),
@@ -523,7 +584,7 @@ function Coach() {
                     💡
                     <span
                       dangerouslySetInnerHTML={{
-                        __html: feedbackData.pause_analysis.comment
+                        __html: (feedbackData.pause_analysis.comment ?? "")
                           .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
                           .replace(/\n(\d+)\. /g, "<br/><br/>$1. ")
                           .replace(/\n/g, "<br/>"),
@@ -645,6 +706,18 @@ function Coach() {
                       whiteSpace: "nowrap",
                       minWidth: "140px",
                       ...button.style,
+                    }}
+                    onMouseEnter={(e) => {
+                      const target = e.currentTarget as HTMLButtonElement;
+                      if (button.id === "newCoaching")
+                        target.style.backgroundColor = "#003d25";
+                      else target.style.opacity = "0.9";
+                    }}
+                    onMouseLeave={(e) => {
+                      const target = e.currentTarget as HTMLButtonElement;
+                      target.style.opacity = "1";
+                      target.style.backgroundColor = button.style
+                        .backgroundColor as string;
                     }}
                   >
                     {button.text}
@@ -820,8 +893,14 @@ function Coach() {
             fontWeight: "500",
             transition: "all 0.2s ease",
           }}
-          onMouseEnter={(e) => (e.target.style.backgroundColor = "#003d25")}
-          onMouseLeave={(e) => (e.target.style.backgroundColor = "#00492C")}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+              "#003d25";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+              "#00492C";
+          }}
         >
           🎯 새로운 코칭 시작하기
         </button>
@@ -839,7 +918,7 @@ function Coach() {
           width: "20px",
           zIndex: 1000,
         }}
-      ></div>
+      />
 
       {/* 사이드바 */}
       <div
@@ -887,8 +966,16 @@ function Coach() {
 
 export default Coach;
 
-function SidebarButton({ label, icon, isActive, onClick }) {
-  const buttonStyle = {
+// ---------------- Sidebar Button ----------------
+interface SidebarButtonProps {
+  label: string;
+  icon?: string; // 처리 방식에 따라 string URL
+  isActive: boolean;
+  onClick: () => void;
+}
+
+function SidebarButton({ label, icon, isActive, onClick }: SidebarButtonProps) {
+  const buttonStyle: React.CSSProperties = {
     backgroundColor: isActive ? "#066c43" : "#00492C",
     color: "white",
     width: "80px",
@@ -900,7 +987,7 @@ function SidebarButton({ label, icon, isActive, onClick }) {
     justifyContent: "center",
     gap: "5px",
     fontSize: "14px",
-    fontWeight: isActive ? "700" : "400",
+    fontWeight: isActive ? 700 : 400,
     transition: "background-color 0.3s",
     border: "none",
     cursor: "pointer",
@@ -911,10 +998,14 @@ function SidebarButton({ label, icon, isActive, onClick }) {
       style={buttonStyle}
       onClick={onClick}
       onMouseEnter={(e) => {
-        if (!isActive) e.target.style.backgroundColor = "#055538";
+        if (!isActive)
+          (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+            "#055538";
       }}
       onMouseLeave={(e) => {
-        if (!isActive) e.target.style.backgroundColor = "#00492C";
+        if (!isActive)
+          (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+            "#00492C";
       }}
     >
       {icon && (

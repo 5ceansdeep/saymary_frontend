@@ -1,12 +1,14 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Newpw() {
   const navigate = useNavigate();
-  const [password, setPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
 
-  const handlePasswordChange = (e) => {
+  // 상태 타입 명시
+  const [password, setPassword] = useState<string>("");
+  const [passwordError, setPasswordError] = useState<string>("");
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     setPassword(value);
     if (value.length > 0 && value.length < 6) {
@@ -20,41 +22,47 @@ function Newpw() {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get("token");
 
-    console.log("보낼 token:", token); // 반드시 확인
+    console.log("보낼 token:", token);
 
     if (!token) {
       alert("토큰이 유효하지 않습니다.");
       return;
     }
+    if (!password || passwordError) {
+      alert("유효한 비밀번호를 입력하세요.");
+      return;
+    }
 
     try {
-
-      // 비밀번호 재설정 API 엔드포인트로 수정 (login이 아닌)
       const response = await fetch(
-        "https://api.saymary.site/api/user/reset-password", // 올바른 엔드포인트로 변경
+        "https://api.saymary.site/api/user/reset-password",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token, password }), // email 대신 token과 password 전송
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, password }),
         }
       );
 
-      const text = await response.text();
+      const contentType = response.headers.get("content-type");
+      const text = contentType?.includes("application/json")
+        ? JSON.stringify(await response.json())
+        : await response.text();
+
       console.log("응답 내용:", text);
 
-      if (response.ok && text.includes("변경")) {
+      if (response.ok && /변경/.test(text)) {
         alert("비밀번호가 성공적으로 변경되었습니다!");
         navigate("/login");
       } else {
         alert("비밀번호 변경 실패: " + text);
       }
     } catch (error) {
-      alert("서버 오류 발생");
       console.error(error);
+      alert("서버 오류 발생");
     }
   };
+
+  const canSubmit = Boolean(password) && !passwordError;
 
   return (
     <div
@@ -65,7 +73,7 @@ function Newpw() {
         backgroundColor: "#00492C",
       }}
     >
-      {/* 계정 생성 페이지 */}
+      {/* 타이틀 */}
       <h1
         style={{
           position: "absolute",
@@ -81,17 +89,17 @@ function Newpw() {
         Wipe the slate clean :)
       </h1>
 
-      {/* 회원가입 폼 박스 */}
+      {/* 폼 박스 */}
       <div
         style={{
           position: "absolute",
           bottom: "0",
           left: "50%",
           transform: "translateX(-50%)",
-          width: "90%", // 전체 너비의 90%
-          maxWidth: "500px", // 최대 너비 제한
-          height: "60vh", // 전체 높이의 60%
-          padding: "5vw", // 반응형 여백
+          width: "90%",
+          maxWidth: "500px",
+          height: "60vh",
+          padding: "5vw",
           backgroundColor: "#FFFCE4",
           borderRadius: "10px",
           boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
@@ -120,6 +128,9 @@ function Newpw() {
           placeholder="Enter your password"
           value={password}
           onChange={handlePasswordChange}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && canSubmit) handleNewpw();
+          }}
           style={{
             marginBottom: "10px",
             fontSize: "1rem",
@@ -149,15 +160,15 @@ function Newpw() {
         {/* 제출 버튼 */}
         <button
           onClick={handleNewpw}
-          disabled={!password || passwordError}
+          disabled={!canSubmit}
           style={{
             padding: "12px",
             fontSize: "1rem",
             borderRadius: "5px",
-            backgroundColor: !password || passwordError ? "#C7C29B" : "#00492C",
+            backgroundColor: canSubmit ? "#00492C" : "#C7C29B",
             color: "white",
             border: "none",
-            cursor: !password || passwordError ? "not-allowed" : "pointer",
+            cursor: canSubmit ? "pointer" : "not-allowed",
             marginLeft: "18%",
             marginTop: "10px",
             width: "320px",
@@ -166,7 +177,7 @@ function Newpw() {
           Submit
         </button>
 
-        {/* 계정 등록 링크 (sign up) */}
+        {/* 링크들 */}
         <div
           style={{
             display: "flex",
@@ -199,7 +210,6 @@ function Newpw() {
             Sign up
           </label>
         </div>
-        {/* or Sign in */}
         <div
           style={{
             display: "flex",

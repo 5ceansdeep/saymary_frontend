@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"], // DOM 꼭 포함
+    "jsx": "react-jsx", // ← 문자열 하나!
+    "strict": true,
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "isolatedModules": true,
+    "moduleResolution": "Bundler", // TS 5 이상권장. TS 4면 "Node"
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": { "@/*": ["src/*"] },
+    "types": ["react", "react-dom"] // 안전하게 명시 (optional이지만 추천)
+  },
+  "include": ["src", "src/types/assets.d.ts"],
+  "exclude": ["node_modules", "dist", "build"]
+}

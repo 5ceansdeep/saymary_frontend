@@ -1,23 +1,24 @@
-import { useState, useRef } from "react";
+import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Select() {
   const navigate = useNavigate();
 
+  // 옵션 목록 (불변 배열)
   const situation1 = [
     "Lecture (강의)",
     "Interview (면접)",
     "Presentation (발표)",
     "Speech (연설)",
     "Briefing (브리핑)",
-  ];
+  ] as const;
   const situation2 = [
     "Professor / Teacher (교수 / 선생님)",
     "Interviewer (면접관)",
     "Colleague / Team member (동료 / 팀원)",
     "Client / Boss (고객 / 상사)",
     "General audience (일반 청중)",
-  ];
+  ] as const;
   const situation3 = [
     "Explanatory (설명형)",
     "Self-introductory (자기소개형)",
@@ -25,54 +26,67 @@ function Select() {
     "Informal (비격식형)",
     "Formal (격식형)",
     "Q&A style (질문응답형)",
-  ];
+  ] as const;
 
-  const [activeStates1, setActiveStates1] = useState(null);
-  const [activeStates2, setActiveStates2] = useState(null);
-  const [activeStates3, setActiveStates3] = useState(null);
+  // 선택 상태 (인덱스 or null)
+  const [activeStates1, setActiveStates1] = useState<number | null>(null);
+  const [activeStates2, setActiveStates2] = useState<number | null>(null);
+  const [activeStates3, setActiveStates3] = useState<number | null>(null);
 
-  const [selectedFile, setSelectedFile] = useState(null);
-  const fileInputRef = useRef(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const selectedSituation = situation1[activeStates1];
-  const selectedAudience = situation2[activeStates2];
-  const selectedStyle = situation3[activeStates3];
+  const selectedSituation =
+    activeStates1 !== null ? situation1[activeStates1] : undefined;
+  const selectedAudience =
+    activeStates2 !== null ? situation2[activeStates2] : undefined;
+  const selectedStyle =
+    activeStates3 !== null ? situation3[activeStates3] : undefined;
 
   const isReadyToUpload =
     activeStates1 !== null && activeStates2 !== null && activeStates3 !== null;
 
-  const handleClick1 = (index) => {
+  const handleClick1 = (index: number) => {
     setActiveStates1((prev) => (prev === index ? null : index));
   };
 
-  const handleClick2 = (index) => {
+  const handleClick2 = (index: number) => {
     setActiveStates2((prev) => (prev === index ? null : index));
   };
 
-  const handleClick3 = (index) => {
+  const handleClick3 = (index: number) => {
     setActiveStates3((prev) => (prev === index ? null : index));
   };
 
   const handleButtonClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click(); // input 클릭 트리거
-    }
+    fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+  const handleFileChange: React.ChangeEventHandler<HTMLInputElement> = async (
+    e
+  ) => {
+    const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      handleUpload(file);
+      await handleUpload(file);
     }
-    fileInputRef.current.value = null;
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleUpload = async (file) => {
+  const handleUpload = async (file: File) => {
     if (!file) {
       alert("파일을 선택해주세요.");
+      return;
+    }
+    if (
+      !isReadyToUpload ||
+      !selectedSituation ||
+      !selectedAudience ||
+      !selectedStyle
+    ) {
+      alert("상단의 옵션을 모두 선택해주세요.");
       return;
     }
 
@@ -83,32 +97,41 @@ function Select() {
     formData.append("file", file);
 
     setIsLoading(true);
-try {
-  const res = await fetch("https://api.saymary.site/api/coaching/feedback", {
-    method: "POST",
-    body: formData,
-  });
+    try {
+      const res = await fetch(
+        "https://api.saymary.site/api/coaching/feedback",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
-  const result = await res.json();
-  console.log("업로드 결과:", result);
+      // 네트워크/서버 에러 체크
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`HTTP ${res.status} ${res.statusText} ${text}`);
+      }
 
-  // 성공 시 Coach 페이지로 이동하면서 데이터 전달
-  navigate("/coaching/result", {
-    state: {
-      feedback: result,
-      situation: selectedSituation,
-      audience: selectedAudience,
-      style: selectedStyle,
-      fileName: file.name,
-      uploadTime: new Date().toLocaleString(),
-    },
-  });
-} catch (err) {
-  console.error("업로드 중 오류:", err);
-  alert("업로드 실패");
-} finally {
-  setIsLoading(false);
-}
+      const result: unknown = await res.json();
+      console.log("업로드 결과:", result);
+
+      // 성공 시 Coach 페이지로 이동하면서 데이터 전달
+      navigate("/coaching/result", {
+        state: {
+          feedback: result,
+          situation: selectedSituation,
+          audience: selectedAudience,
+          style: selectedStyle,
+          fileName: file.name,
+          uploadTime: new Date().toLocaleString(),
+        },
+      });
+    } catch (err) {
+      console.error("업로드 중 오류:", err);
+      alert("업로드 실패");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -152,7 +175,7 @@ try {
           left: "12%",
           width: "88%",
           height: "80%",
-          overflowY: "auto", // 스크롤 가능, 스크롤바는 index.css에서 설정
+          overflowY: "auto",
           overflowX: "hidden",
         }}
       >
@@ -160,19 +183,18 @@ try {
         <h1
           style={{
             color: "#000000",
-            marginTop: "0.3%",
+            marginTop: "2.5%",
             marginBottom: "0px",
             fontFamily: "Noto Sans KR, sans-serif",
             fontWeight: 500,
             fontSize: "2rem",
-            paddingTop: "3%",
             paddingBottom: "5px",
             paddingLeft: "7%",
           }}
         >
           Situation
           <div>
-            {situation1.map((situation1, idx) => (
+            {situation1.map((label, idx) => (
               <button
                 key={idx}
                 onClick={() => handleClick1(idx)}
@@ -196,7 +218,7 @@ try {
                   color: activeStates1 === idx ? "#ffffff" : "#000000",
                 }}
               >
-                {situation1}
+                {label}
               </button>
             ))}
           </div>
@@ -216,7 +238,7 @@ try {
         >
           Audience type
           <div>
-            {situation2.map((situation2, idx) => (
+            {situation2.map((label, idx) => (
               <button
                 key={idx}
                 onClick={() => handleClick2(idx)}
@@ -240,7 +262,7 @@ try {
                   color: activeStates2 === idx ? "#ffffff" : "#000000",
                 }}
               >
-                {situation2}
+                {label}
               </button>
             ))}
           </div>
@@ -260,7 +282,7 @@ try {
         >
           Speech style
           <div>
-            {situation3.map((situation3, idx) => (
+            {situation3.map((label, idx) => (
               <button
                 key={idx}
                 onClick={() => handleClick3(idx)}
@@ -285,7 +307,7 @@ try {
                   color: activeStates3 === idx ? "#ffffff" : "#000000",
                 }}
               >
-                {situation3}
+                {label}
               </button>
             ))}
           </div>
@@ -306,8 +328,8 @@ try {
               top: "25%",
               right: "20px",
               zIndex: 1000,
-              padding: "20px 60px",
-              borderRadius: "20px",
+              padding: "1.5% 3%",
+              borderRadius: "15px",
               border: "none",
               backgroundColor: "#00492C",
               color: "#ffffff",

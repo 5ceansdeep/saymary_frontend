@@ -1,30 +1,27 @@
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-function Login() {
+function Register() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
 
-  // 누락된 상태 변수들 추가
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  // 상태 타입 명시
+  const [nickname, setNickname] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [emailError, setEmailError] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [passwordError, setPasswordError] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string>("");
 
-  useEffect(() => {
-    const savedEmail = localStorage.getItem("rememberedEmail");
-    if (savedEmail) {
-      setEmail(savedEmail);
-      setRememberMe(true);
-    }
-  }, []);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleEmailChange = (e) => {
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
+    // 허용 문자만 유지 (영/숫자/@.!*$)
     const filteredValue = value.replace(/[^a-zA-Z0-9@.!*$]/g, "");
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     setEmail(filteredValue);
     if (filteredValue === "" || emailRegex.test(filteredValue)) {
       setEmailError("");
@@ -33,7 +30,7 @@ function Login() {
     }
   };
 
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     setPassword(value);
     if (value.length > 0 && value.length < 6) {
@@ -41,13 +38,36 @@ function Login() {
     } else {
       setPasswordError("");
     }
+    if (confirmPassword && value !== confirmPassword) {
+      setConfirmPasswordError("Passwords do not match.");
+    } else if (confirmPassword && value === confirmPassword) {
+      setConfirmPasswordError("");
+    }
   };
 
-  // login.js 수정 - 사용자 정보 호출 실패 시에도 로그인 처리
+  const handleConfirmPasswordChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { value } = e.target;
+    setConfirmPassword(value);
+    if (value !== password) {
+      setConfirmPasswordError("Passwords do not match.");
+    } else {
+      setConfirmPasswordError("");
+    }
+  };
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      setError("이메일과 비밀번호를 입력해주세요.");
+  const handleRegister = async () => {
+    if (!nickname || !email || !password || !confirmPassword) {
+      setError("모든 필드를 입력해주세요.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+    if (emailError || passwordError || confirmPasswordError) {
+      setError("입력 오류를 수정해주세요.");
       return;
     }
 
@@ -55,20 +75,14 @@ function Login() {
     setError(null);
 
     try {
-      const response = await fetch("https://api.saymary.site/api/user/login", {
+      const response = await fetch("https://api.saymary.site/api/user/signup", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email,
-          password: password,
-        }),
-        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nickname, email, password }),
       });
 
       const contentType = response.headers.get("content-type");
-      let result;
+      let result: unknown;
 
       if (contentType && contentType.includes("application/json")) {
         result = await response.json();
@@ -76,86 +90,65 @@ function Login() {
         result = await response.text();
       }
 
-      console.log("서버 응답:", result);
+      console.log("회원가입 응답:", result);
 
       if (response.ok) {
-        console.log("로그인 성공, 쿠키 기반 세션 생성됨");
+        const successByText =
+          typeof result === "string" && result.includes("회원가입 성공");
+        const successByFlag =
+          typeof result === "object" &&
+          result !== null &&
+          (result as { success?: boolean }).success;
 
-        // 사용자 정보 가져오기 시도
-        try {
-          const userResponse = await fetch(
-            "https://api.saymary.site/api/user/me",
-            {
-              method: "GET",
-              credentials: "include",
-            }
-          );
-
-          if (userResponse.ok) {
-            const userData = await userResponse.json();
-            console.log("사용자 정보:", userData);
-            localStorage.setItem("userEmail", userData.email || email);
-            localStorage.setItem("userInfo", JSON.stringify(userData));
-          } else {
-            console.warn(
-              "사용자 정보 호출 실패, 하지만 로그인은 성공으로 처리"
-            );
-            // 사용자 정보를 못 가져와도 로그인은 성공으로 처리
-            localStorage.setItem("userEmail", email);
-            localStorage.setItem("loginTime", new Date().toISOString());
-          }
-        } catch (userInfoError) {
-          console.warn(
-            "사용자 정보 요청 실패, 하지만 로그인은 성공으로 처리:",
-            userInfoError
-          );
+        if (successByText || successByFlag) {
           localStorage.setItem("userEmail", email);
+          localStorage.setItem("userNickname", nickname);
           localStorage.setItem("loginTime", new Date().toISOString());
-        }
 
-        // Remember me 처리
-        if (rememberMe) {
-          localStorage.setItem("rememberedEmail", email);
+          alert("회원가입이 완료되었습니다!");
+          navigate("/login");
         } else {
-          localStorage.removeItem("rememberedEmail");
+          throw new Error("회원가입에 실패했습니다.");
         }
-
-        alert("로그인 성공!");
-        navigate("/upload");
       } else {
-        // 로그인 실패 처리 (기존과 동일)
-        let errorMessage;
+        const errorMessage =
+          typeof result === "string"
+            ? result
+            : (result as { message?: string })?.message ||
+              "회원가입에 실패했습니다.";
 
-        if (typeof result === "string") {
-          errorMessage = result;
+        if (errorMessage.includes("이미 존재")) {
+          setError("이미 가입된 이메일입니다.");
         } else {
-          errorMessage = result.message || `서버 오류: ${response.status}`;
-        }
-
-        if (errorMessage.includes("존재하지 않는 이메일")) {
-          setError("존재하지 않는 이메일입니다.");
-        } else if (errorMessage.includes("비밀번호")) {
-          setError("비밀번호가 일치하지 않습니다.");
-        } else if (response.status === 401) {
-          setError("인증에 실패했습니다. 이메일과 비밀번호를 확인해주세요.");
-        } else {
-          setError(errorMessage || "로그인에 실패했습니다.");
+          setError(errorMessage);
         }
       }
-    } catch (error) {
-      console.error("로그인 오류:", error);
-
-      if (error.name === "SyntaxError" && error.message.includes("JSON")) {
+    } catch (err: unknown) {
+      console.error("회원가입 오류:", err);
+      if (err instanceof SyntaxError && /JSON/i.test(err.message)) {
         setError("서버 응답 형식에 오류가 있습니다. 관리자에게 문의하세요.");
-      } else if (error.message.includes("Failed to fetch")) {
+      } else if (err instanceof Error && /Failed to fetch/i.test(err.message)) {
         setError("네트워크 연결을 확인해주세요.");
+      } else if (err instanceof Error) {
+        setError(err.message || "회원가입 중 오류가 발생했습니다.");
       } else {
-        setError(error.message || "로그인 중 오류가 발생했습니다.");
+        setError("회원가입 중 알 수 없는 오류가 발생했습니다.");
       }
     } finally {
       setLoading(false);
     }
   };
+
+  const hasFieldError = Boolean(
+    emailError || passwordError || confirmPasswordError
+  );
+  const canSubmit =
+    !loading &&
+    Boolean(nickname) &&
+    Boolean(email) &&
+    Boolean(password) &&
+    Boolean(confirmPassword) &&
+    !hasFieldError;
 
   return (
     <div
@@ -178,7 +171,7 @@ function Login() {
           textAlign: "center",
         }}
       >
-        Please Login.
+        Welcome :-)
       </h1>
 
       <div
@@ -203,7 +196,7 @@ function Login() {
           justifyContent: "center",
         }}
       >
-        {/* 에러 메시지 표시 */}
+        {/* 에러 메시지 */}
         {error && (
           <div
             style={{
@@ -218,7 +211,7 @@ function Login() {
           </div>
         )}
 
-        {/* 로딩 상태 표시 */}
+        {/* 로딩 표시 */}
         {loading && (
           <div
             style={{
@@ -229,13 +222,43 @@ function Login() {
               fontFamily: "Noto Sans KR, sans-serif",
             }}
           >
-            로그인 중...
+            회원가입 중...
           </div>
         )}
 
         <h3
           style={{
             marginBottom: "5px",
+            fontSize: "1.2rem",
+            margin: "0 auto",
+            marginLeft: "18%",
+          }}
+        >
+          Nickname
+        </h3>
+        <input
+          type="text"
+          placeholder="Enter your nickname"
+          value={nickname}
+          onChange={(e) => setNickname(e.target.value)}
+          disabled={loading}
+          style={{
+            marginBottom: "5px",
+            fontSize: "1rem",
+            borderRadius: "5px",
+            backgroundColor: "#FFFCE4",
+            border: "solid 2px #C7C29B",
+            padding: "10px",
+            width: "300px",
+            marginLeft: "18%",
+            opacity: loading ? 0.6 : 1,
+          }}
+        />
+
+        <h3
+          style={{
+            marginBottom: "5px",
+            marginTop: "10px",
             fontSize: "1.2rem",
             marginLeft: "18%",
           }}
@@ -244,12 +267,12 @@ function Login() {
         </h3>
         <input
           type="email"
-          placeholder="Enter your email"
           value={email}
+          placeholder="Enter your email"
           onChange={handleEmailChange}
           disabled={loading}
           style={{
-            marginBottom: "10px",
+            marginBottom: "5px",
             fontSize: "1rem",
             borderRadius: "5px",
             backgroundColor: "#FFFCE4",
@@ -292,7 +315,7 @@ function Login() {
           onChange={handlePasswordChange}
           disabled={loading}
           style={{
-            marginBottom: "10px",
+            marginBottom: "5px",
             fontSize: "1rem",
             borderRadius: "5px",
             backgroundColor: "#FFFCE4",
@@ -318,77 +341,68 @@ function Login() {
           </p>
         )}
 
-        <div
+        <h3
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginBottom: "20px",
-            fontSize: "0.9rem",
+            marginBottom: "5px",
+            marginTop: "10px",
+            fontSize: "1.2rem",
+            marginLeft: "18%",
+            color: "#00492C",
           }}
         >
-          <div
-            style={{ display: "flex", alignItems: "center", marginLeft: "18%" }}
-          >
-            <input
-              type="checkbox"
-              id="remember-me"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              disabled={loading}
-              style={{ marginRight: "5px" }}
-            />
-            <label
-              htmlFor="remember-me"
-              style={{
-                textDecoration: "underline",
-                margin: 0,
-                fontSize: "1rem",
-                cursor: loading ? "default" : "pointer",
-                opacity: loading ? 0.6 : 1,
-              }}
-            >
-              Remember me
-            </label>
-          </div>
-
-          <label
-            onClick={!loading ? () => navigate("/forgot") : undefined}
+          Confirm Password
+        </h3>
+        <input
+          type="password"
+          placeholder="Enter your password"
+          value={confirmPassword}
+          onChange={handleConfirmPasswordChange}
+          disabled={loading}
+          style={{
+            marginBottom: "5px",
+            fontSize: "1rem",
+            borderRadius: "5px",
+            backgroundColor: "#FFFCE4",
+            border: "solid 2px #C7C29B",
+            padding: "10px",
+            width: "300px",
+            marginLeft: "18%",
+            opacity: loading ? 0.6 : 1,
+          }}
+        />
+        {confirmPasswordError && (
+          <p
             style={{
-              textDecoration: "underline",
-              margin: 0,
-              fontSize: "1rem",
-              cursor: loading ? "default" : "pointer",
-              marginRight: "18%",
-              opacity: loading ? 0.6 : 1,
+              color: "red",
+              fontSize: "0.8rem",
+              marginLeft: "18%",
+              marginTop: "0",
+              marginBottom: "15px",
+              fontFamily: "Noto Sans KR, sans-serif",
             }}
           >
-            Forgot password
-          </label>
-        </div>
+            {confirmPasswordError}
+          </p>
+        )}
 
         <button
-          onClick={handleLogin}
-          disabled={
-            loading || !email || !password || emailError || passwordError
-          }
+          onClick={handleRegister}
+          disabled={!canSubmit}
           style={{
             padding: "12px",
             fontSize: "1rem",
             borderRadius: "5px",
-            backgroundColor: loading ? "#666" : "#00492C",
+            backgroundColor: canSubmit ? "#00492C" : "#666",
             color: "white",
             border: "none",
-            cursor: loading ? "default" : "pointer",
+            cursor: canSubmit ? "pointer" : "default",
             marginLeft: "18%",
             marginTop: "10px",
             width: "320px",
-            opacity:
-              loading || !email || !password || emailError || passwordError
-                ? 0.6
-                : 1,
+            opacity: canSubmit ? 1 : 0.6,
           }}
         >
-          {loading ? "로그인 중..." : "Sign in"}
+          {loading ? "가입 중..." : "Sign up"}
         </button>
 
         <div
@@ -407,10 +421,10 @@ function Login() {
               marginRight: "5px",
             }}
           >
-            Don't have an account?
+            Already have an account?
           </label>
           <label
-            onClick={!loading ? () => navigate("/register") : undefined}
+            onClick={!loading ? () => navigate("/login") : undefined}
             style={{
               color: "#000000",
               fontWeight: "bold",
@@ -421,7 +435,7 @@ function Login() {
               opacity: loading ? 0.6 : 1,
             }}
           >
-            Sign up
+            Sign in
           </label>
         </div>
       </div>
@@ -429,4 +443,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Register;
