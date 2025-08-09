@@ -94,7 +94,8 @@ function Select() {
         const r = await fetch(base + p, { method: "GET", mode: "cors" });
         console.log(p, r.status, r.statusText);
       } catch (e) {
-        console.log(p, "ERR", e.message);
+        const err = e as Error;
+        console.error(err.message);
       }
     }
   })();
