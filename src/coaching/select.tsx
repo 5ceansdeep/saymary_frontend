@@ -74,6 +74,30 @@ function Select() {
     }
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+  const base = "https://api.saymary.site";
+  const candidates = [
+    "/upload_stt_summary",
+    "/upload-stt-summary",
+    "/stt/upload_summary",
+    "/stt/upload-stt-summary",
+    "/api/upload_stt_summary",
+    "/api/upload-stt-summary",
+    "/api/stt/upload_summary",
+    "/api/stt/upload-stt-summary",
+    "/stt/summary/upload",
+    "/api/stt/summary/upload",
+  ];
+
+  (async () => {
+    for (const p of candidates) {
+      try {
+        const r = await fetch(base + p, { method: "GET", mode: "cors" });
+        console.log(p, r.status, r.statusText);
+      } catch (e) {
+        console.log(p, "ERR", e.message);
+      }
+    }
+  })();
 
   const handleUpload = async (file: File) => {
     if (!file) {
