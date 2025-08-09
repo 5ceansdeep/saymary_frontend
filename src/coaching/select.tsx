@@ -74,31 +74,6 @@ function Select() {
     }
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
-  const base = "https://api.saymary.site";
-  const candidates = [
-    "/upload_stt_summary",
-    "/upload-stt-summary",
-    "/stt/upload_summary",
-    "/stt/upload-stt-summary",
-    "/api/upload_stt_summary",
-    "/api/upload-stt-summary",
-    "/api/stt/upload_summary",
-    "/api/stt/upload-stt-summary",
-    "/stt/summary/upload",
-    "/api/stt/summary/upload",
-  ];
-
-  (async () => {
-    for (const p of candidates) {
-      try {
-        const r = await fetch(base + p, { method: "GET", mode: "cors" });
-        console.log(p, r.status, r.statusText);
-      } catch (e) {
-        const err = e as Error;
-        console.error(err.message);
-      }
-    }
-  })();
 
   const handleUpload = async (file: File) => {
     if (!file) {
@@ -123,10 +98,13 @@ function Select() {
 
     setIsLoading(true);
     try {
-      const res = await fetch("https://api.saymary.site/upload_feedback", {
-        method: "GET",
-        body: formData,
-      });
+      const res = await fetch(
+        "https://api.saymary.site/api/coaching/feedback",
+        {
+          method: "GET",
+          body: formData,
+        }
+      );
 
       // 네트워크/서버 에러 체크
       if (!res.ok) {
