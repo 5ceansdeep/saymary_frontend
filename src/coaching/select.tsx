@@ -98,13 +98,10 @@ function Select() {
 
     setIsLoading(true);
     try {
-      const res = await fetch(
-        "https://api.saymary.site/api/coaching/feedback",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const res = await fetch("https://api.saymary.site//upload_feedback", {
+        method: "POST",
+        body: formData,
+      });
 
       // 네트워크/서버 에러 체크
       if (!res.ok) {
