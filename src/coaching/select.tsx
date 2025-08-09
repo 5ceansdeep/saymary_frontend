@@ -91,31 +91,52 @@ function Select() {
     }
 
     const formData = new FormData();
+    // 백엔드가 받는 키 기준으로 맞추세요.
+    // 스펙상 feedback 엔드포인트는 file만 필수지만, 서버가 받도록 되어 있으면 아래 3개도 전송
     formData.append("file", file);
     formData.append("situation", selectedSituation);
     formData.append("audience", selectedAudience);
     formData.append("style", selectedStyle);
 
     setIsLoading(true);
+
+    // 20초 타임아웃
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 20000);
+
     try {
       const res = await fetch(
         "https://api.saymary.site/api/coaching/feedback",
         {
-          method: "GET",
-          body: formData,
+          method: "POST", // ✅ POST로 변경
+          body: formData, // ✅ FormData 그대로
+          credentials: "include", // ✅ JSESSIONID 쿠키 포함
+          signal: ctrl.signal,
         }
       );
 
-      // 네트워크/서버 에러 체크
       if (!res.ok) {
+        // 텍스트 본문 확보(nginx 502 등 HTML일 수 있음)
         const text = await res.text().catch(() => "");
         throw new Error(`HTTP ${res.status} ${res.statusText} ${text}`);
       }
 
-      const result: unknown = await res.json();
+      // 안전한 JSON 파싱
+      let result: any = null;
+      const ct = res.headers.get("content-type") || "";
+      if (ct.includes("application/json")) {
+        result = await res.json();
+      } else {
+        const text = await res.text();
+        try {
+          result = JSON.parse(text);
+        } catch {
+          result = { raw: text };
+        }
+      }
+
       console.log("업로드 결과:", result);
 
-      // 성공 시 Coach 페이지로 이동하면서 데이터 전달
       navigate("/coaching/result", {
         state: {
           feedback: result,
@@ -130,6 +151,7 @@ function Select() {
       console.error("업로드 중 오류:", err);
       alert("업로드 실패");
     } finally {
+      clearTimeout(timer);
       setIsLoading(false);
     }
   };
