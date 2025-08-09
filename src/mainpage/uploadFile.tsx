@@ -190,7 +190,7 @@ function UploadFile() {
         formData.append("style", "친근");
 
         const response = await fetchWithTimeout(
-          "https://api.saymary.site//upload_stt_summary",
+          "https://api.saymary.site/upload_stt_summary",
           {
             method: "POST",
             body: formData,

@@ -98,7 +98,7 @@ function Select() {
 
     setIsLoading(true);
     try {
-      const res = await fetch("https://api.saymary.site//upload_feedback", {
+      const res = await fetch("https://api.saymary.site/upload_feedback", {
         method: "POST",
         body: formData,
       });
