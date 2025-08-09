@@ -7,6 +7,7 @@ import React, {
   useState,
 } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 type ApiJson =
   | {
@@ -30,7 +31,7 @@ type SummaryData = {
   uploadTime: string;
 };
 
-import axios from "axios";
+
 
 const api = axios.create({
   baseURL: "https://api.saymary.site",
