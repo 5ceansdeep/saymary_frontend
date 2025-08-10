@@ -96,45 +96,51 @@ function Coach() {
       }
 
       // 새로운 API 구조에 맞춰 데이터 매핑
-      // 새로운 API 구조에 맞춰 데이터 매핑
-      const summaryText =
-        parsed.summary ??
-        parsed.summaries?.simple ??
-        parsed.summaries?.["간단요약"] ??
-        "";
-
-      const detailedText =
-        parsed.detailed_summary ??
-        parsed.summaries?.detailed ??
-        parsed.summaries?.["상세요약"] ??
-        parsed.summary ?? // 상세가 없으면 요약으로 폴백
-        "";
-
-      const keywordsText = Array.isArray(parsed.keywords)
-        ? parsed.keywords.join(", ")
-        : (
-            parsed.keywords ??
-            parsed.summaries?.keyword ??
-            parsed.summaries?.["키워드요약"] ??
-            ""
-          ).toString();
-
-      const speedSrc = parsed.speaking_speed ?? parsed.speed_analysis;
-      const pauseSrc = parsed.pause_analysis;
+      //
+      const speedSrc = parsed.speaking_speed ?? parsed.speed_analysis ?? null;
+      const pauseSrc = parsed.pause_analysis ?? null;
 
       const feedbackDataFormatted: FeedbackData = {
-        original_text: parsed.original_text || "",
-        summary: summaryText,
-        detailed_summary: detailedText,
-        keywords: keywordsText,
+        original_text:
+          parsed.original_text ?? parsed.transcript ?? parsed.text ?? "",
+
+        // 요약: 새 API(summary) 우선, 없으면 예전 키 폴백
+        summary:
+          parsed.summary ??
+          parsed.summaries?.simple ??
+          parsed.summaries?.["간단요약"] ??
+          "",
+
+        // 상세요약: 별도 필드가 없으면 summary로 폴백
+        detailed_summary:
+          parsed.detailed_summary ??
+          parsed.summaries?.detailed ??
+          parsed.summaries?.["상세요약"] ??
+          parsed.summary ??
+          "",
+
+        // 키워드: 배열이면 join, 문자열이면 그대로, 없으면 예전 키 폴백
+        keywords: Array.isArray(parsed.keywords)
+          ? parsed.keywords.join(", ")
+          : (
+              parsed.keywords ??
+              parsed.summaries?.keyword ??
+              parsed.summaries?.["키워드요약"] ??
+              ""
+            ).toString(),
+
+        // 말하기 속도: speaking_speed 또는 speed_analysis 모두 대응
         speaking_speed: speedSrc
           ? {
               average_wpm: speedSrc.average_wpm ?? speedSrc.wpm ?? 0,
-              duration_seconds: speedSrc.duration_seconds ?? 0,
+              duration_seconds:
+                speedSrc.duration_seconds ?? speedSrc.duration ?? 0,
               word_count: speedSrc.word_count ?? 0,
               comment: speedSrc.comment ?? speedSrc.feedback ?? "",
             }
           : undefined,
+
+        // 멈춤 분석: pause_analysis 내 pause_stats/낱개 키 모두 폴백
         pause_analysis: pauseSrc
           ? {
               pause_count:
@@ -153,7 +159,6 @@ function Coach() {
             }
           : undefined,
       };
-
       // console.log("변환된 피드백 데이터:", feedbackDataFormatted);
 
       setFeedbackData(feedbackDataFormatted);
