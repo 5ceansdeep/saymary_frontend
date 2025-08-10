@@ -78,53 +78,93 @@ function Coach() {
 
   useEffect(() => {
     if (location.state) {
-      const receivedFeedback = location.state.feedback;
-      // console.log("받은 피드백 데이터:", receivedFeedback);
-
+      const received = location.state?.feedback;
       let parsed: any = {};
-      if (typeof receivedFeedback === "string") {
+      if (typeof received === "string") {
         try {
-          parsed = JSON.parse(receivedFeedback);
+          parsed = JSON.parse(received);
         } catch {
-          parsed = { summary: receivedFeedback };
+          parsed = { summary: received };
         }
-      } else if (
-        typeof receivedFeedback === "object" &&
-        receivedFeedback !== null
-      ) {
-        parsed = receivedFeedback;
+      } else if (received && typeof received === "object") {
+        parsed = received;
       }
 
-      // 새로운 API 구조에 맞춰 데이터 매핑
+      // data/result/coaching 같은 래핑 풀기
+      const payload =
+        parsed?.data ?? parsed?.result ?? parsed?.coaching ?? parsed;
+
+      console.log("payload =", payload);
+      console.log("summary/keywords =", payload.summary, payload.keywords);
+
+      const speedSrc = payload.speaking_speed ?? payload.speed_analysis ?? null;
+      const pauseSrc = payload.pause_analysis ?? null;
+
       const feedbackDataFormatted: FeedbackData = {
-        original_text: parsed.original_text || "",
-        summary: parsed.summaries?.["간단요약"] || parsed.summary || "",
-        detailed_summary: parsed.summaries?.["상세요약"] || "",
-        keywords: parsed.summaries?.["키워드요약"] || "",
-        speaking_speed: parsed.speed_analysis
+        original_text:
+          payload.original_text ?? payload.transcript ?? payload.text ?? "",
+
+        // 요약: 새 API(summary) 우선, 예전 키 폴백
+        summary:
+          payload.summary ??
+          payload.summary_text ??
+          payload.summary?.text ??
+          payload.summaries?.simple ??
+          payload.summaries?.["간단요약"] ??
+          "",
+
+        // 상세요약: 없으면 summary로 폴백
+        detailed_summary:
+          payload.detailed_summary ??
+          payload.summaries?.detailed ??
+          payload.summaries?.["상세요약"] ??
+          payload.summary ??
+          "",
+
+        // 키워드: 배열·문자열 모두 대응
+        keywords: Array.isArray(payload.keywords)
+          ? payload.keywords.join(", ")
+          : (
+              payload.keywords ??
+              payload.keywords_text ??
+              payload.summaries?.keyword ??
+              payload.summaries?.["키워드요약"] ??
+              ""
+            ).toString(),
+
+        // 말하기 속도
+        speaking_speed: speedSrc
           ? {
-              average_wpm: parsed.speed_analysis?.wpm || 0,
-              duration_seconds: parsed.speed_analysis?.duration_seconds || 0,
-              word_count: parsed.speed_analysis?.word_count || 0,
-              comment: parsed.speed_analysis?.feedback || "",
+              average_wpm: speedSrc.average_wpm ?? speedSrc.wpm ?? 0,
+              duration_seconds:
+                speedSrc.duration_seconds ?? speedSrc.duration ?? 0,
+              word_count: speedSrc.word_count ?? 0,
+              comment: speedSrc.comment ?? speedSrc.feedback ?? "",
             }
           : undefined,
-        pause_analysis: parsed.pause_analysis
+
+        // 멈춤 분석
+        pause_analysis: pauseSrc
           ? {
-              pause_count: parsed.pause_analysis?.pause_stats?.pause_count || 0,
+              pause_count:
+                pauseSrc.pause_count ?? pauseSrc.pause_stats?.pause_count ?? 0,
               avg_pause_length:
-                parsed.pause_analysis?.pause_stats?.avg_pause_length || 0,
+                pauseSrc.avg_pause_length ??
+                pauseSrc.pause_stats?.avg_pause_length ??
+                0,
               total_silence:
-                parsed.pause_analysis?.pause_stats?.total_silence || 0,
-              long_pauses: [],
-              comment: parsed.pause_analysis?.feedback || "",
+                pauseSrc.total_silence ??
+                pauseSrc.pause_stats?.total_silence ??
+                0,
+              long_pauses:
+                pauseSrc.long_pauses ?? pauseSrc.pause_stats?.long_pauses ?? [],
+              comment: pauseSrc.comment ?? pauseSrc.feedback ?? "",
             }
           : undefined,
       };
 
-      // console.log("변환된 피드백 데이터:", feedbackDataFormatted);
-
       setFeedbackData(feedbackDataFormatted);
+
       setSessionData({
         situation: location.state.situation || "알 수 없음",
         audience: location.state.audience || "알 수 없음",
@@ -169,7 +209,7 @@ function Coach() {
     }, 1200);
 
     return () => window.clearTimeout(timer);
-  }, [location]);
+  }, [location.state]);
 
   const scrollToBottom = () => {
     const el = BoxRef.current;
