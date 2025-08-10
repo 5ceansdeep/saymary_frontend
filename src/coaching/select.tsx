@@ -92,6 +92,12 @@ function Select() {
 
     const formData = new FormData();
     formData.append("file", file);
+
+    if (selectedSituation)
+      formData.append("situation", String(selectedSituation));
+    if (selectedAudience) formData.append("audience", String(selectedAudience));
+    if (selectedStyle) formData.append("style", String(selectedStyle));
+
     setIsLoading(true);
 
     // 20초 타임아웃
