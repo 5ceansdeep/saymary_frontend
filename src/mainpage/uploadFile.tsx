@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 type ApiJson =
   | {
       success?: boolean;
+      original_text?: string; // ← 추가
       transcript?: string;
       text?: string;
       summaries?: { simple?: string; detailed?: string; keyword?: string };
@@ -218,34 +219,48 @@ function UploadFile() {
             }
             throw new Error(data || "업로드에 실패했습니다.");
           }
-          if (data.success) {
+
+          // success 플래그가 없어도 필드가 있으면 성공으로 간주
+          const text = data.original_text ?? data.transcript ?? data.text ?? "";
+
+          const simple =
+            data["간단요약"] ??
+            data.summaries?.simple ??
+            data.summaries?.["간단요약"] ??
+            "";
+          const detailed =
+            data["상세요약"] ??
+            data.summaries?.detailed ??
+            data.summaries?.["상세요약"] ??
+            "";
+          const keyword =
+            data["키워드요약"] ??
+            data.summaries?.keyword ??
+            data.summaries?.["키워드요약"] ??
+            "";
+
+          // 최소 요건 충족 시 성공 처리
+          if (text || (simple && detailed && keyword)) {
             return {
-              text:
-                data.transcript ?? data.text ?? "텍스트를 불러올 수 없습니다.",
-              간단요약:
-                data["간단요약"] ??
-                data.summaries?.simple ??
-                "간단 요약을 생성할 수 없습니다.",
-              상세요약:
-                data["상세요약"] ??
-                data.summaries?.detailed ??
-                "상세 요약을 생성할 수 없습니다.",
-              키워드요약:
-                data["키워드요약"] ??
-                data.summaries?.keyword ??
-                "키워드 요약을 생성할 수 없습니다.",
+              text: text || "텍스트를 불러올 수 없습니다.",
+              간단요약: simple || "간단 요약을 생성할 수 없습니다.",
+              상세요약: detailed || "상세 요약을 생성할 수 없습니다.",
+              키워드요약: keyword || "키워드 요약을 생성할 수 없습니다.",
               fileName: file.name,
               uploadTime: new Date().toLocaleString(),
             };
           }
+
+          // 정말 실패인 경우만 에러
           throw new Error(data.message || "업로드에 실패했습니다.");
         };
 
+        // ✅ 200이면 여기서 바로 성공 처리하고 return
         if (response.ok) {
-          const summaryData = buildSummary(result);
+          const summaryData = buildSummary(result); // ← 실제 호출
           localStorage.setItem("summaryData", JSON.stringify(summaryData));
           setTimeout(() => navigate("/main", { replace: true }), 800);
-          return;
+          return; // ← 이게 없어서 아래 에러 처리로 떨어졌던 거
         }
 
         // 401 처리 (로컬 시뮬)
