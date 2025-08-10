@@ -96,69 +96,32 @@ function Coach() {
       }
 
       // 새로운 API 구조에 맞춰 데이터 매핑
-      //
-      const speedSrc = parsed.speaking_speed ?? parsed.speed_analysis ?? null;
-      const pauseSrc = parsed.pause_analysis ?? null;
-
       const feedbackDataFormatted: FeedbackData = {
-        original_text:
-          parsed.original_text ?? parsed.transcript ?? parsed.text ?? "",
-
-        // 요약: 새 API(summary) 우선, 없으면 예전 키 폴백
-        summary:
-          parsed.summary ??
-          parsed.summaries?.simple ??
-          parsed.summaries?.["간단요약"] ??
-          "",
-
-        // 상세요약: 별도 필드가 없으면 summary로 폴백
-        detailed_summary:
-          parsed.detailed_summary ??
-          parsed.summaries?.detailed ??
-          parsed.summaries?.["상세요약"] ??
-          parsed.summary ??
-          "",
-
-        // 키워드: 배열이면 join, 문자열이면 그대로, 없으면 예전 키 폴백
-        keywords: Array.isArray(parsed.keywords)
-          ? parsed.keywords.join(", ")
-          : (
-              parsed.keywords ??
-              parsed.summaries?.keyword ??
-              parsed.summaries?.["키워드요약"] ??
-              ""
-            ).toString(),
-
-        // 말하기 속도: speaking_speed 또는 speed_analysis 모두 대응
-        speaking_speed: speedSrc
+        original_text: parsed.original_text || "",
+        summary: parsed.summaries?.["간단요약"] || parsed.summary || "",
+        detailed_summary: parsed.summaries?.["상세요약"] || "",
+        keywords: parsed.summaries?.["키워드요약"] || "",
+        speaking_speed: parsed.speed_analysis
           ? {
-              average_wpm: speedSrc.average_wpm ?? speedSrc.wpm ?? 0,
-              duration_seconds:
-                speedSrc.duration_seconds ?? speedSrc.duration ?? 0,
-              word_count: speedSrc.word_count ?? 0,
-              comment: speedSrc.comment ?? speedSrc.feedback ?? "",
+              average_wpm: parsed.speed_analysis?.wpm || 0,
+              duration_seconds: parsed.speed_analysis?.duration_seconds || 0,
+              word_count: parsed.speed_analysis?.word_count || 0,
+              comment: parsed.speed_analysis?.feedback || "",
             }
           : undefined,
-
-        // 멈춤 분석: pause_analysis 내 pause_stats/낱개 키 모두 폴백
-        pause_analysis: pauseSrc
+        pause_analysis: parsed.pause_analysis
           ? {
-              pause_count:
-                pauseSrc.pause_count ?? pauseSrc.pause_stats?.pause_count ?? 0,
+              pause_count: parsed.pause_analysis?.pause_stats?.pause_count || 0,
               avg_pause_length:
-                pauseSrc.avg_pause_length ??
-                pauseSrc.pause_stats?.avg_pause_length ??
-                0,
+                parsed.pause_analysis?.pause_stats?.avg_pause_length || 0,
               total_silence:
-                pauseSrc.total_silence ??
-                pauseSrc.pause_stats?.total_silence ??
-                0,
-              long_pauses:
-                pauseSrc.long_pauses ?? pauseSrc.pause_stats?.long_pauses ?? [],
-              comment: pauseSrc.comment ?? pauseSrc.feedback ?? "",
+                parsed.pause_analysis?.pause_stats?.total_silence || 0,
+              long_pauses: [],
+              comment: parsed.pause_analysis?.feedback || "",
             }
           : undefined,
       };
+
       // console.log("변환된 피드백 데이터:", feedbackDataFormatted);
 
       setFeedbackData(feedbackDataFormatted);
