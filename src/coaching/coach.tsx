@@ -94,38 +94,72 @@ function Coach() {
       ) {
         parsed = receivedFeedback;
       }
+      // 1) 래핑 제거(data/result/coaching 등)
+      const payload =
+        parsed?.data ?? parsed?.result ?? parsed?.coaching ?? parsed;
 
-      // 새로운 API 구조에 맞춰 데이터 매핑
+      // 2) 속도/템포 소스 선택
+      const speedSrc = payload.speaking_speed ?? payload.speed_analysis ?? null;
+      const pauseSrc = payload.pause_analysis ?? null;
+
+      // 3) feedback을 요약/상세로 폴백
+      const feedbackRaw =
+        typeof payload.feedback === "string" ? payload.feedback.trim() : "";
+      const firstPara = feedbackRaw
+        ? feedbackRaw.split(/\r?\n\r?\n|\r?\n/)[0].replace(/^한줄평:\s*/, "")
+        : "";
+
+      const summaryText =
+        payload.summary ??
+        payload.summary_text ??
+        payload.summary?.text ??
+        firstPara;
+
+      const detailedText =
+        payload.detailed_summary ?? (feedbackRaw || summaryText);
+
+      const keywordsText = Array.isArray(payload.keywords)
+        ? payload.keywords.join(", ")
+        : (payload.keywords ?? "").toString();
+
+      // 4) 화면용 객체 생성
       const feedbackDataFormatted: FeedbackData = {
-        original_text: parsed.original_text || "",
-        summary: parsed.summaries?.["간단요약"] || parsed.summary || "",
-        detailed_summary: parsed.summaries?.["상세요약"] || "",
-        keywords: parsed.summaries?.["키워드요약"] || "",
-        speaking_speed: parsed.speed_analysis
+        original_text:
+          payload.original_text ?? payload.transcript ?? payload.text ?? "",
+        summary: summaryText || "",
+        detailed_summary: detailedText || "",
+        keywords: keywordsText,
+        speaking_speed: speedSrc
           ? {
-              average_wpm: parsed.speed_analysis?.wpm || 0,
-              duration_seconds: parsed.speed_analysis?.duration_seconds || 0,
-              word_count: parsed.speed_analysis?.word_count || 0,
-              comment: parsed.speed_analysis?.feedback || "",
+              average_wpm: speedSrc.average_wpm ?? speedSrc.wpm ?? 0,
+              duration_seconds:
+                speedSrc.duration_seconds ?? speedSrc.duration ?? 0,
+              word_count: speedSrc.word_count ?? 0,
+              comment: speedSrc.comment ?? speedSrc.feedback ?? "",
             }
           : undefined,
-        pause_analysis: parsed.pause_analysis
+        pause_analysis: pauseSrc
           ? {
-              pause_count: parsed.pause_analysis?.pause_stats?.pause_count || 0,
+              pause_count:
+                pauseSrc.pause_count ?? pauseSrc.pause_stats?.pause_count ?? 0,
               avg_pause_length:
-                parsed.pause_analysis?.pause_stats?.avg_pause_length || 0,
+                pauseSrc.avg_pause_length ??
+                pauseSrc.pause_stats?.avg_pause_length ??
+                0,
               total_silence:
-                parsed.pause_analysis?.pause_stats?.total_silence || 0,
-              long_pauses: [],
-              comment: parsed.pause_analysis?.feedback || "",
+                pauseSrc.total_silence ??
+                pauseSrc.pause_stats?.total_silence ??
+                0,
+              long_pauses:
+                pauseSrc.long_pauses ?? pauseSrc.pause_stats?.long_pauses ?? [],
+              comment: pauseSrc.comment ?? pauseSrc.feedback ?? "",
             }
           : undefined,
       };
 
-      // console.log("변환된 피드백 데이터:", feedbackDataFormatted);
-
+      // 5) 상태 반영
       setFeedbackData(feedbackDataFormatted);
-      
+
       setSessionData({
         situation: location.state.situation || "알 수 없음",
         audience: location.state.audience || "알 수 없음",
