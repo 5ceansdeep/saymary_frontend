@@ -8,13 +8,20 @@ import React, {
 } from "react";
 import { useNavigate } from "react-router-dom";
 
+type Summaries = {
+  simple?: string;
+  detailed?: string;
+  keyword?: string;
+  [k: string]: string | undefined; // ← 임의 키 허용
+};
+
 type ApiJson =
   | {
       success?: boolean;
-      original_text?: string; // ← 추가
+      original_text?: string;
       transcript?: string;
       text?: string;
-      summaries?: { simple?: string; detailed?: string; keyword?: string };
+      summaries?: Summaries; // 교체
       ["간단요약"]?: string;
       ["상세요약"]?: string;
       ["키워드요약"]?: string;
