@@ -90,17 +90,44 @@ function Select() {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("file", file);
+    // 라벨 → 코드
+    type SituationLabel = (typeof situation1)[number];
+    type AudienceLabel = (typeof situation2)[number];
+    type StyleLabel = (typeof situation3)[number];
 
-    if (selectedSituation)
-      formData.append("situation", String(selectedSituation));
-    if (selectedAudience) formData.append("audience", String(selectedAudience));
-    if (selectedStyle) formData.append("style", String(selectedStyle));
+    const situationCode: Record<SituationLabel, string> = {
+      "Lecture (강의)": "lecture",
+      "Interview (면접)": "interview",
+      "Presentation (발표)": "presentation",
+      "Speech (연설)": "speech",
+      "Briefing (브리핑)": "briefing",
+    };
+    const audienceCode: Record<AudienceLabel, string> = {
+      "Professor / Teacher (교수 / 선생님)": "professor",
+      "Interviewer (면접관)": "interviewer",
+      "Colleague / Team member (동료 / 팀원)": "colleague",
+      "Client / Boss (고객 / 상사)": "client",
+      "General audience (일반 청중)": "general",
+    };
+    const styleCode: Record<StyleLabel, string> = {
+      "Explanatory (설명형)": "explanatory",
+      "Self-introductory (자기소개형)": "self_intro",
+      "Persuasive (설득형)": "persuasive",
+      "Informal (비격식형)": "informal",
+      "Formal (격식형)": "formal",
+      "Q&A style (질문응답형)": "qa",
+    };
+
+    const toCode = (label: string, dict: Record<string, string>) =>
+      dict[label] ?? label;
+
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("situation", toCode(selectedSituation!, situationCode));
+    fd.append("audience", toCode(selectedAudience!, audienceCode));
+    fd.append("style", toCode(selectedStyle!, styleCode));
 
     setIsLoading(true);
-
-    // 20초 타임아웃
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 20000);
 
@@ -109,33 +136,19 @@ function Select() {
         "https://api.saymary.site/api/fastapi/upload_feedback",
         {
           method: "POST",
-          body: formData,
-          credentials: "include",
+          body: fd, // Content-Type 수동 지정 X
           signal: ctrl.signal,
+          // credentials: "include", // 쿠키 안 쓰면 빼세요(불필요한 CORS 방지)
         }
       );
-
       if (!res.ok) {
-        // 텍스트 본문 확보(nginx 502 등 HTML일 수 있음)
         const text = await res.text().catch(() => "");
         throw new Error(`HTTP ${res.status} ${res.statusText} ${text}`);
       }
-
-      // 안전한 JSON 파싱
-      let result: any = null;
-      const ct = res.headers.get("content-type") || "";
-      if (ct.includes("application/json")) {
-        result = await res.json();
-      } else {
-        const text = await res.text();
-        try {
-          result = JSON.parse(text);
-        } catch {
-          result = { raw: text };
-        }
-      }
-
-      console.log("업로드 결과:", result);
+      const ct = res.headers.get("content-type") ?? "";
+      const result = ct.includes("application/json")
+        ? await res.json()
+        : await res.text();
 
       navigate("/coaching/result", {
         state: {
@@ -147,8 +160,8 @@ function Select() {
           uploadTime: new Date().toLocaleString(),
         },
       });
-    } catch (err) {
-      console.error("업로드 중 오류:", err);
+    } catch (e) {
+      console.error("업로드 실패:", e);
       alert("업로드 실패");
     } finally {
       clearTimeout(timer);
