@@ -127,15 +127,6 @@ function Select() {
     fd.append("audience", toCode(selectedAudience!, audienceCode));
     fd.append("style", toCode(selectedStyle!, styleCode));
 
-    console.log(
-      "FD to send:",
-      Array.from(fd.entries()).map(([k, v]) =>
-        v instanceof File
-          ? [k, { name: v.name, size: v.size, type: v.type }]
-          : [k, v]
-      )
-    );
-
     setIsLoading(true);
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 20000);
@@ -147,7 +138,7 @@ function Select() {
           method: "POST",
           body: fd, // Content-Type 수동 지정 X
           signal: ctrl.signal,
-          credentials: "include",
+          // credentials: "include", // 쿠키 안 쓰면 빼세요(불필요한 CORS 방지)
         }
       );
       if (!res.ok) {
