@@ -91,13 +91,7 @@ function Select() {
     }
 
     const formData = new FormData();
-    // 백엔드가 받는 키 기준으로 맞추세요.
-    // 스펙상 feedback 엔드포인트는 file만 필수지만, 서버가 받도록 되어 있으면 아래 3개도 전송
     formData.append("file", file);
-    formData.append("situation", selectedSituation);
-    formData.append("audience", selectedAudience);
-    formData.append("style", selectedStyle);
-
     setIsLoading(true);
 
     // 20초 타임아웃
