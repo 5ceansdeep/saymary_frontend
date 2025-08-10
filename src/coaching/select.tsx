@@ -108,9 +108,9 @@ function Select() {
       const res = await fetch(
         "https://api.saymary.site/api/coaching/feedback",
         {
-          method: "POST", // ✅ POST로 변경
-          body: formData, // ✅ FormData 그대로
-          credentials: "include", // ✅ JSESSIONID 쿠키 포함
+          method: "POST",
+          body: formData,
+          credentials: "include",
           signal: ctrl.signal,
         }
       );

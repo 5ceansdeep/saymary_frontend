@@ -31,8 +31,6 @@ type SummaryData = {
   uploadTime: string;
 };
 
-
-
 const api = axios.create({
   baseURL: "https://api.saymary.site",
   timeout: 300_000, // 5분
@@ -237,7 +235,7 @@ function UploadFile() {
         formData.append("file", file);
 
         const response = await fetchWithTimeout(
-          "https://api.saymary.site/api/fastapi/upload",
+          "https://api.saymary.site/api/fastapi/upload_stt_summary",
           {
             method: "POST",
             body: formData,
