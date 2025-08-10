@@ -96,28 +96,60 @@ function Coach() {
       }
 
       // 새로운 API 구조에 맞춰 데이터 매핑
+      // 새로운 API 구조에 맞춰 데이터 매핑
+      const summaryText =
+        parsed.summary ??
+        parsed.summaries?.simple ??
+        parsed.summaries?.["간단요약"] ??
+        "";
+
+      const detailedText =
+        parsed.detailed_summary ??
+        parsed.summaries?.detailed ??
+        parsed.summaries?.["상세요약"] ??
+        parsed.summary ?? // 상세가 없으면 요약으로 폴백
+        "";
+
+      const keywordsText = Array.isArray(parsed.keywords)
+        ? parsed.keywords.join(", ")
+        : (
+            parsed.keywords ??
+            parsed.summaries?.keyword ??
+            parsed.summaries?.["키워드요약"] ??
+            ""
+          ).toString();
+
+      const speedSrc = parsed.speaking_speed ?? parsed.speed_analysis;
+      const pauseSrc = parsed.pause_analysis;
+
       const feedbackDataFormatted: FeedbackData = {
         original_text: parsed.original_text || "",
-        summary: parsed.summaries?.["간단요약"] || parsed.summary || "",
-        detailed_summary: parsed.summaries?.["상세요약"] || "",
-        keywords: parsed.summaries?.["키워드요약"] || "",
-        speaking_speed: parsed.speed_analysis
+        summary: summaryText,
+        detailed_summary: detailedText,
+        keywords: keywordsText,
+        speaking_speed: speedSrc
           ? {
-              average_wpm: parsed.speed_analysis?.wpm || 0,
-              duration_seconds: parsed.speed_analysis?.duration_seconds || 0,
-              word_count: parsed.speed_analysis?.word_count || 0,
-              comment: parsed.speed_analysis?.feedback || "",
+              average_wpm: speedSrc.average_wpm ?? speedSrc.wpm ?? 0,
+              duration_seconds: speedSrc.duration_seconds ?? 0,
+              word_count: speedSrc.word_count ?? 0,
+              comment: speedSrc.comment ?? speedSrc.feedback ?? "",
             }
           : undefined,
-        pause_analysis: parsed.pause_analysis
+        pause_analysis: pauseSrc
           ? {
-              pause_count: parsed.pause_analysis?.pause_stats?.pause_count || 0,
+              pause_count:
+                pauseSrc.pause_count ?? pauseSrc.pause_stats?.pause_count ?? 0,
               avg_pause_length:
-                parsed.pause_analysis?.pause_stats?.avg_pause_length || 0,
+                pauseSrc.avg_pause_length ??
+                pauseSrc.pause_stats?.avg_pause_length ??
+                0,
               total_silence:
-                parsed.pause_analysis?.pause_stats?.total_silence || 0,
-              long_pauses: [],
-              comment: parsed.pause_analysis?.feedback || "",
+                pauseSrc.total_silence ??
+                pauseSrc.pause_stats?.total_silence ??
+                0,
+              long_pauses:
+                pauseSrc.long_pauses ?? pauseSrc.pause_stats?.long_pauses ?? [],
+              comment: pauseSrc.comment ?? pauseSrc.feedback ?? "",
             }
           : undefined,
       };
