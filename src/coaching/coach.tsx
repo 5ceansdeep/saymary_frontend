@@ -97,42 +97,38 @@ function Coach() {
       console.log("payload =", payload);
       console.log("summary/keywords =", payload.summary, payload.keywords);
 
+      // payload 만든 뒤 ↓↓↓
       const speedSrc = payload.speaking_speed ?? payload.speed_analysis ?? null;
       const pauseSrc = payload.pause_analysis ?? null;
+
+      // feedback → 요약/상세로 안전하게 폴백
+      const feedbackRaw =
+        typeof payload.feedback === "string" ? payload.feedback.trim() : "";
+      const firstPara = feedbackRaw
+        ? feedbackRaw.split(/\r?\n\r?\n|\r?\n/)[0].replace(/^한줄평:\s*/, "")
+        : "";
+
+      const summaryText =
+        payload.summary ??
+        payload.summary_text ??
+        payload.summary?.text ??
+        firstPara;
+
+      const detailedText =
+        payload.detailed_summary ?? (feedbackRaw || summaryText);
+
+      const keywordsText = Array.isArray(payload.keywords)
+        ? payload.keywords.join(", ")
+        : (payload.keywords ?? "").toString();
 
       const feedbackDataFormatted: FeedbackData = {
         original_text:
           payload.original_text ?? payload.transcript ?? payload.text ?? "",
 
-        // 요약: 새 API(summary) 우선, 예전 키 폴백
-        summary:
-          payload.summary ??
-          payload.summary_text ??
-          payload.summary?.text ??
-          payload.summaries?.simple ??
-          payload.summaries?.["간단요약"] ??
-          "",
+        summary: summaryText || "",
+        detailed_summary: detailedText || "",
+        keywords: keywordsText,
 
-        // 상세요약: 없으면 summary로 폴백
-        detailed_summary:
-          payload.detailed_summary ??
-          payload.summaries?.detailed ??
-          payload.summaries?.["상세요약"] ??
-          payload.summary ??
-          "",
-
-        // 키워드: 배열·문자열 모두 대응
-        keywords: Array.isArray(payload.keywords)
-          ? payload.keywords.join(", ")
-          : (
-              payload.keywords ??
-              payload.keywords_text ??
-              payload.summaries?.keyword ??
-              payload.summaries?.["키워드요약"] ??
-              ""
-            ).toString(),
-
-        // 말하기 속도
         speaking_speed: speedSrc
           ? {
               average_wpm: speedSrc.average_wpm ?? speedSrc.wpm ?? 0,
@@ -143,7 +139,6 @@ function Coach() {
             }
           : undefined,
 
-        // 멈춤 분석
         pause_analysis: pauseSrc
           ? {
               pause_count:
@@ -164,6 +159,8 @@ function Coach() {
       };
 
       setFeedbackData(feedbackDataFormatted);
+
+      console.log("formatted =", feedbackDataFormatted);
 
       setSessionData({
         situation: location.state.situation || "알 수 없음",
