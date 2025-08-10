@@ -256,21 +256,21 @@ function Main() {
       text: "텍스트 복사",
       title: "원본 텍스트와 선택된 요약을 클립보드에 복사합니다",
       onClick: copyToClipboard,
-      style: { backgroundColor: "#ecead5", color: "#656247", border: "none" },
+      style: { backgroundColor: "#f0f0f0", color: "#656247", border: "none" },
     },
     {
       id: "export",
       text: "txt 파일로 내보내기",
       title: "원본 텍스트와 선택된 요약을 텍스트 파일로 다운로드합니다",
       onClick: exportToFile,
-      style: { backgroundColor: "#ecead5", color: "#656247", border: "none" },
+      style: { backgroundColor: "#f0f0f0", color: "#656247", border: "none" },
     },
     {
       id: "goToArchive",
       text: "Archive에 저장",
       title: "보관함에 저장",
       onClick: saveToArchive,
-      style: { backgroundColor: "#ecead5", color: "#656247", border: "none" },
+      style: { backgroundColor: "#f0f0f0", color: "#656247", border: "none" },
     },
     {
       id: "newUpload",
@@ -279,7 +279,7 @@ function Main() {
       onClick: handleNewUpload,
       style: { backgroundColor: "#00492C", color: "white", border: "none" },
     },
-    // 필요 시 로그아웃 버튼 사용
+    // // 필요 시 로그아웃 버튼 사용
     // {
     //   id: "logout",
     //   text: "로그아웃",
@@ -419,7 +419,7 @@ function Main() {
               style={{
                 position: "absolute",
                 top: "100%",
-                right: "0",
+                left: "27%",
                 zIndex: 1001,
                 display: "flex",
                 flexDirection: "column",

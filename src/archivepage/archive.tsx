@@ -205,18 +205,7 @@ function Archive() {
         border: "none",
       },
     },
-    //파일삭제 버튼
-    {
-      id: "delete",
-      text: "🗑 삭제하기",
-      title: "이 파일을 보관함에서 삭제합니다",
-      onClick: deleteFile,
-      style: {
-        backgroundColor: "#ecead5",
-        color: "#B22222",
-        border: "none",
-      },
-    },
+
     {
       id: "export",
       text: "txt 파일로 내보내기",
@@ -225,6 +214,18 @@ function Archive() {
       style: {
         backgroundColor: "#ecead5",
         color: "#333",
+        border: "none",
+      },
+    },
+    //파일삭제 버튼
+    {
+      id: "delete",
+      text: "삭제하기",
+      title: "이 파일을 보관함에서 삭제합니다",
+      onClick: deleteFile,
+      style: {
+        backgroundColor: "#ecead5",
+        color: "#B22222",
         border: "none",
       },
     },
@@ -335,7 +336,7 @@ function Archive() {
     border: "1px solid #ccc",
     borderRadius: "8px",
     boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-    zIndex: 0,
+    zIndex: 1000,
     minWidth: "180px",
     overflow: "hidden",
   };
