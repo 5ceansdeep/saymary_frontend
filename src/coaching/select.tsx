@@ -138,16 +138,16 @@ function Select() {
 
     setIsLoading(true);
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 20000);
+    const timer = setTimeout(() => ctrl.abort(), 10 * 60 * 1000);
 
     try {
       const res = await fetch(
         "https://api.saymary.site/api/fastapi/upload_feedback",
         {
           method: "POST",
-          body: fd, // Content-Type 수동 지정 X
-          signal: ctrl.signal,
+          body: fd,
           credentials: "include",
+          cache: "no-store", // 캐시 간섭 방지
         }
       );
       if (!res.ok) {
