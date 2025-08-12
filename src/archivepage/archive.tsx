@@ -1,7 +1,7 @@
 import React from "react";
 import { useState, useEffect, useCallback } from "react";
 import Search from "../img/search.png";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Navigate } from "react-router-dom";
 
 // --- Types ---
 interface FileItem {
@@ -197,8 +197,9 @@ function Archive() {
   // 새 파일 업로드 (라우팅 연결 전 임시)
   const handleNewUpload = (_file: FileItem) => {
     console.log("새 파일 업로드");
-    alert("새 파일 업로드 페이지로 이동합니다!");
+    alert("새 파일 업로드 페이지로 이동합니다.");
     setShowActionMenu({});
+    navigate("/upload");
   };
 
   // 액션 버튼 데이터 배열
