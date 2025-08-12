@@ -16,55 +16,24 @@ export default function LoginState({
 
   // 로그인 상태 평가
   const evaluateAuth = useCallback(() => {
-    try {
-      const userEmail = localStorage.getItem("userEmail");
-      const raw = localStorage.getItem("loginTime");
-      let ok = !!userEmail;
-
-      if (ok && raw) {
-        const t = Number(raw);
-        let hours: number;
-
-        if (Number.isFinite(t)) {
-          hours = (Date.now() - t) / (1000 * 60 * 60);
-        } else {
-          const parsed = new Date(raw).getTime();
-          hours = Number.isFinite(parsed)
-            ? (Date.now() - parsed) / (1000 * 60 * 60)
-            : 0;
-        }
-
-        if (hours > 24) {
-          localStorage.removeItem("userEmail");
-          localStorage.removeItem("loginTime");
-          ok = false;
-        }
-      }
-
-      setIsAuthed(ok);
-      setText(ok ? authedText : unauthText);
-    } catch {
-      setIsAuthed(false);
-      setText(unauthText);
-    }
+    const hasAny = localStorage.length > 0;
+    setIsAuthed(hasAny);
+    setText(hasAny ? authedText : unauthText);
   }, [authedText, unauthText]);
 
   useEffect(() => {
-    evaluateAuth(); // 첫 렌더에서 즉시 평가
+    evaluateAuth();
   }, [evaluateAuth]);
 
-  // 같은 탭 변화 대응: storage(다른 탭), authchange(내 탭), focus(탭 전환)
+  // 같은 탭/다른 탭 변화 모두 반영
   useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === "userEmail" || e.key === "loginTime") evaluateAuth();
-    };
+    const onStorage = () => evaluateAuth(); // 다른 탭
     const onAuthChange = () => evaluateAuth();
     const onFocus = () => evaluateAuth();
 
     window.addEventListener("storage", onStorage);
     window.addEventListener("authchange", onAuthChange);
     window.addEventListener("focus", onFocus);
-
     return () => {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("authchange", onAuthChange);
@@ -81,7 +50,7 @@ export default function LoginState({
     localStorage.removeItem("userInfo");
     localStorage.removeItem("summaryData");
 
-    // 같은 탭에서 즉시 반영되도록
+    // 같은 탭에서 즉시 반영
     window.dispatchEvent(new Event("authchange"));
 
     alert("로그아웃되셨습니다.");
