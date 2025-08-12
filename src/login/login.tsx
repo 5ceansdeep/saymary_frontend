@@ -101,6 +101,10 @@ function Login() {
           localStorage.setItem("loginTime", new Date().toISOString());
         }
 
+        // ✅ 공통 후처리 (항상 찍는다)
+        localStorage.setItem("loginTime", String(Date.now()));
+        window.dispatchEvent(new Event("authchange")); // ← ★ 여기 추가
+        
         // Remember me
         if (rememberMe) {
           localStorage.setItem("rememberedEmail", email);

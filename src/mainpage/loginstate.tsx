@@ -18,18 +18,29 @@ export default function LoginState({
   const evaluateAuth = useCallback(() => {
     try {
       const userEmail = localStorage.getItem("userEmail");
-      const loginTime = localStorage.getItem("loginTime");
+      const raw = localStorage.getItem("loginTime");
       let ok = !!userEmail;
 
-      if (ok && loginTime) {
-        const hours =
-          (Date.now() - new Date(loginTime).getTime()) / (1000 * 60 * 60);
+      if (ok && raw) {
+        const t = Number(raw);
+        let hours: number;
+
+        if (Number.isFinite(t)) {
+          hours = (Date.now() - t) / (1000 * 60 * 60);
+        } else {
+          const parsed = new Date(raw).getTime();
+          hours = Number.isFinite(parsed)
+            ? (Date.now() - parsed) / (1000 * 60 * 60)
+            : 0;
+        }
+
         if (hours > 24) {
           localStorage.removeItem("userEmail");
           localStorage.removeItem("loginTime");
           ok = false;
         }
       }
+
       setIsAuthed(ok);
       setText(ok ? authedText : unauthText);
     } catch {
@@ -39,31 +50,45 @@ export default function LoginState({
   }, [authedText, unauthText]);
 
   useEffect(() => {
-    evaluateAuth();
+    evaluateAuth(); // 첫 렌더에서 즉시 평가
   }, [evaluateAuth]);
 
-  // (선택) 다른 탭에서 localStorage 바뀌면 동기화
+  // 같은 탭 변화 대응: storage(다른 탭), authchange(내 탭), focus(탭 전환)
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key === "userEmail" || e.key === "loginTime") evaluateAuth();
     };
+    const onAuthChange = () => evaluateAuth();
+    const onFocus = () => evaluateAuth();
+
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    window.addEventListener("authchange", onAuthChange);
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("authchange", onAuthChange);
+      window.removeEventListener("focus", onFocus);
+    };
   }, [evaluateAuth]);
 
-// 로그아웃 함수
+  // 로그아웃 함수
   const handleLogout = useCallback(() => {
-    if (!window.confirm("정말 로그아웃할까요?")) return; // 취소 누르면 그대로 종료
+    if (!window.confirm("정말 로그아웃할까요?")) return;
 
     localStorage.removeItem("userEmail");
     localStorage.removeItem("loginTime");
     localStorage.removeItem("userInfo");
     localStorage.removeItem("summaryData");
+
+    // 같은 탭에서 즉시 반영되도록
+    window.dispatchEvent(new Event("authchange"));
+
     alert("로그아웃되셨습니다.");
     navigate("/login");
   }, [navigate]);
 
-// 로그인 함수
+  // 로그인 함수
   const handleLogin = useCallback(() => {
     navigate("/login");
   }, [navigate]);
