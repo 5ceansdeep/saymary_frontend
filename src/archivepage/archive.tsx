@@ -1,7 +1,7 @@
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Search from "../img/search.png";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 // --- Types ---
 interface FileItem {
@@ -27,28 +27,37 @@ interface ActionButton {
 
 function Archive() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const shouldRender = pathname === "/archive"; // ✅ 렌더 플래그
 
   const [files, setFiles] = useState<FileItem[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [showActionMenu, setShowActionMenu] = useState<ActionMenuState>({});
 
   // --- helpers ---
-  const safeParse = <T,>(raw: string | null, fallback: T): T => {
+  const safeParse = useCallback(<T,>(raw: string | null, fallback: T): T => {
     if (!raw) return fallback;
     try {
       return JSON.parse(raw) as T;
     } catch {
       return fallback;
     }
-  };
+  }, []);
 
-  const getSaved = (): FileItem[] =>
-    safeParse<FileItem[]>(localStorage.getItem("archiveFiles"), []);
+  const getSaved = useCallback((): FileItem[] => {
+    const raw = localStorage.getItem("archiveFiles");
+    try {
+      return raw ? (JSON.parse(raw) as FileItem[]) : [];
+    } catch {
+      return [];
+    }
+  }, []);
 
   // localStorage 불러오기
   useEffect(() => {
+    if (!shouldRender) return; // ✅ 효과 내부에서 가지치기
     setFiles(getSaved());
-  }, [getSaved]);
+  }, [shouldRender, getSaved]);
 
   // 검색 실행 함수
   const handleSearch = () => {
@@ -60,7 +69,7 @@ function Archive() {
     }
 
     const keyword = searchTerm.toLowerCase();
-    const filtered = saved.filter((file) => {
+    const filtered = saved.filter((file: FileItem) => {
       const inName = file.originalFileName?.toLowerCase().includes(keyword);
       const inTranscript = file.transcript?.toLowerCase().includes(keyword);
       const inS1 = file.summary1?.toLowerCase().includes(keyword);
@@ -120,7 +129,7 @@ function Archive() {
       return;
 
     const saved = getSaved();
-    const updated = saved.filter((f) => f.fileId !== fileToDelete.fileId);
+    const updated = saved.filter((file) => file.fileId !== fileToDelete.fileId);
 
     localStorage.setItem("archiveFiles", JSON.stringify(updated));
     setFiles(updated);
@@ -186,7 +195,7 @@ function Archive() {
   };
 
   // 새 파일 업로드 (라우팅 연결 전 임시)
-  const handleNewUpload = () => {
+  const handleNewUpload = (_file: FileItem) => {
     console.log("새 파일 업로드");
     alert("새 파일 업로드 페이지로 이동합니다!");
     setShowActionMenu({});
@@ -359,6 +368,8 @@ function Archive() {
     color: "#666",
   };
 
+  if (!shouldRender) return null;
+
   return (
     <div
       style={{
@@ -406,7 +417,9 @@ function Archive() {
           overflowX: "hidden",
         }}
       >
-        <h1 style={archiveTitleStyle}>누군가의 보관함</h1>
+        <h1 style={archiveTitleStyle}>
+          {localStorage.userEmail || "누군가"}의 보관함
+        </h1>
 
         {/* 검색 박스 */}
         <div style={searchBoxStyle}>
@@ -439,7 +452,7 @@ function Archive() {
               {searchTerm ? "검색 결과가 없습니다." : "저장된 파일이 없습니다."}
             </div>
           ) : (
-            files.map((file, idx) => {
+            files.map((file: FileItem, idx: number) => {
               const key = file.fileId ?? idx;
               return (
                 <div

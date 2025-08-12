@@ -10,6 +10,7 @@ import Coach from "./coaching/coach";
 import UploadFile from "./mainpage/uploadFile";
 import Sidebar from "./mainpage/sideBar";
 import Archive from "./archivepage/archive";
+import LoginState from "./mainpage/loginstate"
 
 import {
   BrowserRouter as Router,
@@ -37,6 +38,7 @@ function App() {
             path="/upload"
             element={
               <Sidebar>
+                <LoginState />
                 <UploadFile />
               </Sidebar>
             }
@@ -45,6 +47,7 @@ function App() {
             path="/main"
             element={
               <Sidebar>
+                <LoginState />
                 <Main />
               </Sidebar>
             }
@@ -55,6 +58,7 @@ function App() {
             path="/coaching"
             element={
               <Sidebar>
+                <LoginState />
                 <Select />
               </Sidebar>
             }
@@ -63,6 +67,7 @@ function App() {
             path="/coaching/select"
             element={
               <Sidebar>
+                <LoginState />
                 <Select />
               </Sidebar>
             }
@@ -74,6 +79,7 @@ function App() {
             path="/archive"
             element={
               <Sidebar>
+                <LoginState />
                 <Archive />
               </Sidebar>
             }

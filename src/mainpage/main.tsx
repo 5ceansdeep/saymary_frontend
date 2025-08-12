@@ -152,15 +152,7 @@ function Main() {
     navigate("/upload");
   };
 
-  // 로그아웃 (필요 시 UI에서 사용)
-  const handleLogout = () => {
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("loginTime");
-    localStorage.removeItem("userInfo");
-    localStorage.removeItem("summaryData");
-    alert("로그아웃되셨습니다.");
-    navigate("/login", { replace: true });
-  };
+
 
   const getSummaryTypeName = (buttonId: SummaryButtonId | null) => {
     switch (buttonId) {
