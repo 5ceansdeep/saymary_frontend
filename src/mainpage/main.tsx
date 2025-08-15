@@ -28,19 +28,19 @@ function Main() {
   );
   const [summaryData, setSummaryData] = useState<SummaryData | null>(null);
   const [currentSummary, setCurrentSummary] = useState<string>("");
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  // const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const BoxRef = useRef<HTMLDivElement | null>(null);
 
   // 박스 등장 애니메이션
   useEffect(() => {
-    if (!isAuthenticated) return;
+    // if (!isAuthenticated) return;
     const t = window.setTimeout(() => setAnimate1(true), 500);
     return () => window.clearTimeout(t);
-  }, [isAuthenticated]);
+  }, []);
 
   // 요약 데이터 로드 (인증 후)
   useEffect(() => {
-    if (!isAuthenticated) return;
+    // if (!isAuthenticated) return;
 
     const saved = localStorage.getItem("summaryData");
     if (saved) {
@@ -74,7 +74,7 @@ function Main() {
     setSummaryData(defaultData);
     setActiveButton("간단요약");
     setCurrentSummary(defaultData.간단요약!);
-  }, [isAuthenticated]);
+  }, []);
 
   // 스크롤
   const scrollToBottom = () => {
@@ -238,24 +238,24 @@ function Main() {
   ] as const;
 
   // 인증 중 화면
-  if (!isAuthenticated) {
-    return (
-      <div
-        style={{
-          backgroundColor: "#00492C",
-          height: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          color: "#F2C81B",
-          fontSize: "18px",
-          fontFamily: "Noto Sans KR, sans-serif",
-        }}
-      >
-        인증 확인 중...
-      </div>
-    );
-  }
+  // if (!isAuthenticated) {
+  //   return (
+  //     <div
+  //       style={{
+  //         backgroundColor: "#00492C",
+  //         height: "100vh",
+  //         display: "flex",
+  //         justifyContent: "center",
+  //         alignItems: "center",
+  //         color: "#F2C81B",
+  //         fontSize: "18px",
+  //         fontFamily: "Noto Sans KR, sans-serif",
+  //       }}
+  //     >
+  //       인증 확인 중...
+  //     </div>
+  //   );
+  // }
 
   return (
     <div

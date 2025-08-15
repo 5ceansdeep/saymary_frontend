@@ -47,13 +47,10 @@ function UploadFile() {
   // 세션 기반 인증 확인
   const checkAuthStatus = useCallback(async (): Promise<boolean> => {
     try {
-      const response = await fetch(
-        "https://api.saymary.site/api/user/me",
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
+      const response = await fetch("https://api.saymary.site/api/user/me", {
+        method: "GET",
+        credentials: "include",
+      });
 
       return response.status === 200;
     } catch {
@@ -66,13 +63,13 @@ function UploadFile() {
     const t = window.setTimeout(() => setAnimate1(true), 100);
 
     (async () => {
-      const ok = await checkAuthStatus();
-      if (!ok) {
-        navigate("/login");
-        return;
-      }
+      // const ok = await checkAuthStatus();
+      // if (!ok) {
+      //   navigate("/login");
+      //   return;
+      // }
     })();
-  }, [checkAuthStatus, navigate]);
+  }, []);
 
   const resetUploadState = useCallback(() => {
     setIsUploading(false);
@@ -178,10 +175,10 @@ function UploadFile() {
       }, 500);
 
       try {
-        const isAuthenticated = await checkAuthStatus();
-        if (!isAuthenticated) {
-          throw new Error("로그인이 필요합니다. 다시 로그인해주세요.");
-        }
+        // const isAuthenticated = await checkAuthStatus();
+        // if (!isAuthenticated) {
+        //   throw new Error("로그인이 필요합니다. 다시 로그인해주세요.");
+        // }
 
         const formData = new FormData();
         formData.append("file", file);
@@ -342,7 +339,7 @@ function UploadFile() {
       }
     },
     [
-      checkAuthStatus,
+      // checkAuthStatus,
       fetchWithTimeout,
       navigate,
       safeParseResponse,
@@ -354,12 +351,12 @@ function UploadFile() {
   const handleFileUpload = useCallback(
     async (file: File) => {
       try {
-        const ok = await checkAuthStatus();
-        if (!ok) {
-          alert("로그인이 필요합니다. 로그인 페이지로 이동합니다.");
-          navigate("/login");
-          return;
-        }
+        // const ok = await checkAuthStatus();
+        // if (!ok) {
+        //   alert("로그인이 필요합니다. 로그인 페이지로 이동합니다.");
+        //   navigate("/login");
+        //   return;
+        // }
 
         validateFile(file);
         setSelectedFile(file);
@@ -371,7 +368,7 @@ function UploadFile() {
         resetUploadState();
       }
     },
-    [checkAuthStatus, navigate, resetUploadState, uploadFileToAPI, validateFile]
+    [navigate, resetUploadState, uploadFileToAPI, validateFile]
   );
 
   // 이벤트 핸들러
