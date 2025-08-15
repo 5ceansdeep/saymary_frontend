@@ -1,11 +1,5 @@
 // src/mainpage/uploadFile.tsx
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 type Summaries = {
@@ -54,21 +48,15 @@ function UploadFile() {
   const checkAuthStatus = useCallback(async (): Promise<boolean> => {
     try {
       const response = await fetch(
-        "https://api.saymary.site/api/user/reset-password",
+        "https://api.saymary.site/api/user/me",
         {
           method: "GET",
           credentials: "include",
         }
       );
 
-      if (response.ok) {
-        return true;
-      } else {
-        console.log("인증되지 않은 상태");
-        return false;
-      }
-    } catch (e) {
-      console.error("인증 상태 확인 중 오류:", e);
+      return response.status === 200;
+    } catch {
       return false;
     }
   }, []);
@@ -80,13 +68,10 @@ function UploadFile() {
     (async () => {
       const ok = await checkAuthStatus();
       if (!ok) {
-        console.warn("인증되지 않은 상태입니다. 로그인 페이지로 이동합니다.");
         navigate("/login");
         return;
       }
     })();
-
-    return () => window.clearTimeout(t);
   }, [checkAuthStatus, navigate]);
 
   const resetUploadState = useCallback(() => {

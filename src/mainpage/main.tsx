@@ -31,41 +31,6 @@ function Main() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const BoxRef = useRef<HTMLDivElement | null>(null);
 
-  // 인증 확인
-  const checkAuthStatus = useCallback(async (): Promise<boolean> => {
-    try {
-      const response = await fetch(
-        "https://api.saymary.site/api/reset-password",
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
-      
-      if (response.ok) {
-        return true;
-      } else {
-        return false;
-      }
-    } catch (e) {
-      console.error("인증 상태 확인 중 오류:", e);
-      return false;
-    }
-  }, []);
-
-  // 페이지 로드 시 인증 확인
-  useEffect(() => {
-    const verifyAuth = async () => {
-      const ok = await checkAuthStatus();
-      if (!ok) {
-        console.warn("인증되지 않은 상태이지만 임시로 허용");
-        // 필요 시 navigate("/login");
-      }
-      setIsAuthenticated(true);
-    };
-    verifyAuth();
-  }, [checkAuthStatus]);
-
   // 박스 등장 애니메이션
   useEffect(() => {
     if (!isAuthenticated) return;

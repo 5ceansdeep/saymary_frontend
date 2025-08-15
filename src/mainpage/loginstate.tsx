@@ -17,7 +17,7 @@ export default function LoginState({
   // 세션 기반 로그인 상태 평가
   const evaluateAuth = useCallback(async () => {
     try {
-      const response = await fetch("https://api.saymary.site/api/reset-password", {
+      const response = await fetch("https://api.saymary.site/api/user/me", {
         method: "GET",
         credentials: "include",
       });
