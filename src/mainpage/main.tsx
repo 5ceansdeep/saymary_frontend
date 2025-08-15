@@ -34,10 +34,13 @@ function Main() {
   // 인증 확인
   const checkAuthStatus = useCallback(async (): Promise<boolean> => {
     try {
-      const response = await fetch("https://api.saymary.site/api/user/me", {
-        method: "GET",
-        credentials: "include",
-      });
+      const response = await fetch(
+        "https://api.saymary.site/api/reset-password",
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
       
       if (response.ok) {
         return true;
