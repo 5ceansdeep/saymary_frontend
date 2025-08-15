@@ -53,11 +53,14 @@ function UploadFile() {
   // 세션 기반 인증 확인
   const checkAuthStatus = useCallback(async (): Promise<boolean> => {
     try {
-      const response = await fetch("https://api.saymary.site/api/user/me", {
-        method: "GET",
-        credentials: "include",
-      });
-      
+      const response = await fetch(
+        "https://api.saymary.site/api/user/reset-password",
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
       if (response.ok) {
         return true;
       } else {
@@ -223,8 +226,8 @@ function UploadFile() {
         console.log("=== API 응답 데이터 ===");
         console.log("Raw Result:", result);
         console.log("Result Type:", typeof result);
-        console.log("Is String:", typeof result === 'string');
-        console.log("Is Object:", typeof result === 'object');
+        console.log("Is String:", typeof result === "string");
+        console.log("Is Object:", typeof result === "object");
 
         const buildSummary = (data: ApiJson): SummaryData => {
           if (typeof data === "string") {
