@@ -75,43 +75,19 @@ function Login() {
       console.log("서버 응답:", result);
 
       if (response.ok) {
-        // 로그인 성공 → 사용자 정보 시도
-        try {
-          const userResponse = await fetch(
-            "https://api.saymary.site/api/user/me",
-            { method: "GET", credentials: "include" }
-          );
-
-          if (userResponse.ok) {
-            const userData = (await userResponse.json()) as {
-              email?: string;
-              [k: string]: unknown;
-            };
-            console.log("사용자 정보:", userData);
-            localStorage.setItem("userEmail", userData.email ?? email);
-            localStorage.setItem("userInfo", JSON.stringify(userData));
-          } else {
-            console.warn("사용자 정보 호출 실패, 로그인은 성공 처리");
-            localStorage.setItem("userEmail", email);
-            localStorage.setItem("loginTime", new Date().toISOString());
-          }
-        } catch (userInfoError) {
-          console.warn("사용자 정보 요청 실패:", userInfoError);
-          localStorage.setItem("userEmail", email);
-          localStorage.setItem("loginTime", new Date().toISOString());
-        }
-
-        // ✅ 공통 후처리 (항상 찍는다)
-        localStorage.setItem("loginTime", String(Date.now()));
-        window.dispatchEvent(new Event("authchange")); // ← ★ 여기 추가
+        // 로그인 성공 - 세션이 서버에서 자동 생성됨
+        console.log("로그인 성공, 세션 쿠키가 설정되었습니다.");
         
-        // Remember me
+        // Remember me 기능만 로컬에 저장
         if (rememberMe) {
           localStorage.setItem("rememberedEmail", email);
         } else {
           localStorage.removeItem("rememberedEmail");
         }
 
+        // 인증 상태 변경 이벤트 발생
+        window.dispatchEvent(new Event("authchange"));
+        
         alert("로그인 성공!");
         navigate("/upload");
       } else {

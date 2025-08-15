@@ -1,65 +1,70 @@
 // 인증 관련 유틸리티 함수들
 
-/** localStorage 기반 인증 상태 확인 (24시간 유효) */
+/** 세션/쿠키 기반 인증 상태 확인 */
 export const checkAuthStatus = async (): Promise<boolean> => {
   try {
-    const userEmail = localStorage.getItem("userEmail");
-    const loginTime = localStorage.getItem("loginTime");
+    const response = await fetch("https://api.saymary.site/api/user/me", {
+      method: "GET",
+      credentials: "include", // 쿠키 포함
+    });
 
-    if (!userEmail) {
-      console.log("등록되지 않은 이메일 입니다");
+    if (response.ok) {
+      const userData = await response.json();
+      console.log("인증된 사용자:", userData);
+      return true;
+    } else {
+      console.log("인증되지 않은 상태");
       return false;
     }
-
-    // 로그인 시간이 24시간 이내인지 확인
-    if (loginTime) {
-      const loginDate = new Date(loginTime);
-      const now = new Date();
-      const hoursDiff =
-        (now.getTime() - loginDate.getTime()) / (1000 * 60 * 60);
-
-      if (hoursDiff > 24) {
-        console.warn("로그인 시간이 24시간을 초과했습니다.");
-        localStorage.removeItem("userEmail");
-        localStorage.removeItem("userNickname");
-        localStorage.removeItem("loginTime");
-        return false;
-      }
-    }
-
-    return true; // localStorage에 유효한 정보가 있으면 인증됨으로 처리
   } catch (e) {
-    // (Optional) SSR/프라이빗 모드 등에서 localStorage 접근 실패 대비
     console.error("인증 상태 확인 중 오류:", e);
     return false;
   }
 };
 
-/** 사용자 정보 저장 */
-export const saveUserInfo = (email: string, nickname: string): void => {
-  localStorage.setItem("userEmail", email);
-  localStorage.setItem("userNickname", nickname);
-  localStorage.setItem("loginTime", new Date().toISOString());
-};
-
-export interface StoredUserInfo {
-  email: string | null;
-  nickname: string | null;
-  loginTime: string | null; // ISO string
+export interface UserInfo {
+  email: string;
+  nickname?: string;
+  [key: string]: unknown;
 }
 
-/** 사용자 정보 가져오기 */
-export const getUserInfo = (): StoredUserInfo => {
-  return {
-    email: localStorage.getItem("userEmail"),
-    nickname: localStorage.getItem("userNickname"),
-    loginTime: localStorage.getItem("loginTime"),
-  };
+/** 세션에서 사용자 정보 가져오기 */
+export const getUserInfo = async (): Promise<UserInfo | null> => {
+  try {
+    const response = await fetch("https://api.saymary.site/api/user/me", {
+      method: "GET",
+      credentials: "include",
+    });
+
+    if (response.ok) {
+      const userData = await response.json();
+      return userData as UserInfo;
+    } else {
+      return null;
+    }
+  } catch (e) {
+    console.error("사용자 정보 조회 중 오류:", e);
+    return null;
+  }
 };
 
-/** 로그아웃 (사용자 정보 삭제) */
-export const logout = (): void => {
-  localStorage.removeItem("userEmail");
-  localStorage.removeItem("userNickname");
-  localStorage.removeItem("loginTime");
+/** 로그아웃 (세션 종료) */
+export const logout = async (): Promise<boolean> => {
+  try {
+    const response = await fetch("https://api.saymary.site/api/user/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+
+    if (response.ok) {
+      console.log("로그아웃 성공");
+      return true;
+    } else {
+      console.error("로그아웃 실패:", response.status);
+      return false;
+    }
+  } catch (e) {
+    console.error("로그아웃 중 오류:", e);
+    return false;
+  }
 };

@@ -14,47 +14,67 @@ export default function LoginState({
   const [text, setText] = useState("확인 중...");
   const navigate = useNavigate();
 
-  // 로그인 상태 평가
-  const evaluateAuth = useCallback(() => {
-    const hasAny = localStorage.length > 0;
-    setIsAuthed(hasAny);
-    setText(hasAny ? authedText : unauthText);
+  // 세션 기반 로그인 상태 평가
+  const evaluateAuth = useCallback(async () => {
+    try {
+      const response = await fetch("https://api.saymary.site/api/user/me", {
+        method: "GET",
+        credentials: "include",
+      });
+      
+      const authenticated = response.ok;
+      setIsAuthed(authenticated);
+      setText(authenticated ? authedText : unauthText);
+    } catch (e) {
+      console.error("인증 상태 확인 중 오류:", e);
+      setIsAuthed(false);
+      setText(unauthText);
+    }
   }, [authedText, unauthText]);
 
   useEffect(() => {
     evaluateAuth();
   }, [evaluateAuth]);
 
-  // 같은 탭/다른 탭 변화 모두 반영
+  // 주기적 인증 상태 확인 (필요시)
   useEffect(() => {
-    const onStorage = () => evaluateAuth(); // 다른 탭
-    const onAuthChange = () => evaluateAuth();
     const onFocus = () => evaluateAuth();
+    const onAuthChange = () => evaluateAuth();
 
-    window.addEventListener("storage", onStorage);
-    window.addEventListener("authchange", onAuthChange);
     window.addEventListener("focus", onFocus);
+    window.addEventListener("authchange", onAuthChange);
+    
     return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("authchange", onAuthChange);
       window.removeEventListener("focus", onFocus);
+      window.removeEventListener("authchange", onAuthChange);
     };
   }, [evaluateAuth]);
 
-  // 로그아웃 함수
-  const handleLogout = useCallback(() => {
+  // 세션 기반 로그아웃 함수
+  const handleLogout = useCallback(async () => {
     if (!window.confirm("정말 로그아웃할까요?")) return;
 
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("loginTime");
-    localStorage.removeItem("userInfo");
-    localStorage.removeItem("summaryData");
+    try {
+      const response = await fetch("https://api.saymary.site/api/user/logout", {
+        method: "POST",
+        credentials: "include",
+      });
 
-    // 같은 탭에서 즉시 반영
-    window.dispatchEvent(new Event("authchange"));
-
-    alert("로그아웃되셨습니다.");
-    navigate("/login");
+      if (response.ok) {
+        // 로컬에 저장된 임시 데이터도 정리
+        localStorage.removeItem("summaryData");
+        localStorage.removeItem("archiveFiles");
+        
+        window.dispatchEvent(new Event("authchange"));
+        alert("로그아웃되셨습니다.");
+        navigate("/login");
+      } else {
+        alert("로그아웃 중 오류가 발생했습니다.");
+      }
+    } catch (e) {
+      console.error("로그아웃 중 오류:", e);
+      alert("로그아웃 중 오류가 발생했습니다.");
+    }
   }, [navigate]);
 
   // 로그인 함수

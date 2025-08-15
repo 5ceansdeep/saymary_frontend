@@ -33,23 +33,21 @@ function Main() {
 
   // 인증 확인
   const checkAuthStatus = useCallback(async (): Promise<boolean> => {
-    const userEmail = localStorage.getItem("userEmail");
-    const loginTime = localStorage.getItem("loginTime");
-    if (!userEmail) return false;
-
-    if (loginTime) {
-      const hoursDiff =
-        (new Date().getTime() - new Date(loginTime).getTime()) /
-        (1000 * 60 * 60);
-      if (hoursDiff > 24) {
-        console.warn("로그인 시간이 24시간을 초과했습니다.");
-        localStorage.removeItem("userEmail");
-        localStorage.removeItem("loginTime");
-        localStorage.removeItem("userInfo");
+    try {
+      const response = await fetch("https://api.saymary.site/api/user/me", {
+        method: "GET",
+        credentials: "include",
+      });
+      
+      if (response.ok) {
+        return true;
+      } else {
         return false;
       }
+    } catch (e) {
+      console.error("인증 상태 확인 중 오류:", e);
+      return false;
     }
-    return true;
   }, []);
 
   // 페이지 로드 시 인증 확인
@@ -152,8 +150,6 @@ function Main() {
     navigate("/upload");
   };
 
-
-
   const getSummaryTypeName = (buttonId: SummaryButtonId | null) => {
     switch (buttonId) {
       case "간단요약":
@@ -246,14 +242,14 @@ function Main() {
     {
       id: "copy",
       text: "텍스트 복사",
-      title: "원본 텍스트와 선택된 요약을 클립보드에 복사합니다",
+      title: "원본 텍스트와 선택된 요약을 클립보드에 복사",
       onClick: copyToClipboard,
       style: { backgroundColor: "#f0f0f0", color: "#656247", border: "none" },
     },
     {
       id: "export",
       text: "txt 파일로 내보내기",
-      title: "원본 텍스트와 선택된 요약을 텍스트 파일로 다운로드합니다",
+      title: "원본 텍스트와 선택된 요약을 텍스트 파일로 다운로드",
       onClick: exportToFile,
       style: { backgroundColor: "#f0f0f0", color: "#656247", border: "none" },
     },
@@ -271,14 +267,6 @@ function Main() {
       onClick: handleNewUpload,
       style: { backgroundColor: "#00492C", color: "white", border: "none" },
     },
-    // // 필요 시 로그아웃 버튼 사용
-    // {
-    //   id: "logout",
-    //   text: "로그아웃",
-    //   title: "세션을 종료합니다",
-    //   onClick: handleLogout,
-    //   style: { backgroundColor: "#e74c3c", color: "white", border: "none" },
-    // },
   ] as const;
 
   // 인증 중 화면
@@ -449,7 +437,7 @@ function Main() {
                   onMouseLeave={(e) => {
                     const el = e.currentTarget as HTMLButtonElement;
                     el.style.backgroundColor =
-                      (btn.style as any)?.backgroundColor || "white";
+                      (btn.style as any)?.backgroundColor || "#e8e7e0ff";
                   }}
                   title={btn.title}
                 >
@@ -482,14 +470,14 @@ function Main() {
             backgroundColor: "#ECEAD5",
             fontFamily: "Noto Sans KR, sans-serif",
             fontWeight: 400,
-            fontSize: "12px",
+            fontSize: "0.8rem",
             marginTop: "20px",
             marginLeft: "7%",
             marginRight: "8%",
             paddingTop: "40px",
             paddingBottom: "50px",
-            paddingLeft: "40px",
-            paddingRight: "40px",
+            paddingLeft: "10%",
+            paddingRight: "10%",
             lineHeight: "2",
             borderRadius: "10px",
             whiteSpace: "pre-line",
@@ -552,7 +540,7 @@ function Main() {
                   color: "#000000",
                   fontFamily: "Noto Sans KR, sans-serif",
                   fontWeight: 500,
-                  fontSize: "0.7rem",
+                  fontSize: "0.6rem",
                   cursor: "pointer",
                   marginTop: "15px",
                   transition: "all 0.3s ease-in-out",
@@ -578,9 +566,9 @@ function Main() {
               color: "#4a4332",
               backgroundColor: "#ECEAD5",
               fontFamily: "Noto Sans KR, sans-serif",
-              fontWeight: 400,
-              fontSize: "13px",
-              padding: "30px",
+              fontWeight: 500,
+              fontSize: "0.8rem",
+              padding: "10%",
               lineHeight: "2.2",
               borderRadius: "10px",
               whiteSpace: "pre-line",

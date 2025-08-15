@@ -50,23 +50,24 @@ function UploadFile() {
 
   const progressIntervalRef = useRef<number | null>(null);
 
-  // 간단 인증 확인
+  // 세션 기반 인증 확인
   const checkAuthStatus = useCallback(async (): Promise<boolean> => {
-    const userEmail = localStorage.getItem("userEmail");
-    const loginTime = localStorage.getItem("loginTime");
-    if (!userEmail) return false;
-
-    if (loginTime) {
-      const hoursDiff =
-        (Date.now() - new Date(loginTime).getTime()) / (1000 * 60 * 60);
-      if (hoursDiff > 24) {
-        console.warn("로그인 시간이 24시간을 초과했습니다.");
-        localStorage.removeItem("userEmail");
-        localStorage.removeItem("loginTime");
+    try {
+      const response = await fetch("https://api.saymary.site/api/user/me", {
+        method: "GET",
+        credentials: "include",
+      });
+      
+      if (response.ok) {
+        return true;
+      } else {
+        console.log("인증되지 않은 상태");
         return false;
       }
+    } catch (e) {
+      console.error("인증 상태 확인 중 오류:", e);
+      return false;
     }
-    return true;
   }, []);
 
   // 마운트 애니메이션 + 인증 체크
@@ -75,11 +76,15 @@ function UploadFile() {
 
     (async () => {
       const ok = await checkAuthStatus();
-      if (!ok) console.warn("인증되지 않은 상태입니다.");
+      if (!ok) {
+        console.warn("인증되지 않은 상태입니다. 로그인 페이지로 이동합니다.");
+        navigate("/login");
+        return;
+      }
     })();
 
     return () => window.clearTimeout(t);
-  }, [checkAuthStatus]);
+  }, [checkAuthStatus, navigate]);
 
   const resetUploadState = useCallback(() => {
     setIsUploading(false);
@@ -187,7 +192,7 @@ function UploadFile() {
       try {
         const isAuthenticated = await checkAuthStatus();
         if (!isAuthenticated) {
-          console.warn("인증되지 않았지만 API 호출 진행");
+          throw new Error("로그인이 필요합니다. 다시 로그인해주세요.");
         }
 
         const formData = new FormData();
@@ -270,47 +275,8 @@ function UploadFile() {
           return; // ← 이게 없어서 아래 에러 처리로 떨어졌던 거
         }
 
-        // 401 처리 (로컬 시뮬)
+        // 401 인증 오류 처리
         if (response.status === 401) {
-          const userEmail = localStorage.getItem("userEmail");
-          const loginTime = localStorage.getItem("loginTime");
-          if (userEmail && loginTime) {
-            const fileBaseName = file.name.replace(/\.[^/.]+$/, "");
-            let simulatedContent = "";
-            const n = file.name.toLowerCase();
-            if (n.includes("voicetext") || n.includes("voice")) {
-              simulatedContent =
-                "안녕하세요. 이것은 음성 텍스트 변환 테스트입니다. 음성 인식 기능이 정상적으로 작동하고 있으며, 사용자의 발화 내용이 텍스트로 변환되었습니다.";
-            } else if (n.includes("meeting") || n.includes("회의")) {
-              simulatedContent =
-                "오늘 회의에서는 프로젝트 진행 상황과 다음 주 일정에 대해 논의했습니다. 주요 이슈들이 해결되었고, 팀원들의 역할 분담이 명확해졌습니다.";
-            } else if (n.includes("interview") || n.includes("인터뷰")) {
-              simulatedContent =
-                "인터뷰에서 지원자의 경험과 역량에 대해 자세히 들어볼 수 있었습니다. 기술적 스킬과 소통 능력 모두 우수한 것으로 평가됩니다.";
-            } else {
-              simulatedContent = `${fileBaseName} 파일의 음성 내용이 성공적으로 텍스트로 변환되었습니다. 음성 인식 품질이 우수하며, 주요 내용들이 정확하게 변환되었습니다. 전체적으로 명확한 발음과 적절한 속도로 진행된 음성이었습니다.`;
-            }
-
-            const summaryData: SummaryData = {
-              text: simulatedContent,
-              간단요약:
-                "음성 파일이 성공적으로 텍스트로 변환되었으며, 주요 내용이 명확하게 인식되었습니다.",
-              상세요약: `${simulatedContent} 음성 품질이 우수하여 높은 정확도로 변환이 완료되었습니다. 발화자의 의도와 맥락이 잘 파악되었으며, 전체적인 내용 구조가 논리적으로 구성되어 있습니다. 추가적인 편집이나 수정 없이도 활용 가능한 수준의 텍스트가 생성되었습니다.`,
-              키워드요약: `• 음성 인식 완료\n• 텍스트 변환 성공\n• 높은 정확도\n• 명확한 발음\n• ${
-                n.includes("meeting")
-                  ? "회의 내용"
-                  : n.includes("interview")
-                  ? "인터뷰 진행"
-                  : "음성 콘텐츠"
-              }\n• 품질 우수\n• 활용 가능`,
-              fileName: file.name,
-              uploadTime: new Date().toLocaleString(),
-            };
-
-            localStorage.setItem("summaryData", JSON.stringify(summaryData));
-            setTimeout(() => navigate("/main", { replace: true }), 800);
-            return;
-          }
           throw new Error("로그인이 필요합니다. 다시 로그인해주세요.");
         }
 
@@ -392,7 +358,11 @@ function UploadFile() {
     async (file: File) => {
       try {
         const ok = await checkAuthStatus();
-        if (!ok) console.warn("인증되지 않았지만 업로드 진행");
+        if (!ok) {
+          alert("로그인이 필요합니다. 로그인 페이지로 이동합니다.");
+          navigate("/login");
+          return;
+        }
 
         validateFile(file);
         setSelectedFile(file);
@@ -404,7 +374,7 @@ function UploadFile() {
         resetUploadState();
       }
     },
-    [checkAuthStatus, resetUploadState, uploadFileToAPI, validateFile]
+    [checkAuthStatus, navigate, resetUploadState, uploadFileToAPI, validateFile]
   );
 
   // 이벤트 핸들러
@@ -469,7 +439,7 @@ function UploadFile() {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   };
 
-  const userEmail = useMemo(() => localStorage.getItem("userEmail"), []);
+  // userEmail은 더 이상 로컬에서 가져오지 않음 (세션 기반으로 변경됨)
 
   // interval 누수 방지
   useEffect(() => {

@@ -33,6 +33,7 @@ function Archive() {
   const [files, setFiles] = useState<FileItem[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [showActionMenu, setShowActionMenu] = useState<ActionMenuState>({});
+  const [userEmail, setUserEmail] = useState<string>("사용자");
 
   // --- helpers ---
   const safeParse = useCallback(<T,>(raw: string | null, fallback: T): T => {
@@ -53,9 +54,27 @@ function Archive() {
     }
   }, []);
 
-  // localStorage 불러오기
+  // 사용자 정보 불러오기 및 파일 목록 불러오기
   useEffect(() => {
-    if (!shouldRender) return; // ✅ 효과 내부에서 가지치기
+    if (!shouldRender) return;
+    
+    const fetchUserInfo = async () => {
+      try {
+        const response = await fetch("https://api.saymary.site/api/user/me", {
+          method: "GET",
+          credentials: "include",
+        });
+        
+        if (response.ok) {
+          const userData = await response.json();
+          setUserEmail(userData.email || "사용자");
+        }
+      } catch (e) {
+        console.error("사용자 정보 조회 오류:", e);
+      }
+    };
+    
+    fetchUserInfo();
     setFiles(getSaved());
   }, [shouldRender, getSaved]);
 
@@ -210,7 +229,7 @@ function Archive() {
       title: "원본 텍스트와 선택된 요약을 클립보드에 복사합니다",
       onClick: copyToClipboard,
       style: {
-        backgroundColor: "#ecead5",
+        backgroundColor: "#f0f0f0",
         color: "#333",
         border: "none",
       },
@@ -222,7 +241,7 @@ function Archive() {
       title: "원본 텍스트와 선택된 요약을 텍스트 파일로 다운로드합니다",
       onClick: exportToFile,
       style: {
-        backgroundColor: "#ecead5",
+        backgroundColor: "#f0f0f0",
         color: "#333",
         border: "none",
       },
@@ -234,7 +253,7 @@ function Archive() {
       title: "이 파일을 보관함에서 삭제합니다",
       onClick: deleteFile,
       style: {
-        backgroundColor: "#ecead5",
+        backgroundColor: "#f0f0f0",
         color: "#B22222",
         border: "none",
       },
@@ -419,7 +438,7 @@ function Archive() {
         }}
       >
         <h1 style={archiveTitleStyle}>
-          {localStorage.userEmail || "누군가"}의 보관함
+          {userEmail}의 보관함
         </h1>
 
         {/* 검색 박스 */}
@@ -525,7 +544,7 @@ function Archive() {
                               if (button.id === "newUpload") {
                                 target.style.backgroundColor = "#005a35";
                               } else {
-                                target.style.backgroundColor = "#f0f0f0";
+                                target.style.backgroundColor = "#e8e7e0ff";
                               }
                             }}
                             onMouseLeave={(e) => {
