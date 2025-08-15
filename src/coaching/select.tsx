@@ -141,17 +141,17 @@ function Select() {
     const timer = setTimeout(() => ctrl.abort(), 10 * 60 * 1000);
 
     try {
-      const res = await fetch(
-        "https://api.saymary.site/api/fastapi/upload_feedback",
-        {
-          method: "POST",
-          body: fd,
-          credentials: "include",
-          cache: "no-store", // 캐시 간섭 방지
-        }
-      );
+      // const res = await fetch(
+      //   "https://api.saymary.site/api/fastapi/upload_feedback",
+      //   {
+      //     method: "POST",
+      //     body: fd,
+      //     credentials: "include",
+      //     cache: "no-store", // 캐시 간섭 방지
+      //   }
+      // );
 
-      const response = await fetch(
+      const res = await fetch(
         "https://api.saymary.site/api/coaching/feedback",
         {
           method: "POST",
