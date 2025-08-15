@@ -72,6 +72,7 @@ function Coach() {
   const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null);
   const [sessionData, setSessionData] = useState<SessionData | null>(null);
   const [showActionButtons, setShowActionButtons] = useState<boolean>(false);
+  const [showActionMenu, setShowActionMenu] = useState<Record<string, boolean>>({});
   const [activeTab, setActiveTab] = useState<TabId>("summary"); // 우측 탭 상태 기본값
 
   const BoxRef = useRef<HTMLDivElement | null>(null);
@@ -245,8 +246,9 @@ function Coach() {
   };
 
   // exportButton 클릭 핸들러
-  const handleExportButtonClick = () => {
-    setShowActionButtons((prev) => !prev);
+  const handleExportButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowActionMenu((prev) => ({ ...prev, main: !prev.main }));
   };
 
   // 새로운 코칭 시작
@@ -334,8 +336,8 @@ function Coach() {
       title: "코칭 피드백을 클립보드에 복사합니다",
       onClick: copyToClipboard,
       style: {
-        backgroundColor: "#ecead5",
-        color: "white",
+        backgroundColor: "#ffffffff",
+        color: "#000000",
         border: "none",
       },
     },
@@ -345,8 +347,8 @@ function Coach() {
       title: "코칭 피드백을 텍스트 파일로 다운로드합니다",
       onClick: exportToFile,
       style: {
-        backgroundColor: "#ecead5",
-        color: "white",
+        backgroundColor: "#ffffffff",
+        color: "#000000",
         border: "none",
       },
     },
@@ -609,6 +611,11 @@ function Coach() {
     }
   };
 
+  // 외부 클릭 시 액션 메뉴 닫기
+  const handleOutsideClick = () => {
+    setShowActionMenu({});
+  };
+
   return (
     <div
       className="custom-scroll"
@@ -620,6 +627,7 @@ function Coach() {
         margin: "0px",
         position: "relative",
       }}
+      onClick={handleOutsideClick}
     >
       {/* 좌측 영역 - 원본 텍스트 */}
       <div
@@ -674,62 +682,59 @@ function Coach() {
                 display: "inline-block",
               }}
             >
-              . . .{/* 액션 버튼들 */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: "0",
-                  zIndex: 1001,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "8px",
-                  marginTop: "5px",
-                  opacity: showActionButtons ? 1 : 0,
-                  transform: showActionButtons
-                    ? "translateY(0)"
-                    : "translateY(-10px)",
-                  transition: "all 0.3s ease-in-out",
-                  visibility: showActionButtons ? "visible" : "hidden",
-                  pointerEvents: showActionButtons ? "auto" : "none",
-                }}
-              >
-                {actionButtons.map((button) => (
-                  <button
-                    key={button.id}
-                    title={button.title}
-                    onClick={button.onClick}
-                    style={{
-                      padding: "8px 16px",
-                      borderRadius: "6px",
-                      fontFamily: "Noto Sans KR, sans-serif",
-                      fontWeight: 500,
-                      fontSize: "0.7rem",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease-in-out",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                      border: "none",
-                      whiteSpace: "nowrap",
-                      minWidth: "140px",
-                      ...button.style,
-                    }}
-                    onMouseEnter={(e) => {
-                      const target = e.currentTarget as HTMLButtonElement;
-                      if (button.id === "newCoaching")
-                        target.style.backgroundColor = "#003d25";
-                      else target.style.opacity = "0.9";
-                    }}
-                    onMouseLeave={(e) => {
-                      const target = e.currentTarget as HTMLButtonElement;
-                      target.style.opacity = "1";
-                      target.style.backgroundColor = button.style
-                        .backgroundColor as string;
-                    }}
-                  >
-                    {button.text}
-                  </button>
-                ))}
-              </div>
+              . . .{/* 액션 메뉴 */}
+              {showActionMenu["main"] && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: "27%",
+                    zIndex: 1001,
+                    display: "flex",
+                    flexDirection: "column",
+                    backgroundColor: "#fff",
+                    border: "1px solid #ccc",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                  }}
+                >
+                  {actionButtons.map((btn) => (
+                    <button
+                      key={btn.id}
+                      style={{
+                        width: "100%",
+                        padding: "12px 16px",
+                        textAlign: "left",
+                        cursor: "pointer",
+                        fontSize: "14px",
+                        transition: "background-color 0.2s ease",
+                        whiteSpace: "nowrap",
+                        ...btn.style,
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        btn.onClick();
+                        setShowActionMenu({});
+                      }}
+                      onMouseEnter={(e) => {
+                        const el = e.currentTarget as HTMLButtonElement;
+                        if (btn.id === "newCoaching")
+                          el.style.backgroundColor = "#005a35";
+                        else el.style.backgroundColor = "#f0f0f0";
+                      }}
+                      onMouseLeave={(e) => {
+                        const el = e.currentTarget as HTMLButtonElement;
+                        el.style.backgroundColor =
+                          (btn.style as any)?.backgroundColor || "#e8e7e0ff";
+                      }}
+                      title={btn.title}
+                    >
+                      {btn.text}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </h1>
           <h2
