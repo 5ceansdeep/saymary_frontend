@@ -150,14 +150,35 @@ function Select() {
           cache: "no-store", // 캐시 간섭 방지
         }
       );
+
+      console.log("=== 코칭 API 응답 상태 ===");
+      console.log("Status:", res.status);
+      console.log("Status Text:", res.statusText);
+      console.log("Headers:", Object.fromEntries(res.headers.entries()));
+
       if (!res.ok) {
         const text = await res.text().catch(() => "");
+        console.log("=== API 오류 응답 ===");
+        console.log("Error Text:", text);
         throw new Error(`HTTP ${res.status} ${res.statusText} ${text}`);
       }
+      
       const ct = res.headers.get("content-type") ?? "";
       const result = ct.includes("application/json")
         ? await res.json()
         : await res.text();
+
+      console.log("=== 코칭 API 응답 데이터 ===");
+      console.log("Content-Type:", ct);
+      console.log("Raw Result:", result);
+      console.log("Result Type:", typeof result);
+      console.log("Is String:", typeof result === 'string');
+      console.log("Is Object:", typeof result === 'object');
+      
+      if (typeof result === 'object' && result !== null) {
+        console.log("Object Keys:", Object.keys(result));
+        console.log("JSON Stringified:", JSON.stringify(result, null, 2));
+      }
 
       navigate("/coaching/result", {
         state: {

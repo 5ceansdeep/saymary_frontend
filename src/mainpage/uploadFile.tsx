@@ -208,6 +208,11 @@ function UploadFile() {
           }
         );
 
+        console.log("=== API 응답 상태 ===");
+        console.log("Status:", response.status);
+        console.log("Status Text:", response.statusText);
+        console.log("Headers:", Object.fromEntries(response.headers.entries()));
+
         if (progressIntervalRef.current) {
           window.clearInterval(progressIntervalRef.current);
           progressIntervalRef.current = null;
@@ -215,7 +220,11 @@ function UploadFile() {
         setUploadProgress(100);
 
         const result = await safeParseResponse(response);
-        console.log("API 응답:", result);
+        console.log("=== API 응답 데이터 ===");
+        console.log("Raw Result:", result);
+        console.log("Result Type:", typeof result);
+        console.log("Is String:", typeof result === 'string');
+        console.log("Is Object:", typeof result === 'object');
 
         const buildSummary = (data: ApiJson): SummaryData => {
           if (typeof data === "string") {

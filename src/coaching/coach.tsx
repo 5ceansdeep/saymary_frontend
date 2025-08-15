@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
 import godown from "../img/godown.png";
 import homeIcon from "../img/home.png";
 import coachingIcon from "../img/coaching.png";
@@ -25,7 +26,6 @@ interface FeedbackData {
   original_text: string;
   summary: string;
   detailed_summary: string;
-  keywords: string;
   speaking_speed?: SpeakingSpeed;
   pause_analysis?: PauseAnalysis;
 }
@@ -137,23 +137,12 @@ function Coach() {
       const detailedText =
         payload.detailed_summary ?? (feedbackRaw || summaryText);
 
-      const keywordsText = Array.isArray(payload.keywords)
-        ? payload.keywords.join(", ")
-        : (
-            payload.keywords ??
-            payload.summaries?.keyword ??
-            payload.summaries?.["키워드요약"] ??
-            extractKeywords(feedbackRaw)
-          ) // ← 마지막 폴백
-            .toString();
-
       // 4) 화면용 객체 생성
       const feedbackDataFormatted: FeedbackData = {
         original_text:
           payload.original_text ?? payload.transcript ?? payload.text ?? "",
         summary: summaryText || "",
         detailed_summary: detailedText || "",
-        keywords: keywordsText,
         speaking_speed: speedSrc
           ? {
               average_wpm: speedSrc.average_wpm ?? speedSrc.wpm ?? 0,
@@ -199,7 +188,6 @@ function Coach() {
           "재택근무는 코로나19 팬데믹을 계기로 빠르게 확산된 근무 형태입니다.",
         summary: "발표력이 좋습니다.",
         detailed_summary: "전반적으로 명확하고 체계적인 발표였습니다.",
-        keywords: "재택근무, 코로나19, 팬데믹",
         speaking_speed: {
           average_wpm: 160.37,
           duration_seconds: 17.21,
@@ -281,9 +269,6 @@ function Coach() {
         content += `=== 상세 요약 ===\n${
           feedbackData.detailed_summary || "상세 요약 없음"
         }\n\n`;
-        content += `=== 키워드 ===\n${
-          feedbackData.keywords || "키워드 없음"
-        }\n\n`;
 
         if (feedbackData.speaking_speed) {
           content += `=== 말하기 속도 분석 ===\n평균 WPM: ${feedbackData.speaking_speed.average_wpm}\n발화 시간: ${feedbackData.speaking_speed.duration_seconds}초\n단어 수: ${feedbackData.speaking_speed.word_count}개\n코멘트: ${feedbackData.speaking_speed.comment}\n\n`;
@@ -319,9 +304,6 @@ function Coach() {
       }\n\n`;
       content += `=== 상세 요약 ===\n${
         feedbackData.detailed_summary || "상세 요약 없음"
-      }\n\n`;
-      content += `=== 키워드 ===\n${
-        feedbackData.keywords || "키워드 없음"
       }\n\n`;
 
       if (feedbackData.speaking_speed) {
@@ -383,7 +365,7 @@ function Coach() {
 
   // 탭 데이터
   const tabs: TabItem[] = [
-    { id: "summary", label: "💬 요약 & 키워드", icon: "💬" },
+    { id: "summary", label: "💬 요약", icon: "💬" },
     { id: "speed", label: "⚡ 말하기 속도", icon: "⚡" },
     { id: "pause", label: "⏸️ 말하기 템포", icon: "⏸️" },
   ];
@@ -427,35 +409,14 @@ function Coach() {
               >
                 📄 상세 요약
               </h3>
-              <p
+              <div
                 style={{
                   lineHeight: "1.6",
                   color: "#333",
                   marginBottom: "15px",
                 }}
               >
-                {feedbackData.detailed_summary || "상세 요약이 없습니다."}
-              </p>
-            </div>
-
-            <div>
-              <h3
-                style={{
-                  color: "#00492C",
-                  marginBottom: "10px",
-                  fontSize: "1.1rem",
-                }}
-              >
-                🔑 키워드
-              </h3>
-              <div
-                style={{
-                  lineHeight: "1.6",
-                  color: "#333",
-                  whiteSpace: "pre-line",
-                }}
-              >
-                {feedbackData.keywords || "키워드가 없습니다."}
+                <ReactMarkdown>{feedbackData.detailed_summary || "상세 요약이 없습니다."}</ReactMarkdown>
               </div>
             </div>
           </div>
@@ -542,15 +503,7 @@ function Coach() {
                       overflowY: "auto",
                     }}
                   >
-                    💡
-                    <span
-                      dangerouslySetInnerHTML={{
-                        __html: (feedbackData.speaking_speed.comment ?? "")
-                          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                          .replace(/\n(\d+)\. /g, "<br/><br/>$1. ")
-                          .replace(/\n/g, "<br/>"),
-                      }}
-                    />
+                    💡 <ReactMarkdown>{feedbackData.speaking_speed.comment ?? ""}</ReactMarkdown>
                   </div>
                 </div>
               </div>
@@ -641,15 +594,7 @@ function Coach() {
                       overflowY: "auto",
                     }}
                   >
-                    💡
-                    <span
-                      dangerouslySetInnerHTML={{
-                        __html: (feedbackData.pause_analysis.comment ?? "")
-                          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                          .replace(/\n(\d+)\. /g, "<br/><br/>$1. ")
-                          .replace(/\n/g, "<br/>"),
-                      }}
-                    />
+                    💡 <ReactMarkdown>{feedbackData.pause_analysis.comment ?? ""}</ReactMarkdown>
                   </div>
                 </div>
               </div>
@@ -706,7 +651,7 @@ function Coach() {
           >
             파일명 : {sessionData?.fileName || "알 수 없음"}
             {/* exportButton */}
-            <button
+            <div
               className="exportButton"
               title="내보내기 옵션"
               onClick={handleExportButtonClick}
@@ -726,6 +671,7 @@ function Coach() {
                 borderRadius: "15px",
                 transition: "all 0.2s ease-in-out",
                 position: "relative",
+                display: "inline-block",
               }}
             >
               . . .{/* 액션 버튼들 */}
@@ -784,7 +730,7 @@ function Coach() {
                   </button>
                 ))}
               </div>
-            </button>
+            </div>
           </h1>
           <h2
             style={{
