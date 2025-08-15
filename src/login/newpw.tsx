@@ -22,8 +22,6 @@ function Newpw() {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get("token");
 
-    console.log("보낼 token:", token);
-
     if (!token) {
       alert("토큰이 유효하지 않습니다.");
       return;
@@ -39,22 +37,17 @@ function Newpw() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token, password }),
+          credentials: "include",
+          body: JSON.stringify({ token, newPassword: password }), // 필드명 맞추기
         }
       );
 
-      const contentType = response.headers.get("content-type");
-      const text = contentType?.includes("application/json")
-        ? JSON.stringify(await response.json())
-        : await response.text();
-
-      console.log("응답 내용:", text);
-
-      if (response.ok && /변경/.test(text)) {
+      const data = await response.text(); // 또는 response.json()
+      if (response.ok) {
         alert("비밀번호가 성공적으로 변경되었습니다!");
         navigate("/login");
       } else {
-        alert("비밀번호 변경 실패: " + text);
+        alert("비밀번호 변경 실패: " + data);
       }
     } catch (error) {
       console.error(error);
