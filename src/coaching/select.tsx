@@ -141,8 +141,18 @@ function Select() {
     const timer = setTimeout(() => ctrl.abort(), 10 * 60 * 1000);
 
     try {
+      // const res = await fetch(
+      //   "https://api.saymary.site/api/fastapi/upload_feedback",
+      //   {
+      //     method: "POST",
+      //     body: fd,
+      //     credentials: "include",
+      //     cache: "no-store", // 캐시 간섭 방지
+      //   }
+      // );
+
       const res = await fetch(
-        "https://api.saymary.site/api/fastapi/upload_feedback",
+        "https://api.saymary.site/api/fastapi/feedback",
         {
           method: "POST",
           body: fd,
@@ -162,7 +172,7 @@ function Select() {
         console.log("Error Text:", text);
         throw new Error(`HTTP ${res.status} ${res.statusText} ${text}`);
       }
-      
+
       const ct = res.headers.get("content-type") ?? "";
       const result = ct.includes("application/json")
         ? await res.json()
@@ -172,10 +182,10 @@ function Select() {
       console.log("Content-Type:", ct);
       console.log("Raw Result:", result);
       console.log("Result Type:", typeof result);
-      console.log("Is String:", typeof result === 'string');
-      console.log("Is Object:", typeof result === 'object');
-      
-      if (typeof result === 'object' && result !== null) {
+      console.log("Is String:", typeof result === "string");
+      console.log("Is Object:", typeof result === "object");
+
+      if (typeof result === "object" && result !== null) {
         console.log("Object Keys:", Object.keys(result));
         console.log("JSON Stringified:", JSON.stringify(result, null, 2));
       }
