@@ -72,7 +72,9 @@ function Coach() {
   const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null);
   const [sessionData, setSessionData] = useState<SessionData | null>(null);
   const [showActionButtons, setShowActionButtons] = useState<boolean>(false);
-  const [showActionMenu, setShowActionMenu] = useState<Record<string, boolean>>({});
+  const [showActionMenu, setShowActionMenu] = useState<Record<string, boolean>>(
+    {}
+  );
   const [activeTab, setActiveTab] = useState<TabId>("summary"); // 우측 탭 상태 기본값
 
   const BoxRef = useRef<HTMLDivElement | null>(null);
@@ -99,9 +101,18 @@ function Coach() {
       const payload =
         parsed?.data ?? parsed?.result ?? parsed?.coaching ?? parsed;
 
+      // 1-추가) 유틸: 숫자/텍스트 안전 변환
+      const toNum = (v: any) => {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : 0;
+      };
+      const pickText = (...cands: any[]) =>
+        cands.find((v) => typeof v === "string" && v.trim().length > 0) || "";
+
       // 2) 속도/템포 소스 선택
-      const speedSrc = payload.speaking_speed ?? payload.speed_analysis ?? null;
-      const pauseSrc = payload.pause_analysis ?? null;
+      const speedSrc: any =
+        payload.speaking_speed ?? payload.speed_analysis ?? null;
+      const pauseSrc: any = payload.pause_analysis ?? null;
 
       // 3) feedback을 요약/상세로 폴백
       const feedbackRaw =
@@ -111,16 +122,15 @@ function Coach() {
         ? feedbackRaw.split(/\r?\n\r?\n|\r?\n/)[0].replace(/^한줄평:\s*/, "")
         : "";
 
+      // (선택) 키워드 추출은 그대로 두셔도 됩니다
       const extractKeywords = (txt: string) => {
         if (!txt) return "";
-        // "키워드: A, B, C" 같은 줄이 있으면 그걸 사용
         const m = txt.match(/키워드\s*[:：]\s*(.+)/i);
         if (m)
           return m[1]
             .split(/[,\s·]+/)
             .filter(Boolean)
             .join(", ");
-        // 글머리표( -, •, · )로 시작하는 라인 몇 개를 키워드로 사용
         return txt
           .split(/\r?\n/)
           .filter((l) => /^[\-•·]/.test(l))
@@ -129,45 +139,53 @@ function Coach() {
           .join(", ");
       };
 
-      const summaryText =
-        payload.summary ??
-        payload.summary_text ??
-        payload.summary?.text ??
-        firstPara;
+      // ✅ 빈 문자열까지 대비해 “내용 있는 첫 값”을 고르는 방식으로 변경
+      const summaryText = pickText(
+        payload.summary,
+        payload.summary_text,
+        payload.summary?.text,
+        firstPara
+      );
 
-      const detailedText =
-        payload.detailed_summary ?? (feedbackRaw || summaryText);
+      const detailedText = pickText(
+        payload.detailed_summary,
+        feedbackRaw,
+        summaryText
+      );
 
-      // 4) 화면용 객체 생성
+      // 4) 화면용 객체 생성 (숫자는 전부 number로 강제 변환)
       const feedbackDataFormatted: FeedbackData = {
         original_text:
           payload.original_text ?? payload.transcript ?? payload.text ?? "",
-        summary: summaryText || "",
-        detailed_summary: detailedText || "",
+        summary: summaryText,
+        detailed_summary: detailedText,
         speaking_speed: speedSrc
           ? {
-              average_wpm: speedSrc.average_wpm ?? speedSrc.wpm ?? 0,
-              duration_seconds:
-                speedSrc.duration_seconds ?? speedSrc.duration ?? 0,
-              word_count: speedSrc.word_count ?? 0,
-              comment: speedSrc.comment ?? speedSrc.feedback ?? "",
+              average_wpm: toNum(speedSrc.average_wpm ?? speedSrc.wpm),
+              duration_seconds: toNum(
+                speedSrc.duration_seconds ?? speedSrc.duration
+              ),
+              word_count: toNum(speedSrc.word_count),
+              comment: pickText(speedSrc.comment, speedSrc.feedback),
             }
           : undefined,
         pause_analysis: pauseSrc
           ? {
-              pause_count:
-                pauseSrc.pause_count ?? pauseSrc.pause_stats?.pause_count ?? 0,
-              avg_pause_length:
+              pause_count: toNum(
+                pauseSrc.pause_count ?? pauseSrc.pause_stats?.pause_count
+              ),
+              avg_pause_length: toNum(
                 pauseSrc.avg_pause_length ??
-                pauseSrc.pause_stats?.avg_pause_length ??
-                0,
-              total_silence:
-                pauseSrc.total_silence ??
-                pauseSrc.pause_stats?.total_silence ??
-                0,
+                  pauseSrc.pause_stats?.avg_pause_length
+              ),
+              total_silence: toNum(
+                pauseSrc.total_silence ?? pauseSrc.pause_stats?.total_silence
+              ),
               long_pauses:
-                pauseSrc.long_pauses ?? pauseSrc.pause_stats?.long_pauses ?? [],
-              comment: pauseSrc.comment ?? pauseSrc.feedback ?? "",
+                pauseSrc.long_pauses ??
+                pauseSrc.pause_stats?.long_pauses ??
+                ([] as number[]),
+              comment: pickText(pauseSrc.comment, pauseSrc.feedback),
             }
           : undefined,
       };
@@ -368,8 +386,8 @@ function Coach() {
   // 탭 데이터
   const tabs: TabItem[] = [
     { id: "summary", label: "💬 요약", icon: "💬" },
-    { id: "speed", label: "⚡ 말하기 속도", icon: "⚡" },
-    { id: "pause", label: "⏸️ 말하기 템포", icon: "⏸️" },
+    { id: "speed", label: "⚡ 속도", icon: "⚡" },
+    { id: "pause", label: "⏸️ 멈춤", icon: "⏸️" },
   ];
 
   // 탭 컨텐츠 렌더링
@@ -418,7 +436,9 @@ function Coach() {
                   marginBottom: "15px",
                 }}
               >
-                <ReactMarkdown>{feedbackData.detailed_summary || "상세 요약이 없습니다."}</ReactMarkdown>
+                <ReactMarkdown>
+                  {feedbackData.detailed_summary || "상세 요약이 없습니다."}
+                </ReactMarkdown>
               </div>
             </div>
           </div>
@@ -505,7 +525,10 @@ function Coach() {
                       overflowY: "auto",
                     }}
                   >
-                    💡 <ReactMarkdown>{feedbackData.speaking_speed.comment ?? ""}</ReactMarkdown>
+                    💡{" "}
+                    <ReactMarkdown>
+                      {feedbackData.speaking_speed.comment ?? ""}
+                    </ReactMarkdown>
                   </div>
                 </div>
               </div>
@@ -525,7 +548,7 @@ function Coach() {
                 fontSize: "1.1rem",
               }}
             >
-              ⏸️ 말하기 템포 분석
+              ⏸️ 말하기 멈춤(간격) 분석
             </h3>
             {feedbackData.pause_analysis ? (
               <div>
@@ -596,7 +619,10 @@ function Coach() {
                       overflowY: "auto",
                     }}
                   >
-                    💡 <ReactMarkdown>{feedbackData.pause_analysis.comment ?? ""}</ReactMarkdown>
+                    💡{" "}
+                    <ReactMarkdown>
+                      {feedbackData.pause_analysis.comment ?? ""}
+                    </ReactMarkdown>
                   </div>
                 </div>
               </div>
@@ -855,7 +881,7 @@ function Coach() {
               onClick={() => setActiveTab(tab.id)}
               style={{
                 flex: 1,
-                padding: "10px 5px",
+                padding: "15px 5px",
                 border: "none",
                 backgroundColor:
                   activeTab === tab.id ? "#00492C" : "transparent",
