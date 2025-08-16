@@ -335,6 +335,7 @@ function Main() {
           {/* 액션 버튼 */}
           <span
             style={{
+              position: "relative",
               color: "#656247",
               backgroundColor: "transparent",
               fontFamily: "Noto Sans KR, sans-serif",
@@ -360,60 +361,60 @@ function Main() {
             }}
           >
             ⋮
+            {/* 액션 메뉴 */}
+            {showActionMenu["main"] && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  right: "-500%",
+                  zIndex: 1001,
+                  display: "flex",
+                  flexDirection: "column",
+                  backgroundColor: "#fff",
+                  border: "1px solid #ccc",
+                  borderRadius: "8px",
+                  overflow: "hidden",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                }}
+              >
+                {actionButtons.map((btn) => (
+                  <button
+                    key={btn.id}
+                    style={{
+                      width: "100%",
+                      padding: "12px 16px",
+                      textAlign: "left",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      transition: "background-color 0.2s ease",
+                      whiteSpace: "nowrap",
+                      ...btn.style,
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      btn.onClick();
+                      setShowActionMenu({});
+                    }}
+                    onMouseEnter={(e) => {
+                      const el = e.currentTarget as HTMLButtonElement;
+                      if (btn.id === "newUpload")
+                        el.style.backgroundColor = "#005a35";
+                      else el.style.backgroundColor = "#f0f0f0";
+                    }}
+                    onMouseLeave={(e) => {
+                      const el = e.currentTarget as HTMLButtonElement;
+                      el.style.backgroundColor =
+                        (btn.style as any)?.backgroundColor || "#e8e7e0ff";
+                    }}
+                    title={btn.title}
+                  >
+                    {btn.text}
+                  </button>
+                ))}
+              </div>
+            )}
           </span>
-          {/* 액션 메뉴 */}
-          {showActionMenu["main"] && (
-            <div
-              style={{
-                position: "absolute",
-                top: "100%",
-                left: "27%",
-                zIndex: 1001,
-                display: "flex",
-                flexDirection: "column",
-                backgroundColor: "#fff",
-                border: "1px solid #ccc",
-                borderRadius: "8px",
-                overflow: "hidden",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-              }}
-            >
-              {actionButtons.map((btn) => (
-                <button
-                  key={btn.id}
-                  style={{
-                    width: "100%",
-                    padding: "12px 16px",
-                    textAlign: "left",
-                    cursor: "pointer",
-                    fontSize: "14px",
-                    transition: "background-color 0.2s ease",
-                    whiteSpace: "nowrap",
-                    ...btn.style,
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    btn.onClick();
-                    setShowActionMenu({});
-                  }}
-                  onMouseEnter={(e) => {
-                    const el = e.currentTarget as HTMLButtonElement;
-                    if (btn.id === "newUpload")
-                      el.style.backgroundColor = "#005a35";
-                    else el.style.backgroundColor = "#f0f0f0";
-                  }}
-                  onMouseLeave={(e) => {
-                    const el = e.currentTarget as HTMLButtonElement;
-                    el.style.backgroundColor =
-                      (btn.style as any)?.backgroundColor || "#e8e7e0ff";
-                  }}
-                  title={btn.title}
-                >
-                  {btn.text}
-                </button>
-              ))}
-            </div>
-          )}
         </h1>
 
         {/* 날짜 */}
