@@ -19,6 +19,13 @@ type ApiJson =
       ["간단요약"]?: string;
       ["상세요약"]?: string;
       ["키워드요약"]?: string;
+      // 새로운 응답 형식 필드들
+      fileId?: string | null;
+      originalFileName?: string | null;
+      summary1?: string;
+      summary2?: string;
+      summary3?: string;
+      userId?: string | null;
       message?: string;
     }
   | string;
@@ -243,16 +250,19 @@ function UploadFile() {
             data["간단요약"] ??
             data.summaries?.simple ??
             data.summaries?.["간단요약"] ??
+            data.summary1 ??
             "";
           const detailed =
             data["상세요약"] ??
             data.summaries?.detailed ??
             data.summaries?.["상세요약"] ??
+            data.summary2 ??
             "";
           const keyword =
             data["키워드요약"] ??
             data.summaries?.keyword ??
             data.summaries?.["키워드요약"] ??
+            data.summary3 ??
             "";
 
           // 최소 요건 충족 시 성공 처리
