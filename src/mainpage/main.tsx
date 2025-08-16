@@ -555,7 +555,7 @@ function Main() {
                     line.trim().startsWith("•") ||
                     line.trim().startsWith("-")
                   ) {
-                    const keyword = line.replace(/^[•\-]\s*/, "").trim();
+                    const keyword = line.replace(/^[•\-]\s*/, "").replace(/[,\s]*$/, "").trim();
                     if (keyword) {
                       return (
                         <span
@@ -565,12 +565,12 @@ function Main() {
                             fontFamily: "Noto Sans KR, sans-serif",
                             margin: "5px 10px",
                             padding: "8px 16px",
-                            backgroundColor: "#00492C",
+                            backgroundColor: "#9a9983ff",
                             borderRadius: "25px",
                             color: "#ffffff",
                             fontWeight: 500,
-                            fontSize: "0.8rem",
                             minWidth: "80px",
+                            fontSize: "0.8rem",
                             textAlign: "center",
                             boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                           }}
