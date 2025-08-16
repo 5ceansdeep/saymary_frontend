@@ -194,7 +194,7 @@ function UploadFile() {
         // );
 
         const response = await fetchWithTimeout(
-          "https://api.saymary.site/api/fastapi/upload",
+          "https://api.saymary.site/api/spring/upload",
           {
             method: "POST",
             body: formData,
