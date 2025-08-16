@@ -152,7 +152,7 @@ function Select() {
       // );
 
       const res = await fetch(
-        "https://api.saymary.site/api/coaching/feedback",
+        "https://api.saymary.site/api/fastapi/upload_feedback",
         {
           method: "POST",
           body: fd,
