@@ -54,27 +54,10 @@ function Archive() {
     }
   }, []);
 
-  // 사용자 정보 불러오기 및 파일 목록 불러오기
+  // 파일 목록 불러오기
   useEffect(() => {
     if (!shouldRender) return;
     
-    const fetchUserInfo = async () => {
-      try {
-        const response = await fetch("https://api.saymary.site/api/user/me", {
-          method: "GET",
-          credentials: "include",
-        });
-        
-        if (response.ok) {
-          const userData = await response.json();
-          setUserEmail(userData.email || "사용자");
-        }
-      } catch (e) {
-        console.error("사용자 정보 조회 오류:", e);
-      }
-    };
-    
-    fetchUserInfo();
     setFiles(getSaved());
   }, [shouldRender, getSaved]);
 

@@ -14,23 +14,11 @@ export default function LoginState({
   const [text, setText] = useState("확인 중...");
   const navigate = useNavigate();
 
-  // 세션 기반 로그인 상태 평가
+  // 로그인 상태 평가 (API 호출 제거)
   const evaluateAuth = useCallback(async () => {
-    try {
-      const response = await fetch("https://api.saymary.site/api/user/me", {
-        method: "GET",
-        credentials: "include",
-      });
-      
-      const authenticated = response.ok;
-      setIsAuthed(authenticated);
-      setText(authenticated ? authedText : unauthText);
-    } catch (e) {
-      console.error("인증 상태 확인 중 오류:", e);
-      setIsAuthed(false);
-      setText(unauthText);
-    }
-  }, [authedText, unauthText]);
+    setIsAuthed(false);
+    setText(unauthText);
+  }, [unauthText]);
 
   useEffect(() => {
     evaluateAuth();

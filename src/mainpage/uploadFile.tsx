@@ -51,19 +51,6 @@ function UploadFile() {
 
   const progressIntervalRef = useRef<number | null>(null);
 
-  // 세션 기반 인증 확인
-  // const checkAuthStatus = useCallback(async (): Promise<boolean> => {
-  //   try {
-  //     const response = await fetch("https://api.saymary.site/api/user/me", {
-  //       method: "GET",
-  //       credentials: "include",
-  //     });
-
-  //     return response.status === 200;
-  //   } catch {
-  //     return false;
-  //   }
-  // }, []);
 
   // 마운트 애니메이션 + 인증 체크
   useEffect(() => {
