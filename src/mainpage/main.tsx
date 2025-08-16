@@ -534,8 +534,8 @@ function Main() {
               color: "#4a4332",
               backgroundColor: "#ECEAD5",
               fontFamily: "Noto Sans KR, sans-serif",
-              fontWeight: 500,
-              fontSize: "0.8rem",
+              fontWeight: activeButton === "키워드요약" ? 700 : 500,
+              fontSize: activeButton === "키워드요약" ? "1rem" : "0.8rem",
               padding: "10%",
               lineHeight: "2.2",
               borderRadius: "10px",
@@ -547,7 +547,55 @@ function Main() {
               textAlign: activeButton ? "left" : "center",
             }}
           >
-            {currentSummary || "위의 버튼을 클릭하여 요약을 확인해보세요! 📋"}
+            {activeButton === "키워드요약" && currentSummary ? (
+              <div style={{ width: "100%", textAlign: "left" }}>
+                {currentSummary.split("\n").map((line, index) => {
+                  // 키워드 라인인지 확인 (•나 -로 시작하는 라인)
+                  if (
+                    line.trim().startsWith("•") ||
+                    line.trim().startsWith("-")
+                  ) {
+                    const keyword = line.replace(/^[•\-]\s*/, "").trim();
+                    if (keyword) {
+                      return (
+                        <span
+                          key={index}
+                          style={{
+                            display: "inline-block",
+                            fontFamily: "Noto Sans KR, sans-serif",
+                            margin: "5px 10px",
+                            padding: "8px 16px",
+                            backgroundColor: "#00492C",
+                            borderRadius: "25px",
+                            color: "#ffffff",
+                            fontWeight: 500,
+                            fontSize: "0.8rem",
+                            minWidth: "80px",
+                            textAlign: "center",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                          }}
+                        >
+                          {keyword}
+                        </span>
+                      );
+                    }
+                  } else if (line.trim()) {
+                    // 일반 텍스트 라인 (제목이나 설명)
+                    return (
+                      <div
+                        key={index}
+                        style={{ marginBottom: "15px", fontWeight: 600 }}
+                      >
+                        {line}
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+            ) : (
+              currentSummary || "위의 버튼을 클릭하여 요약을 확인해보세요! 📋"
+            )}
           </div>
         </div>
 
