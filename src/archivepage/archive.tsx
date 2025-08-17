@@ -77,7 +77,7 @@ function Archive() {
   // 파일 목록 불러오기
   useEffect(() => {
     if (!shouldRender) return;
-    
+
     setFiles(getSaved());
   }, [shouldRender, getSaved]);
 
@@ -116,7 +116,7 @@ function Archive() {
       상세요약: file.summary2,
       키워드요약: file.summary3,
       summaryType: file.summaryType,
-        selectedSummaryLabel: label,
+      selectedSummaryLabel: label,
       selectedSummaryText: text,
     } as const;
 
@@ -443,9 +443,7 @@ function Archive() {
           overflowX: "hidden",
         }}
       >
-        <h1 style={archiveTitleStyle}>
-          {userEmail}의 보관함
-        </h1>
+        <h1 style={archiveTitleStyle}>{userEmail}의 보관함</h1>
 
         {/* 검색 박스 */}
         <div style={searchBoxStyle}>
@@ -499,13 +497,16 @@ function Archive() {
                     <span style={fileItemSpanStyle}>
                       {formatDate(file.createdAt)}
                     </span>
-{(() => {
+                    {(() => {
                       const { label, text } = pickSummaryByType(file);
                       if (!text) return null;
-                      const preview = text.length > 50 ? `${text.substring(0, 50)}...` : text;
+                      const preview =
+                        text.length > 50 ? `${text.substring(0, 50)}...` : text;
                       return (
                         <div style={{ ...fileItemSpanStyle, marginTop: "4px" }}>
-                          <strong style={{ marginRight: "5px", color: "#333" }}>{label}:</strong>
+                          <strong style={{ marginRight: "5px", color: "#333" }}>
+                            {label}:
+                          </strong>
                           {preview}
                         </div>
                       );
