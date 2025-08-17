@@ -25,6 +25,26 @@ interface ActionButton {
   style: React.CSSProperties;
 }
 
+const normalizeSummaryType = (raw?: string) => {
+  const s = (raw ?? "").toLowerCase();
+  if (s.includes("상세") || s.includes("detail")) return "상세요약";
+  if (s.includes("키워드") || s.includes("keyword")) return "키워드요약";
+  return "간단요약";
+};
+
+const pickSummaryByType = (file: FileItem) => {
+  const label = normalizeSummaryType(file.summaryType);
+  let text: string | undefined;
+
+  if (label === "상세요약") text = file.summary2;
+  else if (label === "키워드요약") text = file.summary3;
+  else text = file.summary1; // 간단요약
+
+  if (!text) text = file.summary1 || file.summary2 || file.summary3 || "";
+
+  return { label, text };
+};
+
 function Archive() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -86,6 +106,7 @@ function Archive() {
   //파일 클릭 시 Main 페이지로 이동
   const handleFileClick = (file: FileItem) => {
     const created = file.createdAt ? new Date(file.createdAt) : new Date();
+    const { label, text } = pickSummaryByType(file);
 
     const newSummaryData = {
       fileName: file.originalFileName,
@@ -95,6 +116,8 @@ function Archive() {
       상세요약: file.summary2,
       키워드요약: file.summary3,
       summaryType: file.summaryType,
+        selectedSummaryLabel: label,
+      selectedSummaryText: text,
     } as const;
 
     localStorage.setItem("summaryData", JSON.stringify(newSummaryData));
@@ -476,16 +499,17 @@ function Archive() {
                     <span style={fileItemSpanStyle}>
                       {formatDate(file.createdAt)}
                     </span>
-                    {file.summary1 && (
-                      <div style={{ ...fileItemSpanStyle, marginTop: "4px" }}>
-                        <strong style={{ marginRight: "5px", color: "#333" }}>
-                          {file.summaryType || "간단요약"}:
-                        </strong>
-                        {file.summary1.length > 50
-                          ? `${file.summary1.substring(0, 50)}...`
-                          : file.summary1}
-                      </div>
-                    )}
+{(() => {
+                      const { label, text } = pickSummaryByType(file);
+                      if (!text) return null;
+                      const preview = text.length > 50 ? `${text.substring(0, 50)}...` : text;
+                      return (
+                        <div style={{ ...fileItemSpanStyle, marginTop: "4px" }}>
+                          <strong style={{ marginRight: "5px", color: "#333" }}>{label}:</strong>
+                          {preview}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* 액션 버튼 컨테이너 */}
