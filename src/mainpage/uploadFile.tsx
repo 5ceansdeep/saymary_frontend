@@ -118,6 +118,20 @@ function UploadFile() {
     return true;
   }, []);
 
+  // 쿠키 확인 함수
+  const checkAuthStatus = useCallback(async (): Promise<boolean> => {
+    try {
+      const response = await fetch("https://api.saymary.site/api/spring/auth/check", {
+        method: "GET",
+        credentials: "include",
+      });
+      return response.ok;
+    } catch (error) {
+      console.error("인증 확인 오류:", error);
+      return false;
+    }
+  }, []);
+
   // AbortSignal.timeout 호환 핸들러 (폴백)
   const fetchWithTimeout = useCallback(
     async (
@@ -272,8 +286,15 @@ function UploadFile() {
         if (response.ok) {
           const summaryData = buildSummary(result); // ← 실제 호출
           localStorage.setItem("summaryData", JSON.stringify(summaryData));
-          setTimeout(() => navigate("/main", { replace: true }), 800);
-          return; // ← 이게 없어서 아래 에러 처리로 떨어졌던 거
+          
+          // 업로드 성공 후 로그인 상태 확인
+          const isAuthenticated = await checkAuthStatus();
+          if (isAuthenticated) {
+            setTimeout(() => navigate("/main", { replace: true }), 800);
+          } else {
+            setTimeout(() => navigate("/login", { replace: true }), 800);
+          }
+          return;
         }
 
         // 401 인증 오류 처리
@@ -346,7 +367,7 @@ function UploadFile() {
       }
     },
     [
-      // checkAuthStatus,
+      checkAuthStatus,
       fetchWithTimeout,
       navigate,
       safeParseResponse,
