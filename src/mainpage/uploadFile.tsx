@@ -51,7 +51,6 @@ function UploadFile() {
 
   const progressIntervalRef = useRef<number | null>(null);
 
-
   // 마운트 애니메이션 + 인증 체크
   useEffect(() => {
     const t = window.setTimeout(() => setAnimate1(true), 100);
@@ -121,7 +120,7 @@ function UploadFile() {
   // 쿠키 확인 함수
   const checkAuthStatus = useCallback(async (): Promise<boolean> => {
     try {
-      const response = await fetch("https://api.saymary.site/api/spring/auth/check", {
+      const response = await fetch("https://api.saymary.site/api/user/me", {
         method: "GET",
         credentials: "include",
       });
@@ -286,7 +285,7 @@ function UploadFile() {
         if (response.ok) {
           const summaryData = buildSummary(result); // ← 실제 호출
           localStorage.setItem("summaryData", JSON.stringify(summaryData));
-          
+
           // 업로드 성공 후 로그인 상태 확인
           const isAuthenticated = await checkAuthStatus();
           if (isAuthenticated) {
